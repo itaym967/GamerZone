@@ -17,6 +17,7 @@ function ChatContent() {
     const [user, setUser] = useState<any>(null);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [blockedWords, setBlockedWords] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auth & Supabase
@@ -27,6 +28,12 @@ function ChatContent() {
         async function init() {
             const { data } = await supabase.auth.getUser();
             setUser(data.user);
+
+            // Fetch Blocked Words
+            const { data: words } = await supabase.from('blocked_words').select('word');
+            if (words) {
+                setBlockedWords(words.map(w => w.word));
+            }
 
             if (targetId) {
                 // Fetch target profile if query param exists
@@ -81,7 +88,6 @@ function ChatContent() {
         let finalContent = input;
 
         // Filter Logic
-        const blockedWords = JSON.parse(localStorage.getItem("gamerzone_blocked_words") || "[]");
         const lowerInput = input.toLowerCase();
         const foundWord = blockedWords.find((word: string) => lowerInput.includes(word.toLowerCase()));
 
@@ -89,6 +95,13 @@ function ChatContent() {
             const regex = new RegExp(foundWord, "gi");
             finalContent = input.replace(regex, "*".repeat(foundWord.length));
             toast.warning("הודעתך סוננה עקב שפה לא נאותה");
+
+            // Log the attempt (optional, based on new admin specs)
+            await supabase.from('admin_logs').insert({
+                action: 'CHAT_FILTER',
+                target_id: user.id,
+                details: { word: foundWord, original: input }
+            });
         }
 
         await sendMessage(finalContent, activeChat.id);
