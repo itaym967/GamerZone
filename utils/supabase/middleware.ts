@@ -55,6 +55,13 @@ export async function updateSession(request: NextRequest) {
             .eq('id', user.id)
             .single()
 
+        // 2. Admin Check (Secure: Fail Closed)
+        if (path.startsWith('/admin')) {
+            if (!profile || profile.role !== 'admin') {
+                return NextResponse.redirect(new URL('/', request.url))
+            }
+        }
+
         // 1. Onboarding Check
         if (profile) {
             if (!profile.onboarding_completed && !path.startsWith('/onboarding')) {
@@ -64,12 +71,6 @@ export async function updateSession(request: NextRequest) {
 
             if (profile.onboarding_completed && path.startsWith('/onboarding')) {
                 // Prevent re-entry to onboarding if completed
-                return NextResponse.redirect(new URL('/', request.url))
-            }
-
-            // 2. Admin Check
-            if (path.startsWith('/admin') && profile.role !== 'admin') {
-                // Redirect unauthorized access to home
                 return NextResponse.redirect(new URL('/', request.url))
             }
         }

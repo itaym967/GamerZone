@@ -4,6 +4,8 @@ import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert } fr
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 const navItems = [
     { icon: Home, label: "לוח בקרה", href: "/" },
@@ -15,6 +17,32 @@ const navItems = [
 
 export default function Navigation() {
     const pathname = usePathname();
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const checkAdmin = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.role === 'admin') {
+                    setIsAdmin(true);
+                }
+            }
+        };
+        checkAdmin();
+    }, []);
+
+    // Filter nav items based on role
+    const filteredNavItems = navItems.filter(item => {
+        if (item.href === '/admin') return isAdmin;
+        return true;
+    });
 
     return (
         <>
@@ -28,7 +56,7 @@ export default function Navigation() {
                 </div>
 
                 <nav className="flex-1 space-y-2">
-                    {navItems.map((item) => {
+                    {filteredNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
@@ -56,7 +84,7 @@ export default function Navigation() {
             {/* Mobile Bottom Nav */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-bottom pb- safe-area-pb">
                 <div className="flex justify-around items-center p-4">
-                    {navItems.map((item) => {
+                    {filteredNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
