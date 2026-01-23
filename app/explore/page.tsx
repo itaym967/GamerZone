@@ -7,14 +7,14 @@ import { Search, Filter, SlidersHorizontal, UserPlus } from "lucide-react";
 
 // Mock Data for Discovery
 const DISCOVERY_DATA = [
-    { username: "CyberSoldier", tag: "@cs_israel", games: ["Valorant", "CS2"], bio: "מחפש סקוואד רציני לראנקים בערב.", online: true, rank: "Diamond", style: "Competitive" },
-    { username: "NoaGamer", tag: "@noa_plays", games: ["Minecraft", "Roblox"], bio: "בונים עיר חדשה בשרת, כולם מוזמנים!", online: false, rank: "Casual", style: "Chill" },
-    { username: "ApexPredator", tag: "@apex_king", games: ["Apex Legends"], bio: "מ-Main Wraith מאז עונה 1.", online: true, rank: "Master", style: "Competitive" },
-    { username: "PixelArt", tag: "@pixel_m", games: ["Minecraft", "Stardew Valley"], bio: "אוהב משחקי יצירה וניהול.", online: true, rank: "Casual", style: "Chill" },
-    { username: "TryHard99", tag: "@try_hard", games: ["Valorant", "League of Legends"], bio: "רוצה לעלות ל-Immo, רק רציניים.", online: false, rank: "Ascendant", style: "Hardcore" },
-    { username: "FortniteKid", tag: "@fort_build", games: ["Fortnite"], bio: "1v1 בניות? דבר איתי.", online: true, rank: "Gold", style: "Competitive" },
-    { username: "ChillGuy", tag: "@chill_dude", games: ["FIFA 24", "NBA 2K"], bio: "פיפא וצחוקים עם החבר'ה.", online: false, rank: "Casual", style: "Chill" },
-    { username: "StrategyMaster", tag: "@strat_god", games: ["TFT", "Hearthstone"], bio: "חשיבה אסטרטגית זה הדיבור.", online: true, rank: "Platinum", style: "Tactical" },
+    { id: "1", username: "CyberSoldier", tag: "@cs_israel", games: ["Valorant", "CS2"], bio: "מחפש סקוואד רציני לראנקים בערב.", online: true, rank: "Diamond", style: "Competitive" },
+    { id: "2", username: "NoaGamer", tag: "@noa_plays", games: ["Minecraft", "Roblox"], bio: "בונים עיר חדשה בשרת, כולם מוזמנים!", online: false, rank: "Casual", style: "Chill" },
+    { id: "3", username: "ApexPredator", tag: "@apex_king", games: ["Apex Legends"], bio: "מ-Main Wraith מאז עונה 1.", online: true, rank: "Master", style: "Competitive" },
+    { id: "4", username: "PixelArt", tag: "@pixel_m", games: ["Minecraft", "Stardew Valley"], bio: "אוהב משחקי יצירה וניהול.", online: true, rank: "Casual", style: "Chill" },
+    { id: "5", username: "TryHard99", tag: "@try_hard", games: ["Valorant", "League of Legends"], bio: "רוצה לעלות ל-Immo, רק רציניים.", online: false, rank: "Ascendant", style: "Hardcore" },
+    { id: "6", username: "FortniteKid", tag: "@fort_build", games: ["Fortnite"], bio: "1v1 בניות? דבר איתי.", online: true, rank: "Gold", style: "Competitive" },
+    { id: "7", username: "ChillGuy", tag: "@chill_dude", games: ["FIFA 24", "NBA 2K"], bio: "פיפא וצחוקים עם החבר'ה.", online: false, rank: "Casual", style: "Chill" },
+    { id: "8", username: "StrategyMaster", tag: "@strat_god", games: ["TFT", "Hearthstone"], bio: "חשיבה אסטרטגית זה הדיבור.", online: true, rank: "Platinum", style: "Tactical" },
 ];
 
 const FILTERS = {
@@ -94,6 +94,7 @@ export default function ExplorePage() {
                     {filteredGamers.map((gamer, index) => (
                         <GamerCard
                             key={index}
+                            id={gamer.id}
                             username={gamer.username}
                             tag={gamer.tag}
                             games={gamer.games}

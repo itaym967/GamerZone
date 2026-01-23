@@ -148,6 +148,7 @@ export default function ProfilePage() {
 
                         <div className="max-w-md mx-auto lg:mx-0 sticky top-10">
                             <GamerCard
+                                id="preview"
                                 username={formData.username}
                                 tag={formData.tag}
                                 games={formData.games}
