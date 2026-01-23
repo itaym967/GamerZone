@@ -43,9 +43,18 @@ export default function SignupPage() {
             router.push("/login");
 
         } catch (error: any) {
-            toast.error("שגיאה בהרשמה", {
-                description: error.message
-            });
+            console.error(error); // Debugging
+
+            // Check for Rate Limit (429)
+            if (error?.status === 429 || error?.toString().toLowerCase().includes("rate limit") || error?.message?.toLowerCase().includes("too many requests")) {
+                toast.error("יותר מדי ניסיונות", {
+                    description: "אנא המתן דקה לפני ניסיון נוסף. (Supabase Rate Limit)"
+                });
+            } else {
+                toast.error("שגיאה בהרשמה", {
+                    description: error.message || "אירעה שגיאה בלתי צפויה"
+                });
+            }
         } finally {
             setIsLoading(false);
         }
