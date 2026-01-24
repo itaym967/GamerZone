@@ -29,7 +29,10 @@ export function usePushNotifications() {
         try {
             const registration = await navigator.serviceWorker.ready
             // Fallback to hardcoded key if env var fails in Vercel (Key is public safe)
-            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BMh2smgb3nI3qOBD7XJp6gl3jqpDcV9WC5qx3x0NZH6mphcEzVq7v_cGyFTAvtB37AGYTywnTnyMywB609EsImg'
+            let vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BMh2smgb3nI3qOBD7XJp6gl3jqpDcV9WC5qx3x0NZH6mphcEzVq7v_cGyFTAvtB37AGYTywnTnyMywB609EsImg'
+
+            // Sanitize: remove whitespace, newlines, and quotes
+            vapidKey = vapidKey.trim().replace(/['"]/g, '').replace(/\s/g, '');
 
             if (!vapidKey) {
                 console.error("Missing VAPID public key")
