@@ -92,7 +92,27 @@ function ChatContent() {
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || !activeChat || !user) return;
+
+        // Validation checks
+        if (!input.trim()) {
+            toast.error('לא ניתן לשלוח הודעה ריקה');
+            return;
+        }
+
+        if (!activeChat) {
+            toast.error('אנא בחר שיחה');
+            return;
+        }
+
+        if (!user) {
+            toast.error('אנא התחבר כדי לשלוח הודעות');
+            return;
+        }
+
+        if (isLoading) {
+            toast.warning('אנא המתן לטעינת ההודעות');
+            return;
+        }
 
         let finalContent = input;
 
@@ -106,15 +126,23 @@ function ChatContent() {
             toast.warning("הודעתך סוננה עקב שפה לא נאותה");
 
             // Log the attempt (optional, based on new admin specs)
-            await supabase.from('admin_logs').insert({
+            const logResult = await supabase.from('admin_logs').insert({
                 action: 'CHAT_FILTER',
                 target_id: user.id,
                 details: { word: foundWord, original: input }
             });
+
+            if (logResult.error) {
+                console.error('Failed to log filter event:', logResult.error);
+            }
         }
 
-        await sendMessage(finalContent, activeChat.id);
+        // Clear input immediately for better UX
+        const messageToSend = finalContent;
         setInput("");
+
+        // Send message
+        await sendMessage(messageToSend, activeChat.id);
     };
 
     return (
@@ -247,10 +275,11 @@ function ChatContent() {
                             />
                             <button
                                 type="submit"
-                                disabled={!input.trim() || !activeChat}
+                                disabled={!input.trim() || !activeChat || !user || isLoading}
                                 className="p-2 bg-primary rounded-lg text-black hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                title={!user ? "אנא התחבר" : !activeChat ? "בחר שיחה" : isLoading ? "טוען..." : "שלח הודעה"}
                             >
-                                <Send size={18} className={input.trim() ? "translate-x-0.5 -translate-y-0.5" : ""} />
+                                <Send size={18} className={input.trim() && !isLoading ? "translate-x-0.5 -translate-y-0.5" : ""} />
                             </button>
                         </form>
                     </div>

@@ -167,29 +167,65 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
     }
 
     const sendMessage = async (content: string, receiverId: string) => {
+        // Validation: Ensure user is authenticated
         if (!currentUserId) {
-            console.error("sendMessage: No currentUserId");
+            console.error("sendMessage: No currentUserId - user not authenticated");
+            toast.error('אנא התחבר כדי לשלוח הודעות');
             return;
         }
 
-        console.log("Sending message...", { sender_id: currentUserId, receiver_id: receiverId, content });
+        // Validation: Ensure content is not empty
+        if (!content.trim()) {
+            console.error("sendMessage: Empty content");
+            toast.error('לא ניתן לשלוח הודעה ריקה');
+            return;
+        }
 
-        const { data, error } = await supabase
-            .from('messages')
-            .insert({
-                sender_id: currentUserId,
-                receiver_id: receiverId,
-                content
-            })
-            .select() // Return data to see if it worked or get more info
+        // Validation: Ensure receiver ID is valid
+        if (!receiverId) {
+            console.error("sendMessage: No receiverId");
+            toast.error('שגיאה: לא נבחר נמען');
+            return;
+        }
 
-        if (error) {
-            console.error('Supabase Insert Error:', JSON.stringify(error, null, 2));
-            toast.error(`שגיאה בשליחת הודעה: ${error.message || 'שגיאה לא ידועה'}`);
-        } else {
+        console.log("Sending message...", {
+            sender_id: currentUserId,
+            receiver_id: receiverId,
+            content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
+        });
+
+        try {
+            const { data, error } = await supabase
+                .from('messages')
+                .insert({
+                    sender_id: currentUserId,
+                    receiver_id: receiverId,
+                    content
+                })
+                .select()
+
+            if (error) {
+                console.error('Supabase Insert Error:', {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                });
+
+                // Provide specific error messages based on error type
+                if (error.code === 'PGRST301' || error.message.includes('JWT')) {
+                    toast.error('פג תוקף ההתחברות. אנא התחבר מחדש');
+                } else if (error.code === '42501' || error.message.includes('permission')) {
+                    toast.error('אין לך הרשאה לשלוח הודעה זו');
+                } else {
+                    toast.error(`שגיאה בשליחת הודעה: ${error.message}`);
+                }
+                return;
+            }
+
             console.log("Message sent successfully:", data);
 
-            // Trigger Push Notification
+            // Trigger Push Notification (non-blocking)
             if (receiverId !== currentUserId) {
                 fetch('/api/send-push', {
                     method: 'POST',
@@ -200,11 +236,12 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                         message: content,
                         url: `/chat?target=${currentUserId}`
                     })
-                }).catch(err => console.error("Failed to trigger push", err));
+                }).catch(err => console.error("Failed to trigger push notification:", err));
             }
+        } catch (err) {
+            console.error('Unexpected error in sendMessage:', err);
+            toast.error('שגיאה בלתי צפויה בשליחת הודעה');
         }
-
-        // Optimistic update is handled by the subscription usually
     }
 
     return {
