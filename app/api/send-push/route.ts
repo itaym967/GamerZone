@@ -2,21 +2,26 @@ import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createClient } from '@/utils/supabase/server';
 
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-
-if (vapidPublicKey && vapidPrivateKey) {
-    webpush.setVapidDetails(
-        'mailto:support@gamerzone.app',
-        vapidPublicKey,
-        vapidPrivateKey
-    );
-}
+// Remove top-level setVapidDetails configuration to prevent build-time errors
 
 export async function POST(request: Request) {
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
     if (!vapidPublicKey || !vapidPrivateKey) {
         console.error("VAPID keys not configured");
         return NextResponse.json({ error: 'VAPID keys missing' }, { status: 500 });
+    }
+
+    try {
+        webpush.setVapidDetails(
+            'mailto:support@gamerzone.app',
+            vapidPublicKey,
+            vapidPrivateKey
+        );
+    } catch (err) {
+        console.error("Failed to set VAPID details:", err);
+        return NextResponse.json({ error: 'Invalid VAPID configuration' }, { status: 500 });
     }
 
     const { userId, title, message, url } = await request.json();
