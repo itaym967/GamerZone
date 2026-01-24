@@ -21,7 +21,12 @@ export default function OnboardingPage() {
     const [newPlatform, setNewPlatform] = useState("Valorant");
     const [newTag, setNewTag] = useState("");
 
-    const PLATFORMS = ["Valorant", "Fortnite", "Minecraft", "CS2", "Apex Legends", "League of Legends", "FIFA 24", "Discord", "Steam"];
+    const PLATFORMS = [
+        "Valorant", "Fortnite", "Minecraft", "CS2", "Apex Legends",
+        "League of Legends", "FIFA 24", "Call of Duty", "Roblox",
+        "GTA V", "Overwatch 2", "Rocket League", "Rainbow Six Siege",
+        "Discord", "Steam"
+    ];
 
     useEffect(() => {
         const checkUser = async () => {

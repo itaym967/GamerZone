@@ -1,8 +1,8 @@
 "use client";
 
-import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert } from "lucide-react";
+import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
@@ -17,6 +17,7 @@ const navItems = [
 
 export default function Navigation() {
     const pathname = usePathname();
+    const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
@@ -37,6 +38,13 @@ export default function Navigation() {
         };
         checkAdmin();
     }, []);
+
+    const handleSignOut = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push('/login');
+        router.refresh();
+    };
 
     // Filter nav items based on role
     const filteredNavItems = navItems.filter(item => {
@@ -73,10 +81,17 @@ export default function Navigation() {
                     })}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-white/5">
+                <div className="mt-auto pt-6 border-t border-white/5 space-y-2">
                     <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
                         <Settings size={20} />
                         <span className="font-medium">הגדרות</span>
+                    </button>
+                    <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-medium"
+                    >
+                        <LogOut size={20} />
+                        <span>התנתק</span>
                     </button>
                 </div>
             </aside>

@@ -32,35 +32,38 @@ export default function ExplorePage() {
     useEffect(() => {
         async function fetchGamers() {
             try {
+                const { data: { user } } = await supabase.auth.getUser();
                 const { data, error } = await supabase.rpc('get_dashboard_data');
 
                 if (error) throw error;
 
                 if (data) {
                     const profiles = data as any[];
-                    const formattedGamers: Gamer[] = profiles.map((profile: any) => {
-                        const tags = profile.gamertags || [];
-                        const hiddenTagsMap: { [key: string]: string } = {};
-                        const gamesList: string[] = [];
+                    const formattedGamers: Gamer[] = profiles
+                        .filter((p: any) => p.id !== user?.id) // Filter out self
+                        .map((profile: any) => {
+                            const tags = profile.gamertags || [];
+                            const hiddenTagsMap: { [key: string]: string } = {};
+                            const gamesList: string[] = [];
 
-                        tags.forEach((t: any) => {
-                            gamesList.push(t.platform);
-                            if (t.is_hidden) {
-                                hiddenTagsMap[t.platform] = "********";
-                            }
+                            tags.forEach((t: any) => {
+                                gamesList.push(t.platform);
+                                if (t.is_hidden) {
+                                    hiddenTagsMap[t.platform] = "********";
+                                }
+                            });
+
+                            return {
+                                id: profile.id,
+                                username: profile.username || "Unknown",
+                                tag: "@" + (profile.username || "user").toLowerCase(),
+                                games: gamesList,
+                                bio: profile.bio || "",
+                                online: profile.is_online || false,
+                                hiddenTags: hiddenTagsMap,
+                                avatarSeed: profile.avatar_url
+                            };
                         });
-
-                        return {
-                            id: profile.id,
-                            username: profile.username || "Unknown",
-                            tag: "@" + (profile.username || "user").toLowerCase(),
-                            games: gamesList,
-                            bio: profile.bio || "",
-                            online: profile.is_online || false,
-                            hiddenTags: hiddenTagsMap,
-                            avatarSeed: profile.avatar_url
-                        };
-                    });
 
                     setGamers(formattedGamers);
                 }
@@ -130,7 +133,7 @@ export default function ExplorePage() {
                         <span className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></span>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
                         {filteredGamers.map((gamer) => (
                             <GamerCard
                                 key={gamer.id}
