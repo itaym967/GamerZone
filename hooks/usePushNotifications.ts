@@ -61,7 +61,7 @@ export function usePushNotifications() {
 
             const sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: convertedKey,
+                applicationServerKey: convertedKey as BufferSource,
             })
             setSubscription(sub)
             await saveSubscription(sub)
