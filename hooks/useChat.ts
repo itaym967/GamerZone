@@ -20,7 +20,8 @@ export interface Contact {
     avatar_url: string
     last_msg?: string
     last_msg_time?: string
-    online?: boolean // Mocked for now, or via Presence later
+    online?: boolean
+    unread_count?: number
 }
 
 export function useChat(currentUserId: string | undefined, onMessageReceived?: (msg: Message) => void) {
@@ -94,6 +95,20 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                 .select('id, username, avatar_url, is_online')
                 .in('id', contactIds)
 
+            // Fetch unread counts for each contact
+            const { data: unreadMessages } = await supabase
+                .from('messages')
+                .select('sender_id')
+                .eq('receiver_id', currentUserId)
+                .eq('is_read', false)
+                .in('sender_id', contactIds)
+
+            // Count unread messages per sender
+            const unreadCounts = new Map<string, number>()
+            unreadMessages?.forEach(msg => {
+                unreadCounts.set(msg.sender_id, (unreadCounts.get(msg.sender_id) || 0) + 1)
+            })
+
             if (profiles) {
                 const mappedContacts: Contact[] = profiles.map(p => ({
                     id: p.id,
@@ -101,7 +116,8 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                     avatar_url: p.avatar_url,
                     last_msg: contactMap.get(p.id)?.lastMsg,
                     last_msg_time: new Date(contactMap.get(p.id)!.time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-                    online: p.is_online
+                    online: p.is_online,
+                    unread_count: unreadCounts.get(p.id) || 0
                 }))
                 setContacts(mappedContacts)
             }
@@ -473,6 +489,30 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         }
     }, [currentUserId, supabase]);
 
+    const markAsRead = useCallback(async (messageIds: string[]) => {
+        if (!currentUserId || messageIds.length === 0) return;
+
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .update({ is_read: true })
+                .in('id', messageIds)
+                .eq('receiver_id', currentUserId)
+                .eq('is_read', false);
+
+            if (error) {
+                console.error('Error marking messages as read:', error);
+            } else {
+                // Update local state
+                setMessages(prev => prev.map(m =>
+                    messageIds.includes(m.id) ? { ...m, is_read: true } : m
+                ));
+            }
+        } catch (err) {
+            console.error('Unexpected error marking messages as read:', err);
+        }
+    }, [currentUserId, supabase]);
+
     return {
         messages,
         contacts,
@@ -481,6 +521,7 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         isLoading,
         refreshConnection,
         deleteMessage,
-        clearConversation
+        clearConversation,
+        markAsRead
     }
 }

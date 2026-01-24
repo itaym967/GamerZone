@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
-import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2 } from "lucide-react";
+import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2, Check, CheckCheck } from "lucide-react";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -62,7 +62,7 @@ function ChatContent() {
     }, [targetId]);
 
     // Hook
-    const { messages, contacts, sendMessage, fetchMessages, isLoading, deleteMessage, clearConversation } = useChat(user?.id, (msg) => {
+    const { messages, contacts, sendMessage, fetchMessages, isLoading, deleteMessage, clearConversation, markAsRead } = useChat(user?.id, (msg) => {
         if (!activeChat || msg.sender_id !== activeChat.id) {
             const sender = contacts.find(c => c.id === msg.sender_id);
             const senderName = sender ? sender.username : "משתמש";
@@ -83,6 +83,20 @@ function ChatContent() {
             fetchMessages(activeChat.id);
         }
     }, [activeChat?.id]);
+
+    // Auto-mark messages as read when viewing
+    useEffect(() => {
+        if (!activeChat || !user || messages.length === 0) return;
+
+        const unreadMessages = messages.filter(
+            m => m.receiver_id === user.id && m.sender_id === activeChat.id && !m.is_read
+        );
+
+        if (unreadMessages.length > 0) {
+            const unreadIds = unreadMessages.map(m => m.id);
+            markAsRead(unreadIds);
+        }
+    }, [messages, activeChat, user, markAsRead]);
 
     // Handle Contact Selection
     const handleSelectContact = (contact: Contact) => {
@@ -195,6 +209,12 @@ function ChatContent() {
                                         />
                                     </div>
                                     {contact.online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0e0e1b] rounded-full"></span>}
+                                    {/* Unread badge */}
+                                    {contact.unread_count && contact.unread_count > 0 && (
+                                        <span className="absolute -top-1 -left-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                                            {contact.unread_count > 99 ? '99+' : contact.unread_count}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex-1 text-right min-w-0">
                                     <div className="flex justify-between items-center mb-0.5">
@@ -274,8 +294,16 @@ function ChatContent() {
                                             : 'bg-[#1a1a2e] text-gray-200 border border-white/5 rounded-tr-sm'
                                             }`}>
                                             {msg.content}
-                                            <span className={`text-[9px] block text-right mt-1 opacity-60 ${msg.sender_id === user?.id ? 'text-black/70' : 'text-gray-500'}`}>
+                                            <span className={`text-[9px] flex items-center justify-end gap-1 mt-1 opacity-60 ${msg.sender_id === user?.id ? 'text-black/70' : 'text-gray-500'}`}>
                                                 {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                                                {/* Read receipts - only for sent messages */}
+                                                {msg.sender_id === user?.id && (
+                                                    msg.is_read ? (
+                                                        <CheckCheck size={14} className="text-blue-400" />
+                                                    ) : (
+                                                        <Check size={14} className="opacity-50" />
+                                                    )
+                                                )}
                                             </span>
                                         </div>
                                         {/* Delete button - appears on hover */}
