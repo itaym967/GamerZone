@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import GamerCard from "./components/GamerCard";
 import { GamerCardSkeleton } from "./components/Skeleton";
+import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import Navigation from "./components/Navigation";
 import Link from "next/link";
 
@@ -90,6 +91,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all">
+      <ServiceWorkerRegistration />
       <Navigation />
 
       <main className="p-6 max-w-7xl mx-auto space-y-8">

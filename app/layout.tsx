@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -10,7 +11,38 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   title: "GamerZone | Swap Gamertags",
-  description: "הפלטפורמה האולטימטיבית לגיימרים בישראל",
+  description: "הפלטפורמה האולטימטיבית לגיימרים בישראל - החלף gamertags, מצא חברים חדשים לסקוואד",
+  applicationName: "GamerZone",
+  authors: [{ name: "GamerZone Team" }],
+  keywords: ["gaming", "gamers", "israel", "gamertag", "swap", "chat", "gaming community"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "GamerZone",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "GamerZone",
+    title: "GamerZone | Swap Gamertags",
+    description: "הפלטפורמה האולטימטיבית לגיימרים בישראל",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GamerZone | Swap Gamertags",
+    description: "הפלטפורמה האולטימטיבית לגיימרים בישראל",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#00ff9d",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -20,10 +52,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body
         className={`${rubik.variable} antialiased font-rubik bg-background text-foreground`}
       >
         {children}
+        <PWAInstallPrompt />
         <Toaster position="top-center" richColors theme="dark" />
       </body>
     </html>
