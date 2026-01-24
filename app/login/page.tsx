@@ -109,7 +109,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-400">
-                        <a href="#" className="hover:text-primary transition-colors">שכחת סיסמה?</a>
+                        <Link href="/forgot-password" className="hover:text-primary transition-colors">שכחת סיסמה?</Link>
                         <div className="flex items-center gap-2">
                             <label htmlFor="remember" className="cursor-pointer">זכור אותי</label>
                             <input type="checkbox" id="remember" className="rounded bg-white/10 border-white/20 text-primary focus:ring-primary" />

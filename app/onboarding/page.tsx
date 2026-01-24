@@ -61,11 +61,12 @@ export default function OnboardingPage() {
             // 1. Update Profile
             const { error: profileError } = await supabase
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: userId,
                     bio: bio,
-                    onboarding_completed: true
-                })
-                .eq('id', userId);
+                    onboarding_completed: true,
+                    updated_at: new Date().toISOString()
+                });
 
             if (profileError) throw profileError;
 
