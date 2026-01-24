@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אופליין - GamerZone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #050510 0%, #0a0a1e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 16px;
+            background: linear-gradient(to left, #00ff9d, white);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p {
+            font-size: 18px;
+            color: #a0a0a0;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            background: #00ff9d;
+            color: black;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-button:hover {
+            background: #00e68a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 157, 0.3);
+        }
+
+        .retry-button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            margin-top: 24px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .cached-pages {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cached-pages h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #00ff9d;
+        }
+
+        .cached-pages ul {
+            list-style: none;
+            text-align: right;
+        }
+
+        .cached-pages li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cached-pages li:last-child {
+            border-bottom: none;
+        }
+
+        .cached-pages a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .cached-pages a:hover {
+            color: #00ff9d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📡</div>
+        <h1>אין חיבור לאינטרנט</h1>
+        <p>נראה שאתה במצב אופליין. חלק מהתכונות עשויות להיות מוגבלות עד שתתחבר מחדש.</p>
+        
+        <button class="retry-button" onclick="location.reload()">
+            נסה שוב
+        </button>
+
+        <div class="status" id="status">
+            בודק חיבור...
+        </div>
+
+        <div class="cached-pages">
+            <h2>דפים זמינים במצב אופליין</h2>
+            <ul>
+                <li><a href="/">🏠 דף הבית</a></li>
+                <li><a href="/chat">💬 צ'אט</a></li>
+                <li><a href="/explore">🔍 חקור</a></li>
+                <li><a href="/profile">👤 פרופיל</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Check connection status
+        function updateStatus() {
+            const status = document.getElementById('status');
+            if (navigator.onLine) {
+                status.textContent = 'מחובר! רענן את הדף כדי להמשיך.';
+                status.style.color = '#00ff9d';
+            } else {
+                status.textContent = 'עדיין לא מחובר...';
+                status.style.color = '#666';
+            }
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+
+        // Initial check
+        updateStatus();
+
+        // Auto-reload when back online
+        window.addEventListener('online', () => {
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
