@@ -188,6 +188,20 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
             toast.error(`שגיאה בשליחת הודעה: ${error.message || 'שגיאה לא ידועה'}`);
         } else {
             console.log("Message sent successfully:", data);
+
+            // Trigger Push Notification
+            if (receiverId !== currentUserId) {
+                fetch('/api/send-push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: receiverId,
+                        title: 'הודעה חדשה',
+                        message: content,
+                        url: `/chat?target=${currentUserId}`
+                    })
+                }).catch(err => console.error("Failed to trigger push", err));
+            }
         }
 
         // Optimistic update is handled by the subscription usually

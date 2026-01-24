@@ -1,11 +1,12 @@
 "use client";
 
-import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert, LogOut } from "lucide-react";
+import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert, LogOut, Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const navItems = [
     { icon: Home, label: "לוח בקרה", href: "/" },
@@ -19,6 +20,7 @@ export default function Navigation() {
     const pathname = usePathname();
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
+    const { subscribeToPush, subscription } = usePushNotifications();
 
     useEffect(() => {
         const checkAdmin = async () => {
@@ -82,6 +84,15 @@ export default function Navigation() {
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-white/5 space-y-2">
+                    {!subscription && (
+                        <button
+                            onClick={() => subscribeToPush()}
+                            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 transition-all font-medium"
+                        >
+                            <Bell size={20} />
+                            <span>הפעל התראות</span>
+                        </button>
+                    )}
                     <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
                         <Settings size={20} />
                         <span className="font-medium">הגדרות</span>
@@ -115,6 +126,17 @@ export default function Navigation() {
                             </Link>
                         );
                     })}
+                    {!subscription && (
+                        <button
+                            onClick={() => subscribeToPush()}
+                            className="flex flex-col items-center gap-1 text-gray-500 hover:text-yellow-400 transition-colors"
+                        >
+                            <div className="p-1.5 rounded-full">
+                                <Bell size={24} />
+                            </div>
+                            <span className="text-[10px] font-medium">התראות</span>
+                        </button>
+                    )}
                 </div>
             </nav>
         </>
