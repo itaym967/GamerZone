@@ -21,12 +21,17 @@ export interface Contact {
     online?: boolean // Mocked for now, or via Presence later
 }
 
-export function useChat(currentUserId: string | undefined) {
+export function useChat(currentUserId: string | undefined, onMessageReceived?: (msg: Message) => void) {
     const [messages, setMessages] = useState<Message[]>([])
     const [contacts, setContacts] = useState<Contact[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const supabase = createClient()
     const channelRef = useRef<RealtimeChannel | null>(null)
+    const onMessageReceivedRef = useRef(onMessageReceived)
+
+    useEffect(() => {
+        onMessageReceivedRef.current = onMessageReceived
+    }, [onMessageReceived])
 
     // 1. Fetch Contacts (unique users from message history)
     useEffect(() => {
@@ -122,10 +127,16 @@ export function useChat(currentUserId: string | undefined) {
                 (payload) => {
                     const newMessage = payload.new as Message
                     if (newMessage.sender_id === currentUserId || newMessage.receiver_id === currentUserId) {
-                        setMessages(prev => [...prev, newMessage])
+                        setMessages(prev => {
+                            // Deduplicate based on ID just in case
+                            if (prev.some(m => m.id === newMessage.id)) return prev
+                            return [...prev, newMessage]
+                        })
 
-                        // TODO: Update contact list last_msg dynamically?
-                        // Ideally yes.
+                        // Trigger callback for notifications if it's an incoming message
+                        if (newMessage.receiver_id === currentUserId && onMessageReceivedRef.current) {
+                            onMessageReceivedRef.current(newMessage)
+                        }
                     }
                 }
             )

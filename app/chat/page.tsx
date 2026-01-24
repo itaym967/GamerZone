@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
-import { Send, MoreVertical, Phone, Video, Search, Plus } from "lucide-react";
+import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight } from "lucide-react";
 import Navigation from "../components/Navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ function ChatContent() {
     const targetId = searchParams.get("target");
 
     const [activeChat, setActiveChat] = useState<Contact | null>(null);
+    const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
     const [user, setUser] = useState<any>(null);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
@@ -52,6 +53,7 @@ function ChatContent() {
                         last_msg_time: "",
                         online: profile.is_online
                     });
+                    setMobileView('chat');
                 }
             }
         }
@@ -59,7 +61,13 @@ function ChatContent() {
     }, [targetId]);
 
     // Hook
-    const { messages, contacts, sendMessage, fetchMessages, isLoading } = useChat(user?.id);
+    const { messages, contacts, sendMessage, fetchMessages, isLoading } = useChat(user?.id, (msg) => {
+        if (!activeChat || msg.sender_id !== activeChat.id) {
+            const sender = contacts.find(c => c.id === msg.sender_id);
+            const senderName = sender ? sender.username : "משתמש";
+            toast.info(`הודעה חדשה מ-${senderName}`);
+        }
+    });
 
     // Initial Scroll
     useEffect(() => {
@@ -78,6 +86,7 @@ function ChatContent() {
     // Handle Contact Selection
     const handleSelectContact = (contact: Contact) => {
         setActiveChat(contact);
+        setMobileView('chat');
         // fetchMessages is called by the effect above
     };
 
@@ -115,7 +124,7 @@ function ChatContent() {
             <main className="flex-1 flex overflow-hidden h-screen max-w-7xl mx-auto w-full relative">
 
                 {/* Contacts Sidebar */}
-                <aside className="w-80 border-l border-white/5 bg-[#0e0e1b] hidden lg:flex flex-col">
+                <aside className={`${mobileView === 'list' ? 'flex' : 'hidden'} lg:flex w-full lg:w-80 flex-col border-l border-white/5 bg-[#0e0e1b]`}>
                     <div className="p-4 border-b border-white/5">
                         <div className="relative">
                             <input
@@ -153,11 +162,17 @@ function ChatContent() {
                 </aside>
 
                 {/* Chat Area */}
-                <section className="flex-1 flex flex-col bg-[#050510] relative">
+                <section className={`${mobileView === 'chat' ? 'flex' : 'hidden'} lg:flex flex-1 flex-col bg-[#050510] relative`}>
                     {/* Header */}
                     {activeChat ? (
                         <header className="h-16 border-b border-white/5 flex items-center justify-between px-4 bg-[#0e0e1b]/50 backdrop-blur-md">
                             <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setMobileView('list')}
+                                    className="lg:hidden p-2 -mr-2 text-gray-400 hover:text-white"
+                                >
+                                    <ArrowRight size={20} />
+                                </button>
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
                                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeChat.avatar_url}`} className="rounded-full bg-black" />
                                 </div>

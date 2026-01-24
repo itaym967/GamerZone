@@ -152,7 +152,7 @@ export default function Dashboard() {
         </section>
 
         {/* Call to Action Banner - Only for guests */}
-        {!isLoggedIn && (
+        {!isLoggedIn && !loading && (
           <section className="relative overflow-hidden rounded-2xl p-8 border border-white/10 mt-8 group">
             <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl group-hover:opacity-80 transition-opacity pointer-events-none" />
             <div className="relative z-20 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
