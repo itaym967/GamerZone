@@ -10,6 +10,8 @@ export interface Message {
     content: string
     created_at: string
     is_read: boolean
+    deleted_by?: string[]
+    deleted_at?: string
 }
 
 export interface Contact {
@@ -285,7 +287,11 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         if (error) {
             toast.error('שגיאה בטעינת הודעות')
         } else {
-            setMessages(data || [])
+            // Filter out messages deleted by current user
+            const filteredMessages = (data || []).filter(msg =>
+                !msg.deleted_by || !msg.deleted_by.includes(currentUserId!)
+            );
+            setMessages(filteredMessages)
         }
         setIsLoading(false)
     }
@@ -409,12 +415,72 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         }
     }, [currentUserId, setupRealtimeSubscription]);
 
+    const deleteMessage = useCallback(async (messageId: string) => {
+        if (!currentUserId) {
+            toast.error('אנא התחבר כדי למחוק הודעות');
+            return;
+        }
+
+        // Optimistic update - remove from UI immediately
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+
+        try {
+            const { error } = await supabase.rpc('soft_delete_message', {
+                message_id: messageId,
+                user_id: currentUserId
+            });
+
+            if (error) {
+                console.error('Error deleting message:', error);
+                toast.error('שגיאה במחיקת הודעה');
+                // Revert optimistic update by refetching
+                // Note: In production, you might want to store the deleted message and restore it
+            } else {
+                toast.success('ההודעה נמחקה');
+            }
+        } catch (err) {
+            console.error('Unexpected error deleting message:', err);
+            toast.error('שגיאה בלתי צפויה במחיקת הודעה');
+        }
+    }, [currentUserId, supabase]);
+
+    const clearConversation = useCallback(async (otherUserId: string) => {
+        if (!currentUserId) {
+            toast.error('אנא התחבר כדי למחוק שיחות');
+            return;
+        }
+
+        // Optimistic update - clear all messages with this user
+        setMessages(prev => prev.filter(m =>
+            !(m.sender_id === otherUserId || m.receiver_id === otherUserId)
+        ));
+
+        try {
+            const { error } = await supabase.rpc('clear_conversation', {
+                user_id_param: currentUserId,
+                other_user_id: otherUserId
+            });
+
+            if (error) {
+                console.error('Error clearing conversation:', error);
+                toast.error('שגיאה במחיקת השיחה');
+            } else {
+                toast.success('השיחה נמחקה');
+            }
+        } catch (err) {
+            console.error('Unexpected error clearing conversation:', err);
+            toast.error('שגיאה בלתי צפויה במחיקת השיחה');
+        }
+    }, [currentUserId, supabase]);
+
     return {
         messages,
         contacts,
         sendMessage,
         fetchMessages,
         isLoading,
-        refreshConnection
+        refreshConnection,
+        deleteMessage,
+        clearConversation
     }
 }

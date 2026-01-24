@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
-import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight } from "lucide-react";
+import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2 } from "lucide-react";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -62,7 +62,7 @@ function ChatContent() {
     }, [targetId]);
 
     // Hook
-    const { messages, contacts, sendMessage, fetchMessages, isLoading } = useChat(user?.id, (msg) => {
+    const { messages, contacts, sendMessage, fetchMessages, isLoading, deleteMessage, clearConversation } = useChat(user?.id, (msg) => {
         if (!activeChat || msg.sender_id !== activeChat.id) {
             const sender = contacts.find(c => c.id === msg.sender_id);
             const senderName = sender ? sender.username : "משתמש";
@@ -146,6 +146,19 @@ function ChatContent() {
         await sendMessage(messageToSend, activeChat.id);
     };
 
+    const handleClearConversation = async () => {
+        if (!activeChat) return;
+
+        const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק את כל השיחה? פעולה זו אינה ניתנת לביטול.');
+        if (confirmed) {
+            await clearConversation(activeChat.id);
+        }
+    };
+
+    const handleDeleteMessage = async (messageId: string) => {
+        await deleteMessage(messageId);
+    };
+
     return (
         <div className="min-h-screen pb-24 md:pb-0 md:pr-64 flex bg-[#050510]">
             <Navigation />
@@ -226,6 +239,13 @@ function ChatContent() {
                             </div>
 
                             <div className="flex items-center gap-1 opacity-70">
+                                <button
+                                    onClick={handleClearConversation}
+                                    className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 transition-colors"
+                                    title="מחק שיחה"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                                 <button className="p-2 hover:bg-white/10 rounded-lg text-white"><Phone size={18} /></button>
                                 <button className="p-2 hover:bg-white/10 rounded-lg text-white"><Video size={18} /></button>
                                 <button className="p-2 hover:bg-white/10 rounded-lg text-white"><MoreVertical size={18} /></button>
@@ -245,16 +265,27 @@ function ChatContent() {
                                     key={msg.id}
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                                    className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'} group`}
                                 >
-                                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed relative group ${msg.sender_id === user?.id
-                                        ? 'bg-primary text-black rounded-tl-sm'
-                                        : 'bg-[#1a1a2e] text-gray-200 border border-white/5 rounded-tr-sm'
-                                        }`}>
-                                        {msg.content}
-                                        <span className={`text-[9px] block text-right mt-1 opacity-60 ${msg.sender_id === user?.id ? 'text-black/70' : 'text-gray-500'}`}>
-                                            {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+                                    <div className="relative">
+                                        <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.sender_id === user?.id
+                                            ? 'bg-primary text-black rounded-tl-sm'
+                                            : 'bg-[#1a1a2e] text-gray-200 border border-white/5 rounded-tr-sm'
+                                            }`}>
+                                            {msg.content}
+                                            <span className={`text-[9px] block text-right mt-1 opacity-60 ${msg.sender_id === user?.id ? 'text-black/70' : 'text-gray-500'}`}>
+                                                {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        {/* Delete button - appears on hover */}
+                                        <button
+                                            onClick={() => handleDeleteMessage(msg.id)}
+                                            className={`absolute -top-2 ${msg.sender_id === user?.id ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-red-500/90 hover:bg-red-600 rounded-full text-white shadow-lg`}
+                                            title="מחק הודעה"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
                                     </div>
                                 </motion.div>
                             ))}
