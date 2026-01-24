@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import GamerCard from "./components/GamerCard";
 import Navigation from "./components/Navigation";
+import Link from "next/link";
+
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 
@@ -137,15 +139,18 @@ export default function Dashboard() {
 
         {/* Call to Action Banner */}
         <section className="relative overflow-hidden rounded-2xl p-8 border border-white/10 mt-8 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl group-hover:opacity-80 transition-opacity" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
+          <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl group-hover:opacity-80 transition-opacity pointer-events-none" />
+          <div className="relative z-20 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
             <div>
               <h3 className="text-2xl font-bold text-white mb-2">רוצה שכולם יראו אותך?</h3>
               <p className="text-gray-300">צור את כרטיס השחקן שלך והתחל לקבל בקשות החלפה!</p>
             </div>
-            <button className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10 whitespace-nowrap">
-              צור כרטיס שחקן
-            </button>
+            <Link
+              href="/signup"
+              className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10 whitespace-nowrap block cursor-pointer relative z-[100]"
+            >
+              צור כרטיס שחקן עכשיו
+            </Link>
           </div>
         </section>
       </main>
