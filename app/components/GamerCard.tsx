@@ -62,7 +62,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.02, y: -5 }}
-            className={`glass-panel p-5 rounded-2xl relative overflow-hidden group border transition-all duration-300 ${status === 'swapped' ? 'border-primary shadow-[0_0_20px_rgba(0,255,157,0.1)]' : 'border-transparent hover:border-primary'}`}
+            className={`glass-panel p-5 rounded-2xl relative overflow-hidden group border transition-all duration-300 flex flex-col h-full ${status === 'swapped' ? 'border-primary shadow-[0_0_20px_rgba(0,255,157,0.1)]' : 'border-transparent hover:border-primary'}`}
         >
             {/* Decorative Glow */}
             <div className={`absolute top-0 right-0 w-24 h-24 -translate-y-1/2 translate-x-1/2 blur-2xl rounded-full transition-all duration-700 ${status === 'swapped' ? 'bg-primary/40 w-full h-full opacity-20' : 'bg-primary/20 group-hover:bg-primary/40'}`} />
@@ -104,7 +104,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                 </div>
             </div>
 
-            <p className="mt-4 text-sm text-gray-300 line-clamp-2 min-h-[40px]">
+            <p className="mt-4 text-sm text-gray-300 line-clamp-2 min-h-[40px] flex-grow">
                 {bio}
             </p>
 
@@ -149,7 +149,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                 ))}
             </div>
 
-            <div className="mt-5 flex gap-2 relative">
+            <div className="mt-auto pt-5 flex gap-2 relative">
                 <AnimatePresence>
                     {showXpGain && (
                         <motion.div

@@ -23,11 +23,14 @@ interface Gamer {
 export default function Dashboard() {
   const [gamers, setGamers] = useState<Gamer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
     async function fetchGamers() {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+
         // Fetch securely via RPC to handle hidden tags mapping
         const { data, error } = await supabase.rpc('get_dashboard_data');
 
@@ -35,30 +38,39 @@ export default function Dashboard() {
 
         if (data) {
           const profiles = data as any[];
-          const formattedGamers: Gamer[] = profiles.map((profile: any) => {
-            const tags = profile.gamertags || [];
 
-            const hiddenTagsMap: { [key: string]: string } = {};
-            const gamesList: string[] = [];
+          // Filter out current user
+          const currentUserProfile = profiles.find(p => p.id === user?.id);
+          if (currentUserProfile) {
+            setCurrentUsername(currentUserProfile.username);
+          }
 
-            tags.forEach((t: any) => {
-              gamesList.push(t.platform);
-              if (t.is_hidden) {
-                hiddenTagsMap[t.platform] = "********";
-              }
+          const formattedGamers: Gamer[] = profiles
+            .filter((profile: any) => profile.id !== user?.id) // Filter out self
+            .map((profile: any) => {
+              const tags = profile.gamertags || [];
+
+              const hiddenTagsMap: { [key: string]: string } = {};
+              const gamesList: string[] = [];
+
+              tags.forEach((t: any) => {
+                gamesList.push(t.platform);
+                if (t.is_hidden) {
+                  hiddenTagsMap[t.platform] = "********";
+                }
+              });
+
+              return {
+                id: profile.id,
+                username: profile.username || "Unknown",
+                tag: "@" + (profile.username || "user").toLowerCase(),
+                games: gamesList,
+                bio: profile.bio || "",
+                online: profile.is_online || false,
+                hiddenTags: hiddenTagsMap,
+                avatarSeed: profile.avatar_url
+              };
             });
-
-            return {
-              id: profile.id,
-              username: profile.username || "Unknown",
-              tag: "@" + (profile.username || "user").toLowerCase(),
-              games: gamesList,
-              bio: profile.bio || "",
-              online: profile.is_online || false,
-              hiddenTags: hiddenTagsMap,
-              avatarSeed: profile.avatar_url
-            };
-          });
 
           setGamers(formattedGamers);
         }
@@ -82,7 +94,7 @@ export default function Dashboard() {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-primary to-white mb-2">
-              שלום, אורח 👋
+              שלום, {currentUsername || "אורח"} 👋
             </h1>
             <p className="text-gray-400">מוכן למצוא את הסקוואד הבא שלך?</p>
           </div>
@@ -123,7 +135,7 @@ export default function Dashboard() {
               <span className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
               {gamers.length > 0 ? (
                 gamers.map((gamer) => (
                   <GamerCard key={gamer.id} {...gamer} />

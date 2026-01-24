@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Navigation from "../components/Navigation";
-import { Shield, ShieldAlert, Trash2, Plus, AlertTriangle, Eraser, User, Ban } from "lucide-react";
+import { ShieldAlert, Trash2, Plus, Shield, Ban, Lock, Unlock, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,8 @@ interface Profile {
     full_name: string;
     role: string;
     is_online: boolean;
+    is_banned: boolean;
+    ban_reason?: string;
 }
 
 export default function AdminPage() {
@@ -37,6 +39,7 @@ export default function AdminPage() {
     const [logs, setLogs] = useState<AdminLog[]>([]);
     const [users, setUsers] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<string | null>(null);
 
     // Form Inputs
     const [newWord, setNewWord] = useState("");
@@ -52,6 +55,7 @@ export default function AdminPage() {
             router.push("/");
             return;
         }
+        setCurrentUser(user.id);
 
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
         if (profile?.role !== 'admin') {
@@ -69,10 +73,6 @@ export default function AdminPage() {
                 setBlockedWords(data || []);
             } else if (activeTab === 'logs') {
                 const { data, error } = await supabase.from('admin_logs').select('*').order('created_at', { ascending: false }).limit(50);
-                if (error) {
-                    // Ignore RLS error if empty (or handle gracefully)
-                    console.error(error);
-                }
                 setLogs(data || []);
             } else if (activeTab === 'users') {
                 const { data, error } = await supabase.from('profiles').select('*').order('username', { ascending: true }).limit(50);
@@ -103,9 +103,8 @@ export default function AdminPage() {
 
             toast.success(`המילה "${word}" נוספה לרשימה`);
             setNewWord("");
-            fetchData(); // Refresh
+            fetchData();
 
-            // Log action
             await supabase.from('admin_logs').insert({ action: 'ADD_WORD', details: { word } });
 
         } catch (error: any) {
@@ -120,14 +119,87 @@ export default function AdminPage() {
             if (error) throw error;
 
             toast.success("המילה הוסרה בהצלחה");
-            fetchData(); // Refresh
+            fetchData();
 
-            // Log action
             await supabase.from('admin_logs').insert({ action: 'REMOVE_WORD', details: { word } });
 
         } catch (error: any) {
             toast.error("שגיאה במחיקת מילה");
             console.error(error);
+        }
+    };
+
+    const handleFreeze = async (user: Profile) => {
+        const isBanning = !user.is_banned;
+        const reason = isBanning ? prompt("הכנס סיבת הקפאה (אופציונלי):") : null;
+
+        if (isBanning && reason === null) return; // Cancelled
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ is_banned: isBanning, ban_reason: reason })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            toast.success(isBanning ? `המשתמש ${user.username} הוקפא` : `המשתמש ${user.username} שוחרר`);
+
+            // Notify User
+            if (isBanning) {
+                await supabase.from('notifications').insert({
+                    user_id: user.id,
+                    title: 'חשבונך הוקפא',
+                    message: reason ? `החשבון הוקפא עקב: ${reason}` : 'חשבונך הוקפא על ידי מנהל המערכת.',
+                    type: 'error'
+                });
+            } else {
+                await supabase.from('notifications').insert({
+                    user_id: user.id,
+                    title: 'חשבונך שוחרר',
+                    message: 'ההקפאה הוסרה מחשבונך. ברוך שובך!',
+                    type: 'success'
+                });
+            }
+
+            // Log Action
+            await supabase.from('admin_logs').insert({
+                action: isBanning ? 'FREEZE_USER' : 'UNFREEZE_USER',
+                details: { target_user: user.username, reason },
+                admin_id: currentUser
+            });
+
+            fetchData();
+
+        } catch (error: any) {
+            toast.error("שגיאה בביצוע הפעולה");
+            console.error(error);
+        }
+    };
+
+    const handleDelete = async (user: Profile) => {
+        if (!confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${user.username}? פעולה זו אינה הפיכה.`)) return;
+
+        try {
+            // Using RPC for admin deletion logic
+            const { error } = await supabase.rpc('delete_user_as_admin', { target_user_id: user.id });
+
+            if (error) throw error;
+
+            toast.success(`המשתמש ${user.username} נמחק בהצלחה`);
+
+            // Log Action
+            await supabase.from('admin_logs').insert({
+                action: 'DELETE_USER',
+                details: { target_username: user.username, target_id: user.id },
+                admin_id: currentUser
+            });
+
+            fetchData();
+
+        } catch (error: any) {
+            toast.error("שגיאה במחיקת משתמש");
+            console.error("Delete Error:", error);
         }
     };
 
@@ -244,12 +316,16 @@ export default function AdminPage() {
                                             <th className="p-4 font-medium">שם מלא</th>
                                             <th className="p-4 font-medium">תפקיד</th>
                                             <th className="p-4 font-medium">סטטוס</th>
+                                            <th className="p-4 font-medium">פעולות</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5 text-gray-300">
                                         {users.map((user) => (
-                                            <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                                                <td className="p-4 font-bold text-white">{user.username}</td>
+                                            <tr key={user.id} className={`hover:bg-white/5 transition-colors ${user.is_banned ? 'bg-red-500/5' : ''}`}>
+                                                <td className="p-4 font-bold text-white">
+                                                    {user.username}
+                                                    {user.is_banned && <span className="mr-2 text-xs text-red-500 bg-red-950 px-2 py-0.5 rounded-full">מוקפא</span>}
+                                                </td>
                                                 <td className="p-4">{user.full_name}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
@@ -257,8 +333,31 @@ export default function AdminPage() {
                                                     </span>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className={`w-2 h-2 rounded-full inline-block ml-2 ${user.is_online ? 'bg-green-500' : 'bg-gray-500'}`}></span>
-                                                    {user.is_online ? 'מחובר' : 'מנותק'}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`w-2 h-2 rounded-full inline-block ${user.is_online ? 'bg-green-500' : 'bg-gray-500'}`}></span>
+                                                        {user.is_online ? 'מחובר' : 'מנותק'}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 flex gap-2">
+                                                    {user.role !== 'admin' && ( // Cannot freeze admins
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleFreeze(user)}
+                                                                className={`p-2 rounded-lg transition-colors ${user.is_banned ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
+                                                                title={user.is_banned ? "שחרר הקפאה" : "הקפא משתמש"}
+                                                            >
+                                                                {user.is_banned ? <Unlock size={18} /> : <Lock size={18} />}
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => handleDelete(user)}
+                                                                className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                                                title="מחק משתמש"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

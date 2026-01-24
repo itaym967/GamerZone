@@ -156,23 +156,30 @@ export function useChat(currentUserId: string | undefined) {
     }
 
     const sendMessage = async (content: string, receiverId: string) => {
-        if (!currentUserId) return
+        if (!currentUserId) {
+            console.error("sendMessage: No currentUserId");
+            return;
+        }
 
-        const { error } = await supabase
+        console.log("Sending message...", { sender_id: currentUserId, receiver_id: receiverId, content });
+
+        const { data, error } = await supabase
             .from('messages')
             .insert({
                 sender_id: currentUserId,
                 receiver_id: receiverId,
                 content
             })
+            .select() // Return data to see if it worked or get more info
 
         if (error) {
-            toast.error('שגיאה בשליחת הודעה')
-            console.error(error)
+            console.error('Supabase Insert Error:', JSON.stringify(error, null, 2));
+            toast.error(`שגיאה בשליחת הודעה: ${error.message || 'שגיאה לא ידועה'}`);
+        } else {
+            console.log("Message sent successfully:", data);
         }
-        // Optimistic update is handled by the subscription usually, 
-        // but for instant feedback we might want to manually add.
-        // Let's rely on subscription for correctness for now.
+
+        // Optimistic update is handled by the subscription usually
     }
 
     return {
