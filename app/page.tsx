@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import GamerCard from "./components/GamerCard";
+import { GamerCardSkeleton } from "./components/Skeleton";
 import Navigation from "./components/Navigation";
 import Link from "next/link";
 
@@ -133,8 +134,10 @@ export default function Dashboard() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20">
-              <span className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+              {[...Array(8)].map((_, i) => (
+                <GamerCardSkeleton key={i} />
+              ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">

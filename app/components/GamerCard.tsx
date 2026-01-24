@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
+import OptimizedAvatar from "./OptimizedAvatar";
 
 interface GamerCardProps {
     username: string;
@@ -72,9 +73,10 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                     <div className="relative">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary p-[2px]">
                             <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                                <img
-                                    src={currentSeed.startsWith('/avatars') ? currentSeed : `https://api.dicebear.com/7.x/bottts/svg?seed=${currentSeed}&backgroundColor=transparent`}
-                                    alt="avatar"
+                                <OptimizedAvatar
+                                    seed={currentSeed}
+                                    size={48}
+                                    style={currentSeed.startsWith('/avatars') ? 'avataaars' : 'bottts'}
                                     className="w-full h-full object-cover"
                                 />
                             </div>

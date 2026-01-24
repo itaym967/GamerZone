@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight } from "lucide-react";
 import Navigation from "../components/Navigation";
+import OptimizedAvatar from "../components/OptimizedAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useChat, Contact } from "@/hooks/useChat";
@@ -173,7 +174,12 @@ function ChatContent() {
                             >
                                 <div className="relative">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
-                                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.avatar_url}`} className="rounded-full bg-black" />
+                                        <OptimizedAvatar
+                                            seed={contact.avatar_url}
+                                            size={40}
+                                            style="avataaars"
+                                            className="rounded-full bg-black"
+                                        />
                                     </div>
                                     {contact.online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0e0e1b] rounded-full"></span>}
                                 </div>
@@ -202,7 +208,12 @@ function ChatContent() {
                                     <ArrowRight size={20} />
                                 </button>
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
-                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeChat.avatar_url}`} className="rounded-full bg-black" />
+                                    <OptimizedAvatar
+                                        seed={activeChat.avatar_url}
+                                        size={40}
+                                        style="avataaars"
+                                        className="rounded-full bg-black"
+                                    />
                                 </div>
                                 <div className="text-right">
                                     <h3 className="font-bold text-white text-sm">{activeChat.username}</h3>
