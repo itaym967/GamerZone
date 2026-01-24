@@ -28,21 +28,40 @@ export function usePushNotifications() {
     async function subscribeToPush() {
         try {
             const registration = await navigator.serviceWorker.ready
-            // Fallback to hardcoded key if env var fails in Vercel (Key is public safe)
-            let vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BMh2smgb3nI3qOBD7XJp6gl3jqpDcV9WC5qx3x0NZH6mphcEzVq7v_cGyFTAvtB37AGYTywnTnyMywB609EsImg'
 
-            // Sanitize: remove whitespace, newlines, and quotes
-            vapidKey = vapidKey.trim().replace(/['"]/g, '').replace(/\s/g, '');
 
-            if (!vapidKey) {
-                console.error("Missing VAPID public key")
-                toast.error("שגיאת קונפיגורציה: מפתח VAPID חסר")
-                return
+            // 1. Get possible keys
+            const envVarKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            const hardcodedKey = 'BMh2smgb3nI3qOBD7XJp6gl3jqpDcV9WC5qx3x0NZH6mphcEzVq7v_cGyFTAvtB37AGYTywnTnyMywB609EsImg';
+
+            let convertedKey: Uint8Array | null = null;
+
+            // 2. Try Env Var First
+            if (envVarKey) {
+                try {
+                    const cleanKey = envVarKey.trim().replace(/['"\s\u200b]/g, '');
+                    convertedKey = urlBase64ToUint8Array(cleanKey);
+                    console.log("Using Environment VAPID Key");
+                } catch (e) {
+                    console.warn("Environment VAPID Key failed decoding. Falling back to hardcoded.", e);
+                }
+            }
+
+            // 3. Fallback if Env Var failed or missing
+            if (!convertedKey) {
+                try {
+                    convertedKey = urlBase64ToUint8Array(hardcodedKey);
+                    console.log("Using Hardcoded VAPID Key");
+                } catch (e) {
+                    console.error("Hardcoded VAPID Key failed decoding!", e);
+                    toast.error("שגיאה קריטית: מפתח התראות פגום");
+                    return;
+                }
             }
 
             const sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidKey),
+                applicationServerKey: convertedKey,
             })
             setSubscription(sub)
             await saveSubscription(sub)
