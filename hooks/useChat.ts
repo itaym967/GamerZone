@@ -110,9 +110,13 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
 
     // 2. Subscribe to Realtime Messages with Auto-Reconnect
     const setupRealtimeSubscription = useCallback(() => {
-        if (!currentUserId || isSubscribedRef.current) return
+        if (!currentUserId || isSubscribedRef.current) {
+            console.log('⚠️ Skipping subscription setup:', { currentUserId, isSubscribed: isSubscribedRef.current });
+            return;
+        }
 
-        console.log('Setting up realtime subscription for user:', currentUserId);
+        console.log('🔄 Setting up realtime subscription for user:', currentUserId);
+        console.log('📡 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
 
         const channel = supabase
             .channel(`chat_room_${currentUserId}`, {
@@ -129,7 +133,11 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                     table: 'messages'
                 },
                 (payload) => {
-                    console.log('Realtime message received:', payload);
+                    console.log('🎉 REALTIME EVENT RECEIVED:', {
+                        timestamp: new Date().toISOString(),
+                        payload,
+                        currentUserId
+                    });
                     const newMessage = payload.new as Message
 
                     // Update last message time for heartbeat monitoring
@@ -137,13 +145,14 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
 
                     // Only add messages relevant to current user
                     if (newMessage.sender_id === currentUserId || newMessage.receiver_id === currentUserId) {
+                        console.log('✅ Message is relevant to current user');
                         setMessages(prev => {
                             // Deduplicate based on ID
                             if (prev.some(m => m.id === newMessage.id)) {
-                                console.log('Message already exists, skipping:', newMessage.id);
+                                console.log('⚠️ Message already exists, skipping:', newMessage.id);
                                 return prev;
                             }
-                            console.log('Adding new message to state:', newMessage.id);
+                            console.log('➕ Adding new message to state:', newMessage.id);
                             return [...prev, newMessage];
                         })
 
@@ -155,9 +164,11 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                 }
             )
             .subscribe((status) => {
-                console.log('Realtime subscription status:', status);
+                console.log('📊 Realtime subscription status:', status);
                 if (status === 'SUBSCRIBED') {
                     console.log('✅ Successfully subscribed to realtime messages');
+                    console.log('🔍 Channel state:', channelRef.current?.state);
+                    console.log('⚡ Listening for INSERT events on public.messages table');
                     isSubscribedRef.current = true;
                 } else if (status === 'CHANNEL_ERROR') {
                     console.error('❌ Realtime subscription error');
