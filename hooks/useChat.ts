@@ -108,29 +108,36 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
     useEffect(() => {
         if (!currentUserId) return
 
-        // Subscribe to ALL messages involving me
-        // Filter: sender_id=eq.me OR receiver_id=eq.me
-        // Supabase Realtime filters are limited. We usually subscribe to the table and filter in client or use RLS.
-        // If RLS is enabled, we only receive what we are allowed to see.
-        // So we can subscribe to "messages" (Postgres Changes) and we'll get our relevant ones.
+        console.log('Setting up realtime subscription for user:', currentUserId);
 
         const channel = supabase
-            .channel('chat_room')
+            .channel('chat_room', {
+                config: {
+                    broadcast: { self: false }, // Don't receive our own broadcasts
+                    presence: { key: currentUserId }
+                }
+            })
             .on(
                 'postgres_changes',
                 {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'messages'
-                    // filter: `receiver_id=eq.${currentUserId}` // Filter is tricky with OR logic. Rely on RLS + client check.
                 },
                 (payload) => {
+                    console.log('Realtime message received:', payload);
                     const newMessage = payload.new as Message
+
+                    // Only add messages relevant to current user
                     if (newMessage.sender_id === currentUserId || newMessage.receiver_id === currentUserId) {
                         setMessages(prev => {
-                            // Deduplicate based on ID just in case
-                            if (prev.some(m => m.id === newMessage.id)) return prev
-                            return [...prev, newMessage]
+                            // Deduplicate based on ID
+                            if (prev.some(m => m.id === newMessage.id)) {
+                                console.log('Message already exists, skipping:', newMessage.id);
+                                return prev;
+                            }
+                            console.log('Adding new message to state:', newMessage.id);
+                            return [...prev, newMessage];
                         })
 
                         // Trigger callback for notifications if it's an incoming message
@@ -140,11 +147,23 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                     }
                 }
             )
-            .subscribe()
+            .subscribe((status) => {
+                console.log('Realtime subscription status:', status);
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ Successfully subscribed to realtime messages');
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('❌ Realtime subscription error');
+                    toast.error('שגיאה בחיבור לעדכונים בזמן אמת');
+                } else if (status === 'TIMED_OUT') {
+                    console.error('⏱️ Realtime subscription timed out');
+                    toast.warning('החיבור לעדכונים בזמן אמת איטי');
+                }
+            })
 
         channelRef.current = channel
 
         return () => {
+            console.log('Cleaning up realtime subscription');
             supabase.removeChannel(channel)
         }
     }, [currentUserId])
@@ -194,6 +213,18 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
             content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
         });
 
+        // Optimistic update - add message immediately to UI
+        const optimisticMessage: Message = {
+            id: `temp-${Date.now()}`, // Temporary ID
+            sender_id: currentUserId,
+            receiver_id: receiverId,
+            content,
+            created_at: new Date().toISOString(),
+            is_read: false
+        };
+
+        setMessages(prev => [...prev, optimisticMessage]);
+
         try {
             const { data, error } = await supabase
                 .from('messages')
@@ -205,6 +236,9 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                 .select()
 
             if (error) {
+                // Remove optimistic message on error
+                setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+
                 console.error('Supabase Insert Error:', {
                     message: error.message,
                     details: error.details,
@@ -225,6 +259,13 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
 
             console.log("Message sent successfully:", data);
 
+            // Replace optimistic message with real one from server
+            if (data && data.length > 0) {
+                setMessages(prev =>
+                    prev.map(m => m.id === optimisticMessage.id ? data[0] : m)
+                );
+            }
+
             // Trigger Push Notification (non-blocking)
             if (receiverId !== currentUserId) {
                 fetch('/api/send-push', {
@@ -239,6 +280,8 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                 }).catch(err => console.error("Failed to trigger push notification:", err));
             }
         } catch (err) {
+            // Remove optimistic message on unexpected error
+            setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
             console.error('Unexpected error in sendMessage:', err);
             toast.error('שגיאה בלתי צפויה בשליחת הודעה');
         }

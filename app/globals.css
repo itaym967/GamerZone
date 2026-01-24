@@ -2,19 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #050510;
-  --foreground: #ededed;
-  --font-rubik: 'Rubik', sans-serif;
-}
-
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background: linear-gradient(135deg, #050510 0%, #0a0a1e 100%);
+  color: white;
+  direction: rtl;
 }
 
-.glass-panel {
-  background: rgba(14, 14, 27, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Shimmer animation for skeleton loaders */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
