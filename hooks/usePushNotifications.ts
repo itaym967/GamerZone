@@ -28,11 +28,16 @@ export function usePushNotifications() {
     async function subscribeToPush() {
         try {
             const registration = await navigator.serviceWorker.ready
+            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+            if (!vapidKey) {
+                console.error("Missing VAPID public key")
+                toast.error("שגיאת קונפיגורציה: מפתח VAPID חסר")
+                return
+            }
+
             const sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(
-                    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-                ),
+                applicationServerKey: urlBase64ToUint8Array(vapidKey),
             })
             setSubscription(sub)
             await saveSubscription(sub)
