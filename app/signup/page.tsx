@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "../components/Logo";
@@ -12,6 +12,7 @@ import { createClient } from "@/utils/supabase/client";
 export default function SignupPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const supabase = createClient();
 
     const [form, setForm] = useState({
@@ -107,15 +108,24 @@ export default function SignupPage() {
                         </div>
                         <div className="space-y-1 text-right">
                             <label className="text-sm font-medium text-gray-400">סיסמה</label>
-                            <input
-                                type="password"
-                                placeholder="••••••••"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-primary/50 transition-colors placeholder:text-gray-600 text-right"
-                                required
-                                minLength={6}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={form.password}
+                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-primary/50 transition-colors placeholder:text-gray-600 text-right pl-10"
+                                    required
+                                    minLength={6}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
 

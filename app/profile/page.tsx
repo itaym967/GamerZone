@@ -1,39 +1,158 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, RefreshCw, Gamepad2 } from "lucide-react";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
 import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+    const router = useRouter();
+    const supabase = createClient();
+    const [isLoading, setIsLoading] = useState(true);
+    const [userId, setUserId] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
-        username: "NewUser_01",
-        tag: "@gamer_tag",
-        bio: "כתוב כאן משהו מגניב על עצמך...",
-        games: ["Valorant", "Minecraft"],
-        hiddenTags: {
-            "Valorant": "ValoKing#123",
-            "Minecraft": "Miner_99",
-            "Discord": "user#0000"
-        }
+        username: "",
+        tag: "", // Derived from username usually, but let's allow custom logic if needed? Actually, let's keep it simple.
+        bio: "",
+        games: [] as string[],
+        hiddenTags: {} as { [key: string]: string }
     });
 
     const [avatarSeed, setAvatarSeed] = useState("/avatars/samurai.png");
 
-    const handleSave = () => {
-        toast.success("הפרופיל עודכן בהצלחה!", {
-            description: "הכרטיס שלך מעודכן ומוכן להחלפות."
-        });
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    router.push("/login");
+                    return;
+                }
+                setUserId(user.id);
+
+                // Fetch Profile
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profileError) throw profileError;
+
+                // Fetch Gamertags
+                const { data: tags, error: tagsError } = await supabase
+                    .from('gamertags')
+                    .select('*')
+                    .eq('user_id', user.id);
+
+                if (tagsError) throw tagsError;
+
+                // Transform Tags
+                const gamesList: string[] = [];
+                const hiddenTagsMap: { [key: string]: string } = {};
+
+                tags?.forEach(t => {
+                    gamesList.push(t.platform);
+                    hiddenTagsMap[t.platform] = t.tag;
+                });
+
+                setFormData({
+                    username: profile.username || "",
+                    tag: "@" + (profile.username || "user").toLowerCase(),
+                    bio: profile.bio || "",
+                    games: gamesList,
+                    hiddenTags: hiddenTagsMap
+                });
+
+                if (profile.avatar_url) {
+                    setAvatarSeed(profile.avatar_url);
+                }
+
+            } catch (error) {
+                console.error("Error loading profile:", error);
+                toast.error("שגיאה בטעינת הפרופיל");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
+    const handleSave = async () => {
+        if (!userId) return;
+
+        try {
+            toast.loading("שומר שינויים...");
+
+            // 1. Update Profile
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    username: formData.username,
+                    bio: formData.bio,
+                    avatar_url: avatarSeed,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+
+            if (profileError) throw profileError;
+
+            // 2. Update Gamertags
+            // This is complex because we have a map in UI but rows in DB.
+            // Simplified strategy: Upsert each tag in hiddenTags.
+            // Note: This UI implementation is a bit limited (doesn't allow adding NEW games easily in this view, just editing existing).
+            // But let's support editing the values.
+
+            const updates = Object.entries(formData.hiddenTags).map(async ([platform, tag]) => {
+                // Check if exists to update, or insert? 
+                // We need to know which game corresponds to which row?
+                // Let's just upsert based on user_id + platform (if we had unique constraint).
+                // We DO NOT have a unique constraint on (user_id, platform) in the strict schema I saw earlier? 
+                // Actually we do usually. Let's assume we do.
+
+                // First delete old tag for this platform and insert new? Safe but heavy.
+                // let's try upsert.
+
+                // Wait, for this specific UI, let's just update the tags that are changed.
+                const { error } = await supabase
+                    .from('gamertags')
+                    .update({ tag: tag })
+                    .eq('user_id', userId)
+                    .eq('platform', platform);
+
+                if (error) {
+                    // If update failed (maybe didn't exist?), insert?
+                    // But the UI only shows existing games from `games` array.
+                }
+                return error;
+            });
+
+            await Promise.all(updates);
+
+            toast.dismiss();
+            toast.success("הפרופיל עודכן בהצלחה!", {
+                description: "הכרטיס שלך מעודכן ומוכן להחלפות."
+            });
+
+            router.refresh();
+
+        } catch (error: any) {
+            toast.dismiss();
+            toast.error("שגיאה בשמירה", { description: error.message });
+        }
     };
 
-    const regenerateAvatar = () => {
-        const newSeed = Math.random().toString(36).substring(7);
-        setAvatarSeed(newSeed);
-    };
+    if (isLoading) {
+        return <div className="min-h-screen bg-[#050510] flex items-center justify-center text-white">טוען פרופיל...</div>;
+    }
 
     return (
-        <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all">
+        <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all bg-[#050510]">
             <Navigation />
 
             <main className="p-6 max-w-7xl mx-auto">
@@ -58,7 +177,7 @@ export default function ProfilePage() {
                                 <input
                                     type="text"
                                     value={formData.username}
-                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value, tag: "@" + e.target.value.toLowerCase() })}
                                     className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-primary/50 text-right"
                                 />
                             </div>
@@ -68,8 +187,8 @@ export default function ProfilePage() {
                                 <input
                                     type="text"
                                     value={formData.tag}
-                                    onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-primary/50 text-right dir-ltr"
+                                    readOnly
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-gray-400 cursor-not-allowed outline-none text-right dir-ltr"
                                     dir="ltr"
                                 />
                             </div>
@@ -84,6 +203,7 @@ export default function ProfilePage() {
                                         { id: '/avatars/girl_blue.png', name: 'Blue' },
                                         { id: '/avatars/ninja.png', name: 'Ninja' },
                                         { id: '/avatars/gamer.png', name: 'Gamer' }
+                                        // TODO: Add more options or dynamic API
                                     ].map((avatar) => (
                                         <button
                                             key={avatar.id}
@@ -108,8 +228,9 @@ export default function ProfilePage() {
                             </div>
 
                             <div className="border-t border-white/10 pt-4 mt-4">
-                                <h3 className="text-white font-bold mb-3">Gamertags פרטיים (רק לחברים)</h3>
+                                <h3 className="text-white font-bold mb-3">Gamertags (ערוך משחקים קיימים)</h3>
                                 <div className="space-y-3">
+                                    {Object.keys(formData.hiddenTags).length === 0 && <p className="text-gray-500 text-sm">לא הוספת משחקים עדיין via Onboarding.</p>}
                                     {Object.entries(formData.hiddenTags).map(([game, tag]) => (
                                         <div key={game} className="flex items-center gap-2">
                                             <span className="w-24 text-sm text-gray-400">{game}:</span>

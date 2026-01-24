@@ -24,12 +24,14 @@ export default function Dashboard() {
   const [gamers, setGamers] = useState<Gamer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
     async function fetchGamers() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        setIsLoggedIn(!!user);
 
         // Fetch securely via RPC to handle hidden tags mapping
         const { data, error } = await supabase.rpc('get_dashboard_data');
@@ -149,22 +151,24 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* Call to Action Banner */}
-        <section className="relative overflow-hidden rounded-2xl p-8 border border-white/10 mt-8 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl group-hover:opacity-80 transition-opacity pointer-events-none" />
-          <div className="relative z-20 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-2">רוצה שכולם יראו אותך?</h3>
-              <p className="text-gray-300">צור את כרטיס השחקן שלך והתחל לקבל בקשות החלפה!</p>
+        {/* Call to Action Banner - Only for guests */}
+        {!isLoggedIn && (
+          <section className="relative overflow-hidden rounded-2xl p-8 border border-white/10 mt-8 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl group-hover:opacity-80 transition-opacity pointer-events-none" />
+            <div className="relative z-20 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">רוצה שכולם יראו אותך?</h3>
+                <p className="text-gray-300">צור את כרטיס השחקן שלך והתחל לקבל בקשות החלפה!</p>
+              </div>
+              <Link
+                href="/signup"
+                className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10 whitespace-nowrap block cursor-pointer relative z-[100]"
+              >
+                צור כרטיס שחקן עכשיו
+              </Link>
             </div>
-            <Link
-              href="/signup"
-              className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10 whitespace-nowrap block cursor-pointer relative z-[100]"
-            >
-              צור כרטיס שחקן עכשיו
-            </Link>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
     </div>
   );

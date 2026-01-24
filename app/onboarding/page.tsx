@@ -91,7 +91,7 @@ export default function OnboardingPage() {
                 if (tagsError) throw tagsError;
             }
 
-            toast.success("הפרופיל מוכן! ברוך הבא ל-GamerZone");
+            toast.success("ברוכים הבאים ");
             router.push("/");
             router.refresh();
 
