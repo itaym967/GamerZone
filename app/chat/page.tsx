@@ -18,7 +18,7 @@ function ChatContent() {
     const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
     const [user, setUser] = useState<any>(null);
     const [input, setInput] = useState("");
-    const [isTyping, setIsTyping] = useState(false);
+
     const [blockedWords, setBlockedWords] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +62,19 @@ function ChatContent() {
     }, [targetId]);
 
     // Hook
-    const { messages, contacts, sendMessage, fetchMessages, isLoading, deleteMessage, clearConversation, markAsRead } = useChat(user?.id, (msg) => {
+    // Hook
+    const {
+        messages,
+        contacts,
+        sendMessage,
+        fetchMessages,
+        isLoading,
+        deleteMessage,
+        clearConversation,
+        markAsRead,
+        sendTyping,
+        isRemoteTyping: isTyping
+    } = useChat(user?.id, activeChat?.id, (msg) => {
         if (!activeChat || msg.sender_id !== activeChat.id) {
             const sender = contacts.find(c => c.id === msg.sender_id);
             const senderName = sender ? sender.username : "משתמש";
@@ -338,7 +350,10 @@ function ChatContent() {
                             <input
                                 type="text"
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                    sendTyping();
+                                }}
                                 placeholder="כתוב הודעה..."
                                 disabled={!activeChat}
                                 className="flex-1 bg-transparent text-white text-sm outline-none px-2 text-right dir-rtl placeholder:text-gray-600 h-9 disabled:cursor-not-allowed"

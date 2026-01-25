@@ -24,7 +24,7 @@ export interface Contact {
     unread_count?: number
 }
 
-export function useChat(currentUserId: string | undefined, onMessageReceived?: (msg: Message) => void) {
+export function useChat(currentUserId: string | undefined, activeChatId: string | null | undefined, onMessageReceived?: (msg: Message) => void) {
     const [messages, setMessages] = useState<Message[]>([])
     const [contacts, setContacts] = useState<Contact[]>([])
     const [isLoading, setIsLoading] = useState(false)
@@ -35,6 +35,17 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
     const isSubscribedRef = useRef(false)
     const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null)
     const lastMessageTimeRef = useRef<number>(Date.now())
+    const activeChatIdRef = useRef(activeChatId)
+
+    // Typing indicators state & refs
+    const [isRemoteTyping, setIsRemoteTyping] = useState(false)
+    const typingChannelRef = useRef<RealtimeChannel | null>(null)
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const lastTypingSentRef = useRef<number>(0)
+
+    useEffect(() => {
+        activeChatIdRef.current = activeChatId
+    }, [activeChatId])
 
     useEffect(() => {
         onMessageReceivedRef.current = onMessageReceived
@@ -161,18 +172,28 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
                     // Update last message time for heartbeat monitoring
                     lastMessageTimeRef.current = Date.now();
 
-                    // Only add messages relevant to current user
+                    // Only add messages relevant to current user AND active chat
+                    // Note: We still want to notify/update counts for other chats, 
+                    // but 'messages' state should primarily reflect the active conversation to avoid UI mixing.
+                    const isActiveChat = activeChatIdRef.current && (newMessage.sender_id === activeChatIdRef.current || newMessage.receiver_id === activeChatIdRef.current);
+
                     if (newMessage.sender_id === currentUserId || newMessage.receiver_id === currentUserId) {
                         console.log('✅ Message is relevant to current user');
-                        setMessages(prev => {
-                            // Deduplicate based on ID
-                            if (prev.some(m => m.id === newMessage.id)) {
-                                console.log('⚠️ Message already exists, skipping:', newMessage.id);
-                                return prev;
-                            }
-                            console.log('➕ Adding new message to state:', newMessage.id);
-                            return [...prev, newMessage];
-                        })
+
+                        // Update messages state ONLY if it belongs to the active chat
+                        if (isActiveChat) {
+                            setMessages(prev => {
+                                // Deduplicate based on ID
+                                if (prev.some(m => m.id === newMessage.id)) {
+                                    console.log('⚠️ Message already exists, skipping:', newMessage.id);
+                                    return prev;
+                                }
+                                console.log('➕ Adding new message to state:', newMessage.id);
+                                return [...prev, newMessage];
+                            })
+                        } else {
+                            console.log('ℹ️ Message received for background chat, not updating active view');
+                        }
 
                         // Trigger callback for notifications if it's an incoming message
                         if (newMessage.receiver_id === currentUserId && onMessageReceivedRef.current) {
@@ -291,7 +312,56 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         };
     }, [currentUserId, setupRealtimeSubscription])
 
-    // 5. Methods
+    // 5. Typing Indicator Subscription
+    useEffect(() => {
+        if (!currentUserId || !activeChatId) {
+            return;
+        }
+
+        const sortedIds = [currentUserId, activeChatId].sort().join('_');
+        const channelName = `typing_${sortedIds}`;
+        console.log(`🔌 Subscribing to typing channel: ${channelName}`);
+
+        const channel = supabase.channel(channelName);
+
+        channel
+            .on(
+                'broadcast',
+                { event: 'typing' },
+                (payload) => {
+                    if (payload.payload.userId !== currentUserId) {
+                        setIsRemoteTyping(true);
+
+                        // Clear existing timeout
+                        if (typingTimeoutRef.current) {
+                            clearTimeout(typingTimeoutRef.current);
+                        }
+
+                        // Set new timeout to clear typing status after 3 seconds
+                        typingTimeoutRef.current = setTimeout(() => {
+                            setIsRemoteTyping(false);
+                        }, 3000);
+                    }
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    typingChannelRef.current = channel;
+                }
+            });
+
+        return () => {
+            console.log(`🔌 Unsubscribing from typing channel: ${channelName}`);
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+            supabase.removeChannel(channel);
+            typingChannelRef.current = null;
+            setIsRemoteTyping(false);
+        };
+    }, [currentUserId, activeChatId]);
+
+    // 6. Methods
     const fetchMessages = async (otherUserId: string) => {
         setIsLoading(true)
         const { data, error } = await supabase
@@ -513,6 +583,23 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         }
     }, [currentUserId, supabase]);
 
+    const sendTyping = useCallback(async () => {
+        if (!currentUserId || !typingChannelRef.current) return;
+
+        // Throttle: Only send once every 2 seconds
+        const now = Date.now();
+        if (now - lastTypingSentRef.current < 2000) {
+            return;
+        }
+        lastTypingSentRef.current = now;
+
+        await typingChannelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { userId: currentUserId }
+        });
+    }, [currentUserId]);
+
     return {
         messages,
         contacts,
@@ -522,6 +609,8 @@ export function useChat(currentUserId: string | undefined, onMessageReceived?: (
         refreshConnection,
         deleteMessage,
         clearConversation,
-        markAsRead
+        markAsRead,
+        sendTyping,
+        isRemoteTyping
     }
 }
