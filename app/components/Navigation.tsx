@@ -1,58 +1,89 @@
 "use client";
 
-import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert, LogOut, Bell } from "lucide-react";
+import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert, LogOut, Bell, LogIn } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import OptimizedAvatar from "./OptimizedAvatar";
 
 const navItems = [
-    { icon: Home, label: "לוח בקרה", href: "/" },
+    { icon: Home, label: "בית", href: "/" },
     { icon: Search, label: "גלה שחקנים", href: "/explore" },
+];
+
+const authenticatedNavItems = [
     { icon: MessageCircle, label: "צ'אט", href: "/chat" },
     { icon: User, label: "פרופיל", href: "/profile" },
-    { icon: ShieldAlert, label: "ניהול", href: "/admin" },
 ];
 
 export default function Navigation() {
     const pathname = usePathname();
     const router = useRouter();
+    const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const { subscribeToPush, subscription } = usePushNotifications();
+    const supabase = createClient();
 
     useEffect(() => {
-        const checkAdmin = async () => {
-            const supabase = createClient();
+        const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+
             if (user) {
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('role')
+                    .select('*')
                     .eq('id', user.id)
                     .single();
+
+                setProfile(profile);
 
                 if (profile?.role === 'admin') {
                     setIsAdmin(true);
                 }
             }
         };
-        checkAdmin();
+
+        fetchUser();
+
+        // Realtime Auth Listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN') {
+                setUser(session?.user);
+                // Re-fetch profile on sign-in
+                if (session?.user) {
+                    const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                    setProfile(data);
+                    if (data?.role === 'admin') setIsAdmin(true);
+                }
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setProfile(null);
+                setIsAdmin(false);
+                router.push('/login');
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const handleSignOut = async () => {
-        const supabase = createClient();
         await supabase.auth.signOut();
-        router.push('/login');
-        router.refresh();
+        // Router push is handled by the auth state listener
     };
 
-    // Filter nav items based on role
-    const filteredNavItems = navItems.filter(item => {
-        if (item.href === '/admin') return isAdmin;
-        return true;
-    });
+    // Combine nav items based on auth state
+    const currentNavItems = [
+        ...navItems,
+        ...(user ? authenticatedNavItems : []),
+        ...(isAdmin ? [{ icon: ShieldAlert, label: "ניהול", href: "/admin" }] : [])
+    ];
 
     return (
         <>
@@ -66,7 +97,7 @@ export default function Navigation() {
                 </div>
 
                 <nav className="flex-1 space-y-2">
-                    {filteredNavItems.map((item) => {
+                    {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
@@ -83,8 +114,8 @@ export default function Navigation() {
                     })}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-white/5 space-y-2">
-                    {!subscription && (
+                <div className="mt-auto pt-6 border-t border-white/5 space-y-3">
+                    {user && !subscription && (
                         <button
                             onClick={() => subscribeToPush()}
                             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 transition-all font-medium"
@@ -93,24 +124,46 @@ export default function Navigation() {
                             <span>הפעל התראות</span>
                         </button>
                     )}
-                    <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
-                        <Settings size={20} />
-                        <span className="font-medium">הגדרות</span>
-                    </button>
-                    <button
-                        onClick={handleSignOut}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-medium"
-                    >
-                        <LogOut size={20} />
-                        <span>התנתק</span>
-                    </button>
+
+                    {user ? (
+                        <>
+                            {/* Mini Profile Summary */}
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
+                                <OptimizedAvatar
+                                    seed={profile?.avatar_url || "/avatars/gamer.png"}
+                                    size={32}
+                                    className="rounded-full bg-black border border-primary/20"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-white truncate">{profile?.username || "Gamer"}</p>
+                                    <p className="text-[10px] text-gray-500 truncate">מחובר</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSignOut}
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-medium text-sm"
+                            >
+                                <LogOut size={18} />
+                                <span>התנתק</span>
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="flex items-center justify-center gap-2 w-full bg-primary text-black font-bold py-3 rounded-xl hover:bg-primary/90 transition-all"
+                        >
+                            <LogIn size={20} />
+                            <span>התחברות</span>
+                        </Link>
+                    )}
                 </div>
             </aside>
 
             {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-bottom pb- safe-area-pb">
-                <div className="flex justify-around items-center p-4">
-                    {filteredNavItems.map((item) => {
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-pb">
+                <div className="flex justify-around items-center p-3">
+                    {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
@@ -126,16 +179,17 @@ export default function Navigation() {
                             </Link>
                         );
                     })}
-                    {!subscription && (
-                        <button
-                            onClick={() => subscribeToPush()}
-                            className="flex flex-col items-center gap-1 text-gray-500 hover:text-yellow-400 transition-colors"
+
+                    {!user && (
+                        <Link
+                            href="/login"
+                            className="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors"
                         >
                             <div className="p-1.5 rounded-full">
-                                <Bell size={24} />
+                                <LogIn size={24} />
                             </div>
-                            <span className="text-[10px] font-medium">התראות</span>
-                        </button>
+                            <span className="text-[10px] font-medium">התחבר</span>
+                        </Link>
                     )}
                 </div>
             </nav>

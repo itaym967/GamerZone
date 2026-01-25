@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy } from "lucide-react";
+import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy, Shield, X } from "lucide-react";
 import { toast } from "sonner";
 import OptimizedAvatar from "./OptimizedAvatar";
+import { createClient } from "@/utils/supabase/client";
 
 interface GamerCardProps {
     username: string;
@@ -16,39 +17,148 @@ interface GamerCardProps {
     hiddenTags?: { [key: string]: string }; // Map of game -> real gamertag
     avatarSeed?: string; // Optional override for avatar generation
     id: string;
+    currentUserId: string | null;
 }
 
-export default function GamerCard({ username, tag, games, bio, online, hiddenTags, avatarSeed, id }: GamerCardProps) {
-    const [status, setStatus] = useState<"initial" | "pending" | "swapped">("initial");
+export default function GamerCard({ username, tag, games, bio, online, hiddenTags, avatarSeed, id, currentUserId }: GamerCardProps) {
+    const [status, setStatus] = useState<"initial" | "pending_sent" | "pending_received" | "approved" | "rejected">("initial");
+    const [isLoading, setIsLoading] = useState(false);
     const [copiedTag, setCopiedTag] = useState<string | null>(null);
     const [xp, setXp] = useState(Math.floor(Math.random() * 500) + 100);
     const [showXpGain, setShowXpGain] = useState(false);
 
     const level = Math.floor(xp / 100);
     const progress = xp % 100;
-
-    // Use explicit seed if provided, otherwise username
     const currentSeed = avatarSeed || username;
 
-    // Simulate Swap Request
-    const handleSwap = () => {
-        if (status !== "initial") return;
+    const supabase = createClient();
 
-        setStatus("pending");
+    // Check Swap Status on Mount & Realtime
+    useEffect(() => {
+        if (!currentUserId || !id) return;
 
-        // Fake network delay
-        setTimeout(() => {
-            setStatus("swapped");
-            setXp(prev => prev + 50);
-            setShowXpGain(true);
-            setTimeout(() => setShowXpGain(false), 2000);
+        // 1. Initial Fetch
+        const checkStatus = async () => {
+            const { data } = await supabase
+                .from('swap_requests')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${currentUserId})`)
+                .maybeSingle();
 
-            toast.success(`🎉 Swap Successful with ${username}!`, {
-                description: "You gained +50 XP and can now see their private gamertags.",
-                duration: 4000
-            });
-        }, 2500);
+            if (data) {
+                updateLocalStatus(data);
+            }
+        };
+
+        const updateLocalStatus = (data: any) => {
+            if (data.status === 'approved') {
+                setStatus('approved');
+            } else if (data.status === 'pending') {
+                if (data.sender_id === currentUserId) {
+                    setStatus('pending_sent');
+                } else {
+                    setStatus('pending_received');
+                }
+            } else if (data.status === 'rejected') {
+                setStatus('rejected');
+            }
+        };
+
+        checkStatus();
+
+        // 2. Realtime Listener
+        const channel = supabase
+            .channel(`swap_status_${id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'swap_requests',
+                    filter: `sender_id=eq.${currentUserId},receiver_id=eq.${id}` // If I AM SENDER
+                },
+                (payload) => updateLocalStatus(payload.new)
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'swap_requests',
+                    filter: `sender_id=eq.${id},receiver_id=eq.${currentUserId}` // If I AM RECEIVER
+                },
+                (payload) => updateLocalStatus(payload.new)
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentUserId, id]);
+
+
+    const handleSendRequest = async () => {
+        if (!currentUserId) {
+            toast.error("עליך להתחבר כדי לשלוח בקשה!");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const { error } = await supabase
+                .from('swap_requests')
+                .insert({
+                    sender_id: currentUserId,
+                    receiver_id: id,
+                    status: 'pending' // Default, but being explicit
+                });
+
+            if (error) throw error;
+
+            setStatus('pending_sent');
+            toast.success("בקשה נשלחה!", { description: "תקבל התראה כשהמשתמש יאשר." });
+        } catch (error: any) {
+            console.error(error);
+            toast.error("שגיאה בשליחת הבקשה", { description: error.message });
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    const handleApproveResponse = async (approved: boolean) => {
+        setIsLoading(true);
+        try {
+            const newStatus = approved ? 'approved' : 'rejected';
+
+            // Find requests where *I* am the receiver and *THEY* are the sender
+            const { error } = await supabase
+                .from('swap_requests')
+                .update({ status: newStatus })
+                .eq('sender_id', id)
+                .eq('receiver_id', currentUserId);
+
+            if (error) throw error;
+
+            setStatus(newStatus as any);
+
+            if (approved) {
+                setXp(prev => prev + 50);
+                setShowXpGain(true);
+                setTimeout(() => setShowXpGain(false), 2000);
+                toast.success(`🎉 יש התאמה!`, {
+                    description: "פרטי השחקן חשופים כעת.",
+                });
+            } else {
+                toast.info("הבקשה נדחתה.");
+            }
+
+        } catch (error: any) {
+            toast.error("שגיאה בעדכון", { description: error.message });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -63,10 +173,10 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.02, y: -5 }}
-            className={`glass-panel p-5 rounded-2xl relative overflow-hidden group border transition-all duration-300 flex flex-col h-full ${status === 'swapped' ? 'border-primary shadow-[0_0_20px_rgba(0,255,157,0.1)]' : 'border-transparent hover:border-primary'}`}
+            className={`glass-panel p-5 rounded-2xl relative overflow-hidden group border transition-all duration-300 flex flex-col h-full ${status === 'approved' ? 'border-primary shadow-[0_0_20px_rgba(0,255,157,0.1)]' : 'border-transparent hover:border-primary'}`}
         >
             {/* Decorative Glow */}
-            <div className={`absolute top-0 right-0 w-24 h-24 -translate-y-1/2 translate-x-1/2 blur-2xl rounded-full transition-all duration-700 ${status === 'swapped' ? 'bg-primary/40 w-full h-full opacity-20' : 'bg-primary/20 group-hover:bg-primary/40'}`} />
+            <div className={`absolute top-0 right-0 w-24 h-24 -translate-y-1/2 translate-x-1/2 blur-2xl rounded-full transition-all duration-700 ${status === 'approved' ? 'bg-primary/40 w-full h-full opacity-20' : 'bg-primary/20 group-hover:bg-primary/40'}`} />
 
             <div className="flex items-start justify-between relative z-10">
                 <div className="flex items-center gap-3">
@@ -112,7 +222,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
 
             {/* Revealed Gamertags Section */}
             <AnimatePresence>
-                {status === 'swapped' && hiddenTags && (
+                {status === 'approved' && hiddenTags && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -165,20 +275,53 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                     )}
                 </AnimatePresence>
 
-                <button
-                    onClick={handleSwap}
-                    disabled={status !== "initial"}
-                    className={`flex-1 font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${status === 'initial' ? 'bg-primary text-black hover:bg-primary/90' :
-                        status === 'pending' ? 'bg-primary/20 text-primary cursor-wait' :
-                            'bg-white/10 text-white cursor-default'
-                        }`}
-                >
-                    {status === 'initial' && <><Plus size={18} /> <span>החלף פרטים</span></>}
-                    {status === 'pending' && <><Loader2 size={18} className="animate-spin" /> <span>מבקש...</span></>}
-                    {status === 'swapped' && <><Check size={18} className="text-green-400" /> <span>בוצע</span></>}
-                </button>
+                {status === 'initial' || status === 'rejected' ? (
+                    <button
+                        onClick={handleSendRequest}
+                        disabled={isLoading || !currentUserId}
+                        className={`flex-1 font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 bg-primary text-black hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+                        <span>{status === 'rejected' ? 'שלח שוב' : 'החלף פרטים'}</span>
+                    </button>
+                ) : status === 'pending_sent' ? (
+                    <button
+                        disabled
+                        className="flex-1 font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 text-gray-400 cursor-wait"
+                    >
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>ממתין לאישור...</span>
+                    </button>
+                ) : status === 'pending_received' ? (
+                    <div className="flex-1 flex gap-2">
+                        <button
+                            onClick={() => handleApproveResponse(true)}
+                            disabled={isLoading}
+                            className="flex-1 bg-green-500 text-black font-bold py-2 rounded-xl hover:bg-green-400 transition-all flex items-center justify-center"
+                            title="אשר החלפה"
+                        >
+                            <Check size={18} />
+                        </button>
+                        <button
+                            onClick={() => handleApproveResponse(false)}
+                            disabled={isLoading}
+                            className="bg-red-500/20 text-red-400 font-bold py-2 px-3 rounded-xl hover:bg-red-500/30 transition-all flex items-center justify-center"
+                            title="דחה בקשה"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+                ) : ( // Approved
+                    <button
+                        disabled
+                        className="flex-1 font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 bg-emerald-500/20 text-emerald-400 cursor-default border border-emerald-500/30"
+                    >
+                        <Shield size={18} />
+                        <span>חברים</span>
+                    </button>
+                )}
 
-                <Link href={`/chat?target=${id}`} className={`p-2 rounded-xl transition-colors ${status === 'swapped' ? 'bg-primary text-black hover:bg-primary/90' : 'bg-white/5 hover:bg-white/10 text-white'}`}>
+                <Link href={`/chat?target=${id}`} className={`p-2 rounded-xl transition-colors ${status === 'approved' ? 'bg-primary text-black hover:bg-primary/90' : 'bg-white/5 hover:bg-white/10 text-white'}`}>
                     <MessageSquare size={18} />
                 </Link>
             </div>

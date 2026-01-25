@@ -277,6 +277,7 @@ export default function ProfilePage() {
                                 online={true}
                                 hiddenTags={formData.hiddenTags}
                                 avatarSeed={avatarSeed}
+                                currentUserId={userId}
                             />
                             <div className="mt-4 text-center">
                                 <p className="text-xs text-gray-500">

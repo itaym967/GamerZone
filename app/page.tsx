@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [gamers, setGamers] = useState<Gamer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const supabase = createClient();
 
@@ -34,6 +35,7 @@ export default function Dashboard() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setIsLoggedIn(!!user);
+        if (user) setCurrentUserId(user.id);
 
         // Fetch securely via RPC to handle hidden tags mapping
         const { data, error } = await supabase.rpc('get_dashboard_data');
@@ -145,7 +147,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
               {gamers.length > 0 ? (
                 gamers.map((gamer) => (
-                  <GamerCard key={gamer.id} {...gamer} />
+                  <GamerCard key={gamer.id} {...gamer} currentUserId={currentUserId} />
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-gray-400">

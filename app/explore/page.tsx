@@ -25,6 +25,7 @@ const FILTERS = {
 export default function ExplorePage() {
     const [gamers, setGamers] = useState<Gamer[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeGame, setActiveGame] = useState("All");
     const supabase = createClient();
@@ -33,6 +34,7 @@ export default function ExplorePage() {
         async function fetchGamers() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
+                if (user) setCurrentUserId(user.id);
                 const { data, error } = await supabase.rpc('get_dashboard_data');
 
                 if (error) throw error;
@@ -138,6 +140,7 @@ export default function ExplorePage() {
                             <GamerCard
                                 key={gamer.id}
                                 {...gamer}
+                                currentUserId={currentUserId}
                             />
                         ))}
                     </div>
