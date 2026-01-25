@@ -44,6 +44,23 @@ export default function LoginPage() {
         }
     };
 
+    const handleSocialLogin = async (provider: 'discord') => {
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider,
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                },
+            });
+
+            if (error) throw error;
+        } catch (error: any) {
+            toast.error("שגיאה בהתחברות עם " + provider, {
+                description: error.message
+            });
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#050510]">
             {/* Animated Background */}
@@ -68,6 +85,7 @@ export default function LoginPage() {
                     <div className="space-y-4">
                         <button
                             type="button"
+                            onClick={() => handleSocialLogin('discord')}
                             className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
