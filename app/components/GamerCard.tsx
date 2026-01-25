@@ -26,12 +26,30 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
     const [copiedTag, setCopiedTag] = useState<string | null>(null);
     const [xp, setXp] = useState(Math.floor(Math.random() * 500) + 100);
     const [showXpGain, setShowXpGain] = useState(false);
+    // State for revealed tags
+    const [revealedTags, setRevealedTags] = useState<{ [key: string]: string } | null>(null);
 
     const level = Math.floor(xp / 100);
     const progress = xp % 100;
     const currentSeed = avatarSeed || username;
 
     const supabase = createClient();
+
+    const fetchRealTags = async () => {
+        if (!id) return;
+        const { data, error } = await supabase
+            .from('gamertags')
+            .select('platform, tag')
+            .eq('user_id', id);
+
+        if (data) {
+            const realTags: { [key: string]: string } = {};
+            data.forEach((t: any) => {
+                realTags[t.platform] = t.tag;
+            });
+            setRevealedTags(realTags);
+        }
+    };
 
     // Check Swap Status on Mount & Realtime
     useEffect(() => {
@@ -51,8 +69,10 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
         };
 
         const updateLocalStatus = (data: any) => {
+            // If approved, verify we are part of it and fetch tags
             if (data.status === 'approved') {
                 setStatus('approved');
+                fetchRealTags(); // Fetch real tags on approval
             } else if (data.status === 'pending') {
                 if (data.sender_id === currentUserId) {
                     setStatus('pending_sent');
@@ -67,6 +87,8 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
         checkStatus();
 
         // 2. Realtime Listener
+        console.log("Setting up realtime for:", { currentUserId, id });
+
         const channel = supabase
             .channel(`swap_status_${id}`)
             .on(
@@ -75,9 +97,14 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                     event: '*',
                     schema: 'public',
                     table: 'swap_requests',
-                    filter: `sender_id=eq.${currentUserId},receiver_id=eq.${id}` // If I AM SENDER
+                    filter: `sender_id=eq.${currentUserId}`
                 },
-                (payload) => updateLocalStatus(payload.new)
+                (payload) => {
+                    console.log("Realtime Event (Sender):", payload);
+                    if (payload.new && (payload.new as any).receiver_id === id) {
+                        updateLocalStatus(payload.new);
+                    }
+                }
             )
             .on(
                 'postgres_changes',
@@ -85,11 +112,18 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                     event: '*',
                     schema: 'public',
                     table: 'swap_requests',
-                    filter: `sender_id=eq.${id},receiver_id=eq.${currentUserId}` // If I AM RECEIVER
+                    filter: `receiver_id=eq.${currentUserId}`
                 },
-                (payload) => updateLocalStatus(payload.new)
+                (payload) => {
+                    console.log("Realtime Event (Receiver):", payload);
+                    if (payload.new && (payload.new as any).sender_id === id) {
+                        updateLocalStatus(payload.new);
+                    }
+                }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log("Subscription status:", status);
+            });
 
         return () => {
             supabase.removeChannel(channel);
@@ -148,6 +182,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                 toast.success(`🎉 יש התאמה!`, {
                     description: "פרטי השחקן חשופים כעת.",
                 });
+                fetchRealTags(); // Fetch real tags instantly
             } else {
                 toast.info("הבקשה נדחתה.");
             }
@@ -166,6 +201,9 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
         toast.success(" הועתק!", { duration: 1500 });
         setTimeout(() => setCopiedTag(null), 2000);
     };
+
+    // Determine which tags to show: revealed ones (if fetched) or hidden (from props, likely masked)
+    const displayTags = revealedTags || hiddenTags;
 
     return (
         <motion.div
@@ -222,7 +260,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
 
             {/* Revealed Gamertags Section */}
             <AnimatePresence>
-                {status === 'approved' && hiddenTags && (
+                {status === 'approved' && displayTags && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -230,7 +268,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                         className="mt-4 space-y-2"
                     >
                         <h4 className="text-[10px] text-primary font-bold uppercase tracking-wider mb-2 opacity-80">Private Gamertags (Click to Copy):</h4>
-                        {Object.entries(hiddenTags).map(([game, realTag]) => (
+                        {Object.entries(displayTags).map(([game, realTag]) => (
                             <button
                                 key={game}
                                 onClick={() => copyToClipboard(realTag)}
@@ -280,6 +318,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                         onClick={handleSendRequest}
                         disabled={isLoading || !currentUserId}
                         className={`flex-1 font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 bg-primary text-black hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        title={status === 'rejected' ? 'הבקשה הקודמת נדחתה' : ''}
                     >
                         {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
                         <span>{status === 'rejected' ? 'שלח שוב' : 'החלף פרטים'}</span>
