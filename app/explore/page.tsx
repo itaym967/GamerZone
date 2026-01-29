@@ -19,7 +19,22 @@ interface Gamer {
 }
 
 const FILTERS = {
-    games: ["All", "Valorant", "Minecraft", "Fortnite", "Apex Legends", "CS2", "FIFA 24"],
+    games: [
+        "All",
+        "Valorant",
+        "Minecraft",
+        "Fortnite",
+        "Apex Legends",
+        "CS2",
+        "FIFA 24",
+        "Call of Duty",
+        "League of Legends",
+        "Overwatch 2",
+        "GTA V",
+        "Rocket League",
+        "Roblox",
+        "PubG Mobile"
+    ],
 };
 
 export default function ExplorePage() {
@@ -28,21 +43,51 @@ export default function ExplorePage() {
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeGame, setActiveGame] = useState("All");
+    const [onlineOnly, setOnlineOnly] = useState(false);
     const supabase = createClient();
 
     useEffect(() => {
+        let mounted = true;
+
         async function fetchGamers() {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                // Fetch requests independently to prevent one failure from stopping the other
+                const userPromise = supabase.auth.getUser()
+                    .then(res => ({ user: res.data.user, error: null }))
+                    .catch(err => ({ user: null, error: err }));
+
+                const dashboardPromise = (async () => {
+                    try {
+                        const { data, error } = await supabase.rpc('get_dashboard_data');
+                        return { data, error };
+                    } catch (err) {
+                        return { data: null, error: err };
+                    }
+                })();
+
+                // Wait for both
+                const [userResult, dashboardResult] = await Promise.all([userPromise, dashboardPromise]);
+
+                if (!mounted) return;
+
+                const user = userResult.user;
                 if (user) setCurrentUserId(user.id);
-                const { data, error } = await supabase.rpc('get_dashboard_data');
 
-                if (error) throw error;
+                // Log user error if any, but don't stop
+                if (userResult.error && userResult.error?.code !== 'PGRST301') {
+                    console.warn("Error fetching user session:", userResult.error);
+                }
 
-                if (data) {
-                    const profiles = data as any[];
+                // Handle critical dashboard error
+                if (dashboardResult.error) {
+                    throw dashboardResult.error;
+                }
+
+                if (dashboardResult.data) {
+                    const profiles = dashboardResult.data as any[];
+                    // Filter out self (if user exists)
                     const formattedGamers: Gamer[] = profiles
-                        .filter((p: any) => p.id !== user?.id) // Filter out self
+                        .filter((p: any) => p.id !== user?.id)
                         .map((profile: any) => {
                             const tags = profile.gamertags || [];
                             const hiddenTagsMap: { [key: string]: string } = {};
@@ -67,25 +112,36 @@ export default function ExplorePage() {
                             };
                         });
 
-                    setGamers(formattedGamers);
+                    if (mounted) {
+                        setGamers(formattedGamers);
+                    }
                 }
             } catch (err: any) {
-                console.error("Error fetching gamers:", err);
-                toast.error("שגיאה בטעינת משתמשים");
+                if (err.code !== 'PGRST301') { // Ignore expected aborts/redirects
+                    console.error("Error fetching gamers:", err);
+                    toast.error("שגיאה בטעינת שחקנים");
+                }
             } finally {
-                setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                }
             }
         }
 
         fetchGamers();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     const filteredGamers = gamers.filter((gamer) => {
         const matchesSearch = gamer.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
             gamer.tag.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGame = activeGame === "All" || gamer.games.includes(activeGame);
+        const matchesOnline = !onlineOnly || gamer.online;
 
-        return matchesSearch && matchesGame;
+        return matchesSearch && matchesGame && matchesOnline;
     });
 
     return (
@@ -109,18 +165,30 @@ export default function ExplorePage() {
                             placeholder="חפש לפי שם או תיוג..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 text-white outline-none focus:border-primary/50 text-right h-12"
+                            className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 text-white outline-none focus:border-primary/50 text-right h-12 transition-all focus:bg-white/5"
                         />
                         <Search size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     </div>
 
-                    <div className="flex gap-2 overflow-x-auto pb-2 xl:pb-0 no-scrollbar">
+                    <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 xl:pb-0 no-scrollbar items-center">
+                        {/* Online Only Toggle */}
+                        <button
+                            onClick={() => setOnlineOnly(!onlineOnly)}
+                            className={`h-12 px-4 rounded-xl border flex items-center gap-2 transition-all ${onlineOnly
+                                ? "bg-primary/20 border-primary text-primary font-bold"
+                                : "bg-black/20 border-white/10 text-gray-400 hover:text-white"
+                                }`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${onlineOnly ? "bg-primary animate-pulse" : "bg-gray-500"}`} />
+                            <span className="whitespace-nowrap">מחוברים בלבד</span>
+                        </button>
+
                         {/* Game Select */}
                         <div className="relative min-w-[160px]">
                             <select
                                 value={activeGame}
                                 onChange={(e) => setActiveGame(e.target.value)}
-                                className="w-full h-12 appearance-none bg-black/20 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-primary/50 text-right cursor-pointer"
+                                className="w-full h-12 appearance-none bg-black/20 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-primary/50 text-right cursor-pointer hover:bg-white/5 transition-colors"
                             >
                                 {FILTERS.games.map(game => <option key={game} value={game} className="bg-[#0e0e1b] text-white">{game === 'All' ? 'כל המשחקים' : game}</option>)}
                             </select>

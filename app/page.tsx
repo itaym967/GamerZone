@@ -31,19 +31,45 @@ export default function Dashboard() {
   const supabase = createClient();
 
   useEffect(() => {
+    let mounted = true;
+
     async function fetchGamers() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Fetch requests independently to prevent one failure from stopping the other
+        const userPromise = supabase.auth.getUser()
+          .then(res => ({ user: res.data.user, error: null }))
+          .catch(err => ({ user: null, error: err }));
+
+        const dashboardPromise = (async () => {
+          try {
+            const { data, error } = await supabase.rpc('get_dashboard_data');
+            return { data, error };
+          } catch (err) {
+            return { data: null, error: err };
+          }
+        })();
+
+        // Wait for both results
+        const [userResult, dashboardResult] = await Promise.all([userPromise, dashboardPromise]);
+
+        if (!mounted) return;
+
+        const user = userResult.user;
         setIsLoggedIn(!!user);
         if (user) setCurrentUserId(user.id);
 
-        // Fetch securely via RPC to handle hidden tags mapping
-        const { data, error } = await supabase.rpc('get_dashboard_data');
+        // Warn on user error but don't stop
+        if (userResult.error && userResult.error?.code !== 'PGRST301') {
+          console.warn("Error fetching user session:", userResult.error);
+        }
 
-        if (error) throw error;
+        // Throw dashboard error if critical
+        if (dashboardResult.error) {
+          throw dashboardResult.error;
+        }
 
-        if (data) {
-          const profiles = data as any[];
+        if (dashboardResult.data) {
+          const profiles = dashboardResult.data as any[];
 
           // Filter out current user
           const currentUserProfile = profiles.find(p => p.id === user?.id);
@@ -78,17 +104,27 @@ export default function Dashboard() {
               };
             });
 
-          setGamers(formattedGamers);
+          if (mounted) {
+            setGamers(formattedGamers);
+          }
         }
       } catch (err: any) {
-        console.error("Error fetching gamers:", err);
-        toast.error("שגיאה בטעינת שחקנים");
+        if (err.code !== 'PGRST301') {
+          console.error("Error fetching gamers:", err);
+          toast.error("שגיאה בטעינת שחקנים");
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchGamers();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -106,16 +142,7 @@ export default function Dashboard() {
             <p className="text-gray-400">מוכן למצוא את הסקוואד הבא שלך?</p>
           </div>
 
-          <div className="flex gap-3">
-            <div className="w-full md:w-64 px-4 py-2 rounded-xl flex items-center border border-white/5 bg-[#0e0e1b] focus-within:border-primary/50 transition-colors">
-              <input
-                type="text"
-                placeholder="חפש שחקנים..."
-                className="bg-transparent w-full outline-none text-sm placeholder:text-gray-600 text-white"
-              />
-              <Search size={18} className="text-gray-500" />
-            </div>
-          </div>
+          {/* Search bar removed as per request - search is now only in Explore page */}
         </header>
 
         {/* Categories / Filters */}
