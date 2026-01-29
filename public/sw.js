@@ -1,8 +1,8 @@
 // Service Worker for GamerZone PWA
 // Version 1.0.0
 
-const CACHE_NAME = 'gamerzone-v1';
-const RUNTIME_CACHE = 'gamerzone-runtime-v1';
+const CACHE_NAME = 'gamerzone-v2';
+const RUNTIME_CACHE = 'gamerzone-runtime-v2';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
@@ -46,7 +46,7 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch event - improved caching strategy
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
@@ -56,12 +56,52 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // API requests - network first, cache fallback
+    // 1. API requests - Network First, fallback to cache
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(
             fetch(request)
                 .then((response) => {
-                    // Clone and cache successful responses
+                    if (response.ok) {
+                        const responseClone = response.clone();
+                        caches.open(RUNTIME_CACHE).then((cache) => {
+                            cache.put(request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(request))
+        );
+        return;
+    }
+
+    // 2. Next.js Static Assets (hashed files) - Cache First
+    // These look like /_next/static/... usually safe to cache forever until SW update
+    if (url.pathname.startsWith('/_next/static/') || url.pathname.match(/\.(js|css|woff2?|png|jpg|jpeg|gif|ico|svg)$/)) {
+        event.respondWith(
+            caches.match(request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                return fetch(request).then((response) => {
+                    if (response.ok) {
+                        const responseClone = response.clone();
+                        caches.open(RUNTIME_CACHE).then((cache) => {
+                            cache.put(request, responseClone);
+                        });
+                    }
+                    return response;
+                });
+            })
+        );
+        return;
+    }
+
+    // 3. Navigation Requests (HTML pages) - Network First
+    // This ensures we always get the latest UI if online
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
                     if (response.ok) {
                         const responseClone = response.clone();
                         caches.open(RUNTIME_CACHE).then((cache) => {
@@ -71,30 +111,32 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 })
                 .catch(() => {
-                    // Fallback to cache
-                    return caches.match(request);
+                    // If offline, try to serve cached version
+                    return caches.match(request).then((cachedResponse) => {
+                        if (cachedResponse) {
+                            return cachedResponse;
+                        }
+                        return caches.match('/offline.html');
+                    });
                 })
         );
         return;
     }
 
-    // Static assets - cache first, network fallback
+    // 4. Fallback for everything else - Stale While Revalidate
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-
-            return fetch(request).then((response) => {
-                // Cache successful responses
-                if (response.ok) {
-                    const responseClone = response.clone();
+            const fetchPromise = fetch(request).then((networkResponse) => {
+                if (networkResponse.ok) {
+                    const responseClone = networkResponse.clone();
                     caches.open(RUNTIME_CACHE).then((cache) => {
                         cache.put(request, responseClone);
                     });
                 }
-                return response;
+                return networkResponse;
             });
+
+            return cachedResponse || fetchPromise;
         })
     );
 });
