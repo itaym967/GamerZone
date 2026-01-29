@@ -51,29 +51,48 @@ export default function ExplorePage() {
 
         async function fetchGamers() {
             try {
-                // Fetch requests independently to prevent one failure from stopping the other
+                // Timeout wrapper
+                const withTimeout = (promise: Promise<any>, ms: number, name: string) => {
+                    return Promise.race([
+                        promise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error(`${name} timed out`)), ms))
+                    ]);
+                };
+
+                // Fetch requests independently
                 const userPromise = supabase.auth.getUser()
-                    .then(res => ({ user: res.data.user, error: null }))
-                    .catch(err => ({ user: null, error: err }));
+                    .then(res => {
+                        return { user: res.data.user, error: null };
+                    })
+                    .catch(err => {
+                        console.error("Explore: User fetch error", err);
+                        return { user: null, error: err };
+                    });
 
                 const dashboardPromise = (async () => {
                     try {
                         const { data, error } = await supabase.rpc('get_dashboard_data');
                         return { data, error };
                     } catch (err) {
+                        console.error("Explore: rpc error", err);
                         return { data: null, error: err };
                     }
                 })();
 
-                // Wait for both
-                const [userResult, dashboardResult] = await Promise.all([userPromise, dashboardPromise]);
+                // Wait for both with timeout (10s)
+                // Wait for both with timeout (10s)
+                const [userResult, dashboardResult] = await withTimeout(
+                    Promise.all([userPromise, dashboardPromise]),
+                    10000,
+                    "Initial Fetch"
+                );
 
                 if (!mounted) return;
 
                 const user = userResult.user;
                 if (user) setCurrentUserId(user.id);
 
-                // Log user error if any, but don't stop
+                // Log user error if any
                 if (userResult.error && userResult.error?.code !== 'PGRST301') {
                     console.warn("Error fetching user session:", userResult.error);
                 }

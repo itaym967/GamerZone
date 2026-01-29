@@ -59,7 +59,11 @@ export default function OnboardingPage() {
     };
 
     const handleComplete = async () => {
-        if (!userId) return;
+        if (!userId) {
+            console.error("Onboarding: No UserID set!");
+            toast.error("שגיאה: משתמש לא מזוהה");
+            return;
+        }
         setIsLoading(true);
 
         try {
@@ -73,12 +77,12 @@ export default function OnboardingPage() {
                     updated_at: new Date().toISOString()
                 });
 
-            if (profileError) throw profileError;
+            if (profileError) {
+                console.error("Onboarding: Profile update error", profileError);
+                throw profileError;
+            }
 
             // 2. Insert Gamertags
-            // First delete old ones to avoid duplicates if re-running (though this is onboarding)
-            // await supabase.from('gamertags').delete().eq('user_id', userId); 
-            // Actually, let's just insert. 
             if (gamertags.length > 0) {
                 const tagsToInsert = gamertags.map(g => ({
                     user_id: userId,
@@ -88,7 +92,10 @@ export default function OnboardingPage() {
                 }));
 
                 const { error: tagsError } = await supabase.from('gamertags').insert(tagsToInsert);
-                if (tagsError) throw tagsError;
+                if (tagsError) {
+                    console.error("Onboarding: Tags insert error", tagsError);
+                    throw tagsError;
+                }
             }
 
             toast.success("ברוכים הבאים ");
@@ -96,7 +103,7 @@ export default function OnboardingPage() {
             router.refresh();
 
         } catch (error: any) {
-            console.error(error);
+            console.error("Onboarding: Catch error", error);
             toast.error("שגיאה בשמירת הפרופיל", { description: error.message });
         } finally {
             setIsLoading(false);
