@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn } from "lucide-react";
+import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 const navItems = [
     { icon: Home, label: "בית", href: "/" },
     { icon: Search, label: "גלה שחקנים", href: "/explore" },
+    { icon: Users, label: "לוח חי", href: "/lfg" },
 ];
 
 const authenticatedNavItems = [
