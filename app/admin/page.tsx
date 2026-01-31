@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navigation from "../components/Navigation";
 import { ShieldAlert, Trash2, Plus, Shield, Ban, Lock, Unlock, Zap, Activity, Database, TrendingDown, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -148,7 +149,7 @@ export default function AdminPage() {
                     lfgPage: true,  // Phase 1 complete
                     chatHook: true, // Phase 2 complete
                     gamerCard: true, // Phase 3 complete
-                    adminPage: false  // Phase 4 pending
+                    adminPage: true  // Phase 4 complete!
                 }
             });
         } catch (error) {
@@ -162,7 +163,7 @@ export default function AdminPage() {
                     lfgPage: true,
                     chatHook: true,
                     gamerCard: true,  // Phase 3 complete
-                    adminPage: false
+                    adminPage: true   // Phase 4 complete!
                 }
             });
         }
@@ -172,34 +173,54 @@ export default function AdminPage() {
     useEffect(() => {
         if (activeTab !== 'users') return;
 
-        const subscription = supabase
-            .channel('admin-users-changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'profiles'
-                },
-                (payload) => {
-                    if (payload.eventType === 'UPDATE') {
-                        setUsers(prev => prev.map(user =>
-                            user.id === payload.new.id ? { ...user, ...payload.new } : user
-                        ));
-                    } else if (payload.eventType === 'INSERT') {
-                        setUsers(prev => [payload.new as Profile, ...prev]);
+        let channel: RealtimeChannel | null = null;
+
+        const setupSubscription = () => {
+            if (document.hidden) return;
+
+            console.log("Setting up admin users subscription");
+            channel = supabase
+                .channel('admin-users-changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'profiles'
+                    },
+                    (payload) => {
+                        if (payload.eventType === 'UPDATE') {
+                            setUsers(prev => prev.map(user =>
+                                user.id === payload.new.id ? { ...user, ...payload.new } : user
+                            ));
+                        } else if (payload.eventType === 'INSERT') {
+                            setUsers(prev => [payload.new as Profile, ...prev]);
+                        }
+                        else if (payload.eventType === 'DELETE') {
+                            setUsers(prev => prev.filter(user => user.id !== payload.old.id));
+                        }
                     }
-                    // Note: Deletions might need handling if we remove from DB, 
-                    // but we usually just ban. If we hard delete, we can filter.
-                    else if (payload.eventType === 'DELETE') {
-                        setUsers(prev => prev.filter(user => user.id !== payload.old.id));
-                    }
-                }
-            )
-            .subscribe();
+                )
+                .subscribe();
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                console.log("Tab hidden, pausing admin users subscription");
+                channel?.unsubscribe();
+                channel = null;
+            } else {
+                console.log("Tab visible, resuming admin users subscription");
+                setupSubscription();
+            }
+        };
+
+        setupSubscription();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
-            subscription.unsubscribe();
+            channel?.unsubscribe();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [activeTab]);
 
@@ -610,11 +631,11 @@ export default function AdminPage() {
                                             <CheckCircle2 className="text-blue-400" size={20} />
                                             <h3 className="text-sm font-medium text-gray-400">התקדמות אופטימיזציה</h3>
                                         </div>
-                                        <div className="text-3xl font-bold text-white mb-2">75%</div>
-                                        <p className="text-xs text-gray-500">3 מתוך 4 שלבים</p>
+                                        <div className="text-3xl font-bold text-white mb-2">100%</div>
+                                        <p className="text-xs text-gray-500">4 מתוך 4 שלבים</p>
                                         <div className="mt-4 pt-4 border-t border-white/5">
                                             <div className="w-full bg-white/5 rounded-full h-2">
-                                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                                                <div className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full" style={{ width: '100%' }}></div>
                                             </div>
                                         </div>
                                     </div>

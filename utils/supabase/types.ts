@@ -146,7 +146,6 @@ export type Database = {
             messages: {
                 Row: {
                     id: string
-                    chat_id: string
                     sender_id: string
                     receiver_id: string
                     content: string
@@ -157,7 +156,6 @@ export type Database = {
                 }
                 Insert: {
                     id?: string
-                    chat_id: string
                     sender_id: string
                     receiver_id: string
                     content: string
@@ -168,7 +166,6 @@ export type Database = {
                 }
                 Update: {
                     id?: string
-                    chat_id?: string
                     sender_id?: string
                     receiver_id?: string
                     content?: string

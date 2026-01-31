@@ -7,7 +7,6 @@ export interface Message {
     id: string
     sender_id: string
     receiver_id: string
-    chat_id: string // Included now
     content: string
     created_at: string
     is_read: boolean
@@ -404,18 +403,6 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             return;
         }
 
-        if (!activeChatIdRef.current) {
-            // Try to determine chat ID or create one?
-            // For now, assuming activeChatId is required.
-            // But usually 1:1 chat ID is implied or fetched.
-            // If activeChatId is null, we might need to find it.
-            console.error("sendMessage: No activeChatId");
-            // Fallback: If no chat ID, we can't insert into 'messages' which requires chat_id.
-            // However, maybe we can fetch it?
-        }
-
-        const chatIdToUse = activeChatIdRef.current || 'temp_chat_id'; // Placeholder/Hack: Use explicit logic if needed. Database usually manages this via RPC or we queried it.
-
         // Validation: Ensure content is not empty
         if (!content.trim()) {
             console.error("sendMessage: Empty content");
@@ -433,7 +420,6 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
         console.log("Sending message...", {
             sender_id: currentUserId,
             receiver_id: receiverId,
-            chat_id: chatIdToUse,
             content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
         });
 
@@ -442,7 +428,6 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             id: `temp-${Date.now()}`, // Temporary ID
             sender_id: currentUserId,
             receiver_id: receiverId,
-            chat_id: chatIdToUse!,
             content,
             created_at: new Date().toISOString(),
             is_read: false
@@ -456,7 +441,6 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
                 .insert({
                     sender_id: currentUserId,
                     receiver_id: receiverId,
-                    chat_id: chatIdToUse!,
                     content
                 })
                 .select()
