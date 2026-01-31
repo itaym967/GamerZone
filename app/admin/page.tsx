@@ -172,33 +172,48 @@ export default function AdminPage() {
 
     const handleFreeze = async (user: Profile) => {
         const isBanning = !user.is_banned;
-        const reason = isBanning ? prompt("הכנס סיבת הקפאה (אופציונלי):") : null;
 
-        if (isBanning && reason === null) return; // Cancelled
+        let reason: string | null = null;
+        if (isBanning) {
+            reason = prompt("הכנס סיבת הקפאה (אופציונלי):");
+            if (reason === null) return; // Cancelled by user
+        }
 
         try {
-            const { error } = await supabase
+            // Update logic
+            const { data, error } = await supabase
                 .from('profiles')
-                .update({ is_banned: isBanning, ban_reason: reason })
-                .eq('id', user.id);
+                .update({
+                    is_banned: isBanning,
+                    ban_reason: reason
+                })
+                .eq('id', user.id)
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Freeze Error:", error);
+                throw error;
+            }
 
-            // Update local state immediately
+            // Verify the update actually happened
+            if (data.is_banned !== isBanning) {
+                throw new Error("Update failed to apply");
+            }
+
+            // Update local state immediately with confirmed data
             setUsers(users.map(u =>
-                u.id === user.id
-                    ? { ...u, is_banned: isBanning, ban_reason: reason || undefined }
-                    : u
+                u.id === user.id ? { ...u, ...data } : u
             ));
 
             toast.success(isBanning ? `המשתמש ${user.username} הוקפא` : `המשתמש ${user.username} שוחרר`);
 
+            // Notifications & Logging...
             const notificationTitle = isBanning ? 'חשבונך הוקפא' : 'חשבונך שוחרר';
             const notificationMessage = isBanning
                 ? (reason ? `החשבון הוקפא עקב: ${reason}` : 'חשבונך הוקפא על ידי מנהל המערכת.')
                 : 'ההקפאה הוסרה מחשבונך. ברוך שובך!';
 
-            // Notify User (DB)
             await supabase.from('notifications').insert({
                 user_id: user.id,
                 title: notificationTitle,
@@ -206,34 +221,31 @@ export default function AdminPage() {
                 type: isBanning ? 'error' : 'success'
             });
 
-            // Notify User (Push)
-            try {
-                await fetch('/api/send-push', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        title: notificationTitle,
-                        message: notificationMessage,
-                        url: '/'
-                    })
-                });
-            } catch (pushError) {
-                console.error("Failed to send push notification:", pushError);
-            }
+            // Fire and forget push
+            fetch('/api/send-push', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    title: notificationTitle,
+                    message: notificationMessage,
+                    url: '/'
+                })
+            }).catch(e => console.error(e));
 
-            // Log Action
             await supabase.from('admin_logs').insert({
                 action: isBanning ? 'FREEZE_USER' : 'UNFREEZE_USER',
                 details: { target_user: user.username, reason },
                 admin_id: currentUser
             });
 
-            // We can still fetch to be sure, but we don't rely on it for UI feedback
-            // fetchData(); 
         } catch (error: any) {
-            toast.error("שגיאה בביצוע הפעולה");
-            console.error(error);
+            console.error("Operation failed:", error);
+            toast.error("שגיאה בביצוע הפעולה", {
+                description: error.message || "נא לנסות שוב"
+            });
+            // Revert UI if necessary (fetching fresh data)
+            fetchData();
         }
     };
 
