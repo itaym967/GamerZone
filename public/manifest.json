@@ -1,6 +1,7 @@
 {
     "name": "GamerZone - גיימר זון",
     "short_name": "GamerZone",
+    "id": "/",
     "description": "הפלטפורמה האולטימטיבית לגיימרים בישראל - החלף gamertags, מצא חברים חדשים לסקוואד",
     "start_url": "/",
     "display": "standalone",

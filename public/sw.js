@@ -1,8 +1,8 @@
 // Service Worker for GamerZone PWA
 // Version 1.0.0
 
-const CACHE_NAME = 'gamerzone-v3';
-const RUNTIME_CACHE = 'gamerzone-runtime-v3';
+const CACHE_NAME = 'gamerzone-v4';
+const RUNTIME_CACHE = 'gamerzone-runtime-v4';
 
 // ... (PRECACHE_ASSETS remains the same)
 
@@ -11,25 +11,40 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Skip cross-origin requests
+    // Skip cross-origin requests unless it's Supabase Storage
     if (url.origin !== location.origin) {
+        // 1. Supabase Storage Images - Stale While Revalidate
+        // Cache external images for speed, but update in background
+        if (url.href.includes('/storage/v1/object/public/')) {
+            event.respondWith(
+                caches.match(request).then((cachedResponse) => {
+                    const fetchPromise = fetch(request).then((networkResponse) => {
+                        if (networkResponse.ok) {
+                            const responseClone = networkResponse.clone();
+                            caches.open(RUNTIME_CACHE).then((cache) => {
+                                cache.put(request, responseClone);
+                            });
+                        }
+                        return networkResponse;
+                    });
+                    // Return cached response immediately if available, else fetch
+                    return cachedResponse || fetchPromise;
+                })
+            );
+        }
         return;
     }
 
-    // 1. API requests - NETWORK ONLY
-    // We want real-time data always. No caching for API.
+    // 2. API requests - NETWORK ONLY
     if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/supabase/')) {
-        return; // Fallback to browser default (Network)
+        return;
     }
 
-    // 2. Next.js Static Assets (hashed files) - Cache First
-    // These look like /_next/static/... usually safe to cache forever until SW update
+    // 3. Next.js Static Assets - Cache First
     if (url.pathname.startsWith('/_next/static/') || url.pathname.match(/\.(js|css|woff2?|png|jpg|jpeg|gif|ico|svg)$/)) {
         event.respondWith(
             caches.match(request).then((cachedResponse) => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
+                if (cachedResponse) return cachedResponse;
                 return fetch(request).then((response) => {
                     if (response.ok) {
                         const responseClone = response.clone();
@@ -44,34 +59,38 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 3. Navigation Requests (HTML pages) - Network First
-    // This ensures we always get the latest UI if online
+    // 4. Navigation Requests - Network First with Preload
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    if (response.ok) {
-                        const responseClone = response.clone();
+            (async () => {
+                try {
+                    // Use navigation preload if available
+                    const preloadResponse = await event.preloadResponse;
+                    if (preloadResponse) return preloadResponse;
+
+                    const networkResponse = await fetch(request);
+                    if (networkResponse.ok) {
+                        const responseClone = networkResponse.clone();
                         caches.open(RUNTIME_CACHE).then((cache) => {
                             cache.put(request, responseClone);
                         });
                     }
-                    return response;
-                })
-                .catch(() => {
-                    // If offline, try to serve cached version
-                    return caches.match(request).then((cachedResponse) => {
-                        if (cachedResponse) {
-                            return cachedResponse;
-                        }
-                        return caches.match('/offline.html');
-                    });
-                })
+                    return networkResponse;
+                } catch (error) {
+                    const cachedResponse = await caches.match(request);
+                    if (cachedResponse) return cachedResponse;
+
+                    const offlinePage = await caches.match('/offline.html');
+                    if (offlinePage) return offlinePage;
+
+                    return new Response("Offline", { status: 503, statusText: "Offline" });
+                }
+            })()
         );
         return;
     }
 
-    // 4. Fallback for everything else - Stale While Revalidate
+    // 5. Fallback - Stale While Revalidate
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             const fetchPromise = fetch(request).then((networkResponse) => {
@@ -83,7 +102,6 @@ self.addEventListener('fetch', (event) => {
                 }
                 return networkResponse;
             });
-
             return cachedResponse || fetchPromise;
         })
     );
