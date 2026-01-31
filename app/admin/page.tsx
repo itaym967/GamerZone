@@ -127,15 +127,23 @@ export default function AdminPage() {
     const fetchDBMetrics = async () => {
         try {
             // Query pg_stat_activity for active realtime subscriptions
-            const { data: realtimeData } = await supabase.rpc('get_realtime_subscription_count').single();
+            const { data: realtimeData, error: rtError } = await supabase
+                .rpc('get_realtime_subscription_count')
+                .single();
 
             // Query pg_stat_statements for slow queries
-            const { data: slowQueryData } = await supabase.rpc('get_slow_query_metrics').single();
+            const { data: slowQueryData, error: sqError } = await supabase
+                .rpc('get_slow_query_metrics')
+                .single();
+
+            if (rtError || sqError) {
+                throw new Error('RPC call failed');
+            }
 
             setDbMetrics({
-                realtimeSubscriptions: realtimeData?.count || 0,
-                slowQueryCount: slowQueryData?.slow_count || 0,
-                avgQueryTime: slowQueryData?.avg_time || 0,
+                realtimeSubscriptions: (realtimeData as any)?.count || 0,
+                slowQueryCount: (slowQueryData as any)?.slow_count || 0,
+                avgQueryTime: (slowQueryData as any)?.avg_time || 0,
                 optimizationStatus: {
                     lfgPage: true,  // Phase 1 complete
                     chatHook: true, // Phase 2 complete
@@ -153,7 +161,7 @@ export default function AdminPage() {
                 optimizationStatus: {
                     lfgPage: true,
                     chatHook: true,
-                    gamerCard: false,
+                    gamerCard: true,  // Phase 3 complete
                     adminPage: false
                 }
             });
