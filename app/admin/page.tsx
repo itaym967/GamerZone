@@ -93,6 +93,41 @@ export default function AdminPage() {
         }
     };
 
+    // Realtime Subscription for Users
+    useEffect(() => {
+        if (activeTab !== 'users') return;
+
+        const subscription = supabase
+            .channel('admin-users-changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'profiles'
+                },
+                (payload) => {
+                    if (payload.eventType === 'UPDATE') {
+                        setUsers(prev => prev.map(user =>
+                            user.id === payload.new.id ? { ...user, ...payload.new } : user
+                        ));
+                    } else if (payload.eventType === 'INSERT') {
+                        setUsers(prev => [payload.new as Profile, ...prev]);
+                    }
+                    // Note: Deletions might need handling if we remove from DB, 
+                    // but we usually just ban. If we hard delete, we can filter.
+                    else if (payload.eventType === 'DELETE') {
+                        setUsers(prev => prev.filter(user => user.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [activeTab]);
+
     const addWord = async (e: React.FormEvent) => {
         e.preventDefault();
         const word = newWord.trim().toLowerCase();
@@ -341,6 +376,7 @@ export default function AdminPage() {
                                             <th className="p-4 font-medium">שם מלא</th>
                                             <th className="p-4 font-medium">תפקיד</th>
                                             <th className="p-4 font-medium">סטטוס</th>
+                                            <th className="p-4 font-medium">סיבת הקפאה</th>
                                             <th className="p-4 font-medium">פעולות</th>
                                         </tr>
                                     </thead>
@@ -362,6 +398,9 @@ export default function AdminPage() {
                                                         <span className={`w-2 h-2 rounded-full inline-block ${user.is_online ? 'bg-green-500' : 'bg-gray-500'}`}></span>
                                                         {user.is_online ? 'מחובר' : 'מנותק'}
                                                     </div>
+                                                </td>
+                                                <td className="p-4 text-sm text-gray-400 max-w-[150px] truncate" title={user.ban_reason}>
+                                                    {user.ban_reason || "-"}
                                                 </td>
                                                 <td className="p-4 flex gap-2">
                                                     {user.role !== 'admin' && ( // Cannot freeze admins

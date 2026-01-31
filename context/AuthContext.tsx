@@ -10,7 +10,8 @@ interface Profile {
     full_name: string;
     avatar_url: string;
     role: string;
-    // Add other fields as needed
+    is_banned?: boolean;
+    ban_reason?: string;
 }
 
 interface AuthContextType {
@@ -93,8 +94,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (data) {
+                if (data.is_banned) {
+                    await supabase.auth.signOut();
+                    setUser(null);
+                    setProfile(null);
+                    router.push('/login');
+                    return;
+                }
+
                 setProfile(data);
                 setIsAdmin(data.role === 'admin');
+
+                // Listen for changes to this profile (e.g. banning)
+                const channel = supabase
+                    .channel(`profile-${userId}`)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'UPDATE',
+                            schema: 'public',
+                            table: 'profiles',
+                            filter: `id=eq.${userId}`
+                        },
+                        async (payload) => {
+                            if (payload.new.is_banned) {
+                                await supabase.auth.signOut();
+                                setUser(null);
+                                setProfile(null);
+                                router.push('/login');
+                            } else {
+                                // Update profile data (e.g. role change, avatar update)
+                                setProfile({ ...data, ...payload.new });
+                                setIsAdmin(payload.new.role === 'admin');
+                            }
+                        }
+                    )
+                    .subscribe();
+
+                return () => {
+                    supabase.removeChannel(channel);
+                };
             }
         } catch (error) {
             console.error("AuthContext: Unexpected fetch error", error);

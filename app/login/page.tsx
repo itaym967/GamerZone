@@ -23,12 +23,29 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data: { session }, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) throw error;
+
+            if (session?.user) {
+                // Check if user is banned
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('is_banned, ban_reason')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profile?.is_banned) {
+                    await supabase.auth.signOut();
+                    toast.error("החשבון הוקפא", {
+                        description: profile.ban_reason || "חשבונך הוקפא על ידי מנהל המערכת."
+                    });
+                    return;
+                }
+            }
 
             toast.success("ברוך הבא ל-GamerZone! 🎮");
             router.push("/");
