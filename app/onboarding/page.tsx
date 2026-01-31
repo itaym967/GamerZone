@@ -59,7 +59,18 @@ export default function OnboardingPage() {
     };
 
     const handleComplete = async () => {
-        if (!userId) {
+        let finalUserId = userId;
+
+        // Fallback: Try to get user again if state is missing
+        if (!finalUserId) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                finalUserId = user.id;
+                setUserId(user.id);
+            }
+        }
+
+        if (!finalUserId) {
             console.error("Onboarding: No UserID set!");
             toast.error("שגיאה: משתמש לא מזוהה");
             return;
@@ -71,7 +82,7 @@ export default function OnboardingPage() {
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert({
-                    id: userId,
+                    id: finalUserId,
                     bio: bio,
                     onboarding_completed: true,
                     updated_at: new Date().toISOString()
@@ -85,7 +96,7 @@ export default function OnboardingPage() {
             // 2. Insert Gamertags
             if (gamertags.length > 0) {
                 const tagsToInsert = gamertags.map(g => ({
-                    user_id: userId,
+                    user_id: finalUserId,
                     platform: g.platform,
                     tag: g.tag,
                     is_hidden: false // Default to public for now

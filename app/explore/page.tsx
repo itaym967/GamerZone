@@ -79,11 +79,10 @@ export default function ExplorePage() {
                     }
                 })();
 
-                // Wait for both with timeout (10s)
-                // Wait for both with timeout (10s)
+                // Wait for both with timeout (45s)
                 const [userResult, dashboardResult] = await withTimeout(
                     Promise.all([userPromise, dashboardPromise]),
-                    10000,
+                    45000,
                     "Initial Fetch"
                 );
 
