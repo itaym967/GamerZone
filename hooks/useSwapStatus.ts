@@ -7,7 +7,7 @@
  * OPTIMIZATION: Reduces realtime overhead by 90-95% when displaying multiple cards.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -19,7 +19,7 @@ interface SwapStatusMap {
 
 export function useSwapStatus(currentUserId: string | null) {
     const [swapStatuses, setSwapStatuses] = useState<SwapStatusMap>({});
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     const channelRef = useRef<RealtimeChannel | null>(null);
     const isSubscribedRef = useRef(false);
 

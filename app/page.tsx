@@ -1,127 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import GamerCard from "./components/GamerCard";
 import { GamerCardSkeleton } from "./components/Skeleton";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import Navigation from "./components/Navigation";
 import Link from "next/link";
 
-import { createClient } from "@/utils/supabase/client";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useSwapStatus } from "@/hooks/useSwapStatus";
-
-interface Gamer {
-  id: string;
-  username: string;
-  tag: string;
-  games: string[];
-  bio: string;
-  online: boolean;
-  hiddenTags: { [key: string]: string };
-  avatarSeed?: string;
-}
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
-  const [gamers, setGamers] = useState<Gamer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const supabase = createClient();
+  
+  const currentUserId = useMemo(() => user?.id || null, [user?.id]);
+  const isLoggedIn = useMemo(() => !!user, [user]);
 
-  // OPTIMIZATION: Use centralized swap status management
-  const { swapStatuses, fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
+  // Use cached dashboard data
+  const { gamers, loading, currentUsername } = useDashboardData(currentUserId, authLoading);
 
-  // Sync auth state
-  useEffect(() => {
-    if (!authLoading) {
-      setIsLoggedIn(!!user);
-      if (user) {
-        setCurrentUserId(user.id);
-      }
-    }
-  }, [user, authLoading]);
+  // Use centralized swap status management
+  const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
 
-  // Fetch dashboard data
-  useEffect(() => {
-    let mounted = true;
-
-    async function fetchGamers() {
-      if (authLoading) return; // Wait for auth
-
-      try {
-        const { data, error } = await supabase.rpc('get_dashboard_data');
-
-        if (!mounted) return;
-
-        if (error) {
-          console.error("Dashboard: Error fetching data", error);
-          // Don't throw entire page error, just show toast or empty state
-          toast.error("שגיאה בטעינת נתונים");
-          return;
-        }
-
-        if (data) {
-          const profiles = data as any[];
-
-          // Filter out current user
-          const currentUserProfile = profiles.find(p => p.id === user?.id);
-          if (currentUserProfile) {
-            setCurrentUsername(currentUserProfile.username);
-          }
-
-          const formattedGamers: Gamer[] = profiles
-            .filter((profile: any) => profile.id !== user?.id) // Filter out self
-            .map((profile: any) => {
-              const tags = profile.gamertags || [];
-
-              const hiddenTagsMap: { [key: string]: string } = {};
-              const gamesList: string[] = [];
-
-              tags.forEach((t: any) => {
-                gamesList.push(t.platform);
-                if (t.is_hidden) {
-                  hiddenTagsMap[t.platform] = "********";
-                }
-              });
-
-              return {
-                id: profile.id,
-                username: profile.username || "Unknown",
-                tag: "@" + (profile.username || "user").toLowerCase(),
-                games: gamesList,
-                bio: profile.bio || "",
-                online: profile.is_online || false,
-                hiddenTags: hiddenTagsMap,
-                avatarSeed: profile.avatar_url
-              };
-            });
-
-          if (mounted) {
-            setGamers(formattedGamers);
-          }
-        }
-      } catch (err: any) {
-        console.error("Error processing dashboard:", err);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchGamers();
-
-    return () => {
-      mounted = false;
-    };
-  }, [authLoading, user]);
-
-  // OPTIMIZATION: Fetch swap statuses when gamers are loaded
+  // Fetch swap statuses when gamers are loaded
   useEffect(() => {
     if (gamers.length > 0 && currentUserId) {
       const userIds = gamers.map(g => g.id);

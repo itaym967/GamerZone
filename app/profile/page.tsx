@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Save, RefreshCw, Gamepad2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Save, Gamepad2 } from "lucide-react";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
     const router = useRouter();
-    const supabase = createClient();
+    const { user, isLoading: authLoading } = useAuth();
+    const supabase = useMemo(() => createClient(), []);
     const [isLoading, setIsLoading] = useState(true);
-    const [userId, setUserId] = useState<string | null>(null);
+    const userId = useMemo(() => user?.id || null, [user?.id]);
 
     const [formData, setFormData] = useState({
         username: "",
@@ -25,20 +27,20 @@ export default function ProfilePage() {
     const [avatarSeed, setAvatarSeed] = useState("/avatars/samurai.png");
 
     useEffect(() => {
+        if (authLoading) return;
+        
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
+
         const fetchProfile = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    router.push("/login");
-                    return;
-                }
-                setUserId(user.id);
-
                 // Fetch Profile
                 const { data: profile, error: profileError } = await supabase
                     .from('profiles')
                     .select('*')
-                    .eq('id', user.id)
+                    .eq('id', userId)
                     .single();
 
                 if (profileError) throw profileError;
@@ -47,7 +49,7 @@ export default function ProfilePage() {
                 const { data: tags, error: tagsError } = await supabase
                     .from('gamertags')
                     .select('*')
-                    .eq('user_id', user.id);
+                    .eq('user_id', userId);
 
                 if (tagsError) throw tagsError;
 
@@ -81,7 +83,7 @@ export default function ProfilePage() {
         };
 
         fetchProfile();
-    }, []);
+    }, [authLoading, userId, router, supabase]);
 
     const handleSave = async () => {
         if (!userId) return;

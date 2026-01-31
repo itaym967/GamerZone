@@ -1,24 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Navigation from "../components/Navigation";
 import GamerCard from "../components/GamerCard";
 import { Search, Filter } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useSwapStatus } from "@/hooks/useSwapStatus";
-
-interface Gamer {
-    id: string;
-    username: string;
-    tag: string;
-    games: string[];
-    bio: string;
-    online: boolean;
-    hiddenTags: { [key: string]: string };
-    avatarSeed?: string;
-}
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 const FILTERS = {
     games: [
@@ -41,118 +29,19 @@ const FILTERS = {
 
 export default function ExplorePage() {
     const { user, isLoading: authLoading } = useAuth();
-    const [gamers, setGamers] = useState<Gamer[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeGame, setActiveGame] = useState("All");
     const [onlineOnly, setOnlineOnly] = useState(false);
-    const supabase = createClient();
 
-    // OPTIMIZATION: Use centralized swap status management
-    const { swapStatuses, fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
+    const currentUserId = useMemo(() => user?.id || null, [user?.id]);
 
-    // Sync auth state
-    useEffect(() => {
-        if (!authLoading) {
-            if (user) {
-                setCurrentUserId(user.id);
-            }
-        }
-    }, [user, authLoading]);
+    // Use cached dashboard data (shared with home page)
+    const { gamers, loading } = useDashboardData(currentUserId, authLoading);
 
-    useEffect(() => {
-        let mounted = true;
+    // Use centralized swap status management
+    const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
 
-        async function fetchGamers() {
-            if (authLoading) return;
-
-            try {
-                // Timeout wrapper
-                const withTimeout = (promise: Promise<any>, ms: number, name: string) => {
-                    return Promise.race([
-                        promise,
-                        new Promise((_, reject) => setTimeout(() => reject(new Error(`${name} timed out`)), ms))
-                    ]);
-                };
-
-                const dashboardPromise = (async () => {
-                    try {
-                        const { data, error } = await supabase.rpc('get_dashboard_data');
-                        return { data, error };
-                    } catch (err) {
-                        console.error("Explore: rpc error", err);
-                        return { data: null, error: err };
-                    }
-                })();
-
-                // Wait for data with timeout (45s)
-                const dashboardResult = await withTimeout(
-                    dashboardPromise,
-                    45000,
-                    "Data Fetch"
-                );
-
-                if (!mounted) return;
-
-                // Handle critical dashboard error
-                if (dashboardResult.error) {
-                    throw dashboardResult.error;
-                }
-
-                if (dashboardResult.data) {
-                    const profiles = dashboardResult.data as any[];
-                    // Filter out self (if user exists)
-                    const formattedGamers: Gamer[] = profiles
-                        .filter((p: any) => p.id !== user?.id)
-                        .map((profile: any) => {
-                            const tags = profile.gamertags || [];
-                            const hiddenTagsMap: { [key: string]: string } = {};
-                            const gamesList: string[] = [];
-
-                            tags.forEach((t: any) => {
-                                gamesList.push(t.platform);
-                                if (t.is_hidden) {
-                                    hiddenTagsMap[t.platform] = "********";
-                                }
-                            });
-
-                            return {
-                                id: profile.id,
-                                username: profile.username || "Unknown",
-                                tag: "@" + (profile.username || "user").toLowerCase(),
-                                games: gamesList,
-                                bio: profile.bio || "",
-                                online: profile.is_online || false,
-                                hiddenTags: hiddenTagsMap,
-                                avatarSeed: profile.avatar_url
-                            };
-                        });
-
-                    if (mounted) {
-                        setGamers(formattedGamers);
-                    }
-                }
-            } catch (err: any) {
-                if (err.code !== 'PGRST301') { // Ignore expected aborts/redirects
-                    console.error("Error fetching gamers:", err);
-                    toast.error("שגיאה בטעינת שחקנים");
-                }
-            } finally {
-                if (mounted) {
-                    setLoading(false);
-                }
-            }
-        }
-
-        fetchGamers();
-
-        return () => {
-            mounted = false;
-        };
-    }, [authLoading, user]);
-
-    // OPTIMIZATION: Fetch swap statuses when gamers are loaded
+    // Fetch swap statuses when gamers are loaded
     useEffect(() => {
         if (gamers.length > 0 && currentUserId) {
             const userIds = gamers.map(g => g.id);
@@ -160,14 +49,16 @@ export default function ExplorePage() {
         }
     }, [gamers, currentUserId, fetchSwapStatuses]);
 
-    const filteredGamers = gamers.filter((gamer) => {
-        const matchesSearch = gamer.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            gamer.tag.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesGame = activeGame === "All" || gamer.games.includes(activeGame);
-        const matchesOnline = !onlineOnly || gamer.online;
+    const filteredGamers = useMemo(() => {
+        return gamers.filter((gamer) => {
+            const matchesSearch = gamer.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gamer.tag.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesGame = activeGame === "All" || gamer.games.includes(activeGame);
+            const matchesOnline = !onlineOnly || gamer.online;
 
-        return matchesSearch && matchesGame && matchesOnline;
-    });
+            return matchesSearch && matchesGame && matchesOnline;
+        });
+    }, [gamers, searchTerm, activeGame, onlineOnly]);
 
     return (
         <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all bg-[#050510]">

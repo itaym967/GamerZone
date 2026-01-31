@@ -48,8 +48,7 @@ export default function LoginPage() {
             }
 
             toast.success("ברוך הבא ל-GamerZone! 🎮");
-            router.push("/");
-            router.refresh();
+            router.replace("/");
         } catch (error: any) {
             toast.error("שגיאה בהתחברות", {
                 description: error.message === "Invalid login credentials"

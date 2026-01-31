@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 import { RealtimeChannel } from '@supabase/supabase-js'
@@ -28,7 +28,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
     const [messages, setMessages] = useState<Message[]>([])
     const [contacts, setContacts] = useState<Contact[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
     const channelRef = useRef<RealtimeChannel | null>(null)
     const onMessageReceivedRef = useRef(onMessageReceived)
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)

@@ -1,8 +1,9 @@
 "use client";
 
+import { memo, useMemo, useCallback } from "react";
 import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn, Users } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import OptimizedAvatar from "./OptimizedAvatar";
@@ -21,20 +22,19 @@ const authenticatedNavItems = [
 
 export default function Navigation() {
     const pathname = usePathname();
-    const router = useRouter();
     const { user, profile, isAdmin, signOut, isLoading } = useAuth();
     const { subscribeToPush, subscription } = usePushNotifications();
 
-    const handleSignOut = async () => {
+    const handleSignOut = useCallback(async () => {
         await signOut();
-    };
+    }, [signOut]);
 
-    // Combine nav items based on auth state
-    const currentNavItems = [
+    // Memoize nav items to prevent recalculation on every render
+    const currentNavItems = useMemo(() => [
         ...navItems,
         ...(user ? authenticatedNavItems : []),
         ...(isAdmin ? [{ icon: ShieldAlert, label: "ניהול", href: "/admin" }] : [])
-    ];
+    ], [user, isAdmin]);
 
     return (
         <>

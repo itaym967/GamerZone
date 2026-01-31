@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense, useMemo } from "react";
 import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2, Check, CheckCheck } from "lucide-react";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
@@ -9,29 +9,26 @@ import { toast } from "sonner";
 import { useChat, Contact } from "@/hooks/useChat";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 function ChatContent() {
     const searchParams = useSearchParams();
     const targetId = searchParams.get("target");
 
+    const { user } = useAuth();
     const [activeChat, setActiveChat] = useState<Contact | null>(null);
     const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
-    const [user, setUser] = useState<any>(null);
     const [input, setInput] = useState("");
 
     const [blockedWords, setBlockedWords] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Auth & Supabase
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     // Initial Load & Param Handling
     useEffect(() => {
         async function init() {
-            const { data } = await supabase.auth.getUser();
-            setUser(data.user);
-
-            // Fetch Blocked Words
+            // Fetch Blocked Words (cached in component)
             const { data: words } = await supabase.from('blocked_words').select('word');
             if (words) {
                 setBlockedWords(words.map(w => w.word));
@@ -59,7 +56,7 @@ function ChatContent() {
             }
         }
         init();
-    }, [targetId]);
+    }, [targetId, supabase]);
 
     // Hook
     // Hook
