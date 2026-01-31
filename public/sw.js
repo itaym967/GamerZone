@@ -1,8 +1,8 @@
 // Service Worker for GamerZone PWA
-// Version 1.0.0
+// Version 1.0.1
 
-const CACHE_NAME = 'gamerzone-v4';
-const RUNTIME_CACHE = 'gamerzone-runtime-v4';
+const CACHE_NAME = 'gamerzone-v5';
+const RUNTIME_CACHE = 'gamerzone-runtime-v5';
 
 // ... (PRECACHE_ASSETS remains the same)
 
@@ -90,7 +90,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 5. Fallback - Stale While Revalidate
+    // 5. Fallback - Stale While Revalidate (only for GET requests)
+    if (request.method !== 'GET') {
+        // Don't cache non-GET requests (POST, PUT, DELETE, etc.)
+        return;
+    }
+
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             const fetchPromise = fetch(request).then((networkResponse) => {

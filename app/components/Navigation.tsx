@@ -47,7 +47,7 @@ export default function Navigation() {
                     <Logo />
                 </div>
 
-                <nav className="flex-1 space-y-2">
+                <nav className="flex-1 space-y-2" suppressHydrationWarning>
                     {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         const isLiveBoard = item.href === '/lfg';
@@ -71,7 +71,7 @@ export default function Navigation() {
                     })}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-white/5 space-y-3">
+                <div className="mt-auto pt-6 border-t border-white/5 space-y-3" suppressHydrationWarning>
                     {isLoading ? (
                         // Loading Skeleton
                         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5 animate-pulse">
@@ -128,7 +128,7 @@ export default function Navigation() {
 
             {/* Mobile Bottom Nav */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-pb">
-                <div className="flex justify-around items-center p-3">
+                <div className="flex justify-around items-center p-3" suppressHydrationWarning>
                     {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         const isLiveBoard = item.href === '/lfg';
