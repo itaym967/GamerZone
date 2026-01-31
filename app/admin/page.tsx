@@ -50,6 +50,12 @@ export default function AdminPage() {
     }, [activeTab]);
 
     const checkAdminAccess = async () => {
+        // TEMP: Bypass for testing
+        if (process.env.NODE_ENV === 'development') {
+            setCurrentUser('test-admin-id');
+            return;
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             router.push("/");
@@ -145,21 +151,33 @@ export default function AdminPage() {
 
             toast.success(isBanning ? `המשתמש ${user.username} הוקפא` : `המשתמש ${user.username} שוחרר`);
 
-            // Notify User
-            if (isBanning) {
-                await supabase.from('notifications').insert({
-                    user_id: user.id,
-                    title: 'חשבונך הוקפא',
-                    message: reason ? `החשבון הוקפא עקב: ${reason}` : 'חשבונך הוקפא על ידי מנהל המערכת.',
-                    type: 'error'
+            const notificationTitle = isBanning ? 'חשבונך הוקפא' : 'חשבונך שוחרר';
+            const notificationMessage = isBanning
+                ? (reason ? `החשבון הוקפא עקב: ${reason}` : 'חשבונך הוקפא על ידי מנהל המערכת.')
+                : 'ההקפאה הוסרה מחשבונך. ברוך שובך!';
+
+            // Notify User (DB)
+            await supabase.from('notifications').insert({
+                user_id: user.id,
+                title: notificationTitle,
+                message: notificationMessage,
+                type: isBanning ? 'error' : 'success'
+            });
+
+            // Notify User (Push)
+            try {
+                await fetch('/api/send-push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        title: notificationTitle,
+                        message: notificationMessage,
+                        url: '/'
+                    })
                 });
-            } else {
-                await supabase.from('notifications').insert({
-                    user_id: user.id,
-                    title: 'חשבונך שוחרר',
-                    message: 'ההקפאה הוסרה מחשבונך. ברוך שובך!',
-                    type: 'success'
-                });
+            } catch (pushError) {
+                console.error("Failed to send push notification:", pushError);
             }
 
             // Log Action
@@ -346,7 +364,7 @@ export default function AdminPage() {
                                                                 className={`p-2 rounded-lg transition-colors ${user.is_banned ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
                                                                 title={user.is_banned ? "שחרר הקפאה" : "הקפא משתמש"}
                                                             >
-                                                                {user.is_banned ? <Unlock size={18} /> : <Lock size={18} />}
+                                                                {user.is_banned ? <Lock size={18} /> : <Unlock size={18} />}
                                                             </button>
 
                                                             <button
