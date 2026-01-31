@@ -329,6 +329,14 @@ export type Database = {
                 Args: Record<string, never>
                 Returns: Json
             }
+            get_realtime_subscription_count: {
+                Args: Record<string, never>
+                Returns: { count: number }
+            }
+            get_slow_query_metrics: {
+                Args: Record<string, never>
+                Returns: { slow_count: number; avg_time: number }
+            }
         }
         Enums: {
             [_ in never]: never

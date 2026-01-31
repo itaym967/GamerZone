@@ -11,6 +11,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useSwapStatus } from "@/hooks/useSwapStatus";
 
 interface Gamer {
   id: string;
@@ -31,6 +32,9 @@ export default function Dashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const supabase = createClient();
+
+  // OPTIMIZATION: Use centralized swap status management
+  const { swapStatuses, fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
 
   // Sync auth state
   useEffect(() => {
@@ -117,6 +121,14 @@ export default function Dashboard() {
     };
   }, [authLoading, user]);
 
+  // OPTIMIZATION: Fetch swap statuses when gamers are loaded
+  useEffect(() => {
+    if (gamers.length > 0 && currentUserId) {
+      const userIds = gamers.map(g => g.id);
+      fetchSwapStatuses(userIds);
+    }
+  }, [gamers, currentUserId, fetchSwapStatuses]);
+
   return (
     <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all">
       <ServiceWorkerRegistration />
@@ -164,7 +176,13 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
               {gamers.length > 0 ? (
                 gamers.map((gamer) => (
-                  <GamerCard key={gamer.id} {...gamer} currentUserId={currentUserId} />
+                  <GamerCard
+                    key={gamer.id}
+                    {...gamer}
+                    currentUserId={currentUserId}
+                    initialSwapStatus={getSwapStatus(gamer.id)}
+                    onSwapStatusChange={updateSwapStatus}
+                  />
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-gray-400">

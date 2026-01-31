@@ -7,6 +7,7 @@ import { Search, Filter } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useSwapStatus } from "@/hooks/useSwapStatus";
 
 interface Gamer {
     id: string;
@@ -47,6 +48,9 @@ export default function ExplorePage() {
     const [activeGame, setActiveGame] = useState("All");
     const [onlineOnly, setOnlineOnly] = useState(false);
     const supabase = createClient();
+
+    // OPTIMIZATION: Use centralized swap status management
+    const { swapStatuses, fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
 
     // Sync auth state
     useEffect(() => {
@@ -148,6 +152,14 @@ export default function ExplorePage() {
         };
     }, [authLoading, user]);
 
+    // OPTIMIZATION: Fetch swap statuses when gamers are loaded
+    useEffect(() => {
+        if (gamers.length > 0 && currentUserId) {
+            const userIds = gamers.map(g => g.id);
+            fetchSwapStatuses(userIds);
+        }
+    }, [gamers, currentUserId, fetchSwapStatuses]);
+
     const filteredGamers = gamers.filter((gamer) => {
         const matchesSearch = gamer.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
             gamer.tag.toLowerCase().includes(searchTerm.toLowerCase());
@@ -222,6 +234,8 @@ export default function ExplorePage() {
                                 key={gamer.id}
                                 {...gamer}
                                 currentUserId={currentUserId}
+                                initialSwapStatus={getSwapStatus(gamer.id)}
+                                onSwapStatusChange={updateSwapStatus}
                             />
                         ))}
                     </div>

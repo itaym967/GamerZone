@@ -57,41 +57,67 @@ export default function LFGPage() {
     useEffect(() => {
         fetchPosts()
 
-        // Real-time Subscription
-        const channel = supabase
-            .channel('lfg_realtime')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'lfg_posts',
-                },
-                async (payload) => {
-                    // Fetch the full post with profile to prepend
-                    const { data, error } = await supabase
-                        .from('lfg_posts')
-                        .select(`
-                    *,
-                    profiles (
-                    id,
-                    username,
-                    avatar_url,
-                    is_banned
-                    )
-                `)
-                        .eq('id', payload.new.id)
-                        .single()
+        // Only subscribe if page is visible
+        if (!document.hidden) {
+            // Real-time Subscription with game filter
+            const channel = supabase
+                .channel('lfg_realtime')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'lfg_posts',
+                        // Filter by selected game to reduce realtime load
+                        filter: selectedGame ? `game=eq.${selectedGame}` : undefined
+                    },
+                    async (payload) => {
+                        // Double-check game filter (defense in depth)
+                        if (!selectedGame || (payload.new as any).game === selectedGame) {
+                            // Fetch the full post with profile to prepend
+                            const { data, error } = await supabase
+                                .from('lfg_posts')
+                                .select(`
+                            *,
+                            profiles (
+                            id,
+                            username,
+                            avatar_url,
+                            is_banned
+                            )
+                        `)
+                                .eq('id', (payload.new as any).id)
+                                .single()
 
-                    if (data && !error) {
-                        setPosts((prev) => [data as PostWithProfile, ...prev])
+                            if (data && !error) {
+                                setPosts((prev) => [data as PostWithProfile, ...prev])
+                            }
+                        }
                     }
-                }
-            )
-            .subscribe()
+                )
+                .subscribe()
 
+            return () => {
+                supabase.removeChannel(channel)
+            }
+        }
+    }, [selectedGame])
+
+    // Pause subscription when tab is hidden to reduce database load
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // Remove all channels when tab is hidden
+                supabase.removeAllChannels()
+            } else {
+                // Re-fetch when tab becomes visible
+                fetchPosts()
+            }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
         return () => {
-            supabase.removeChannel(channel)
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
         }
     }, [selectedGame])
 

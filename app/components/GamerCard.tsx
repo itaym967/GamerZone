@@ -18,16 +18,26 @@ interface GamerCardProps {
     avatarSeed?: string; // Optional override for avatar generation
     id: string;
     currentUserId: string | null;
+    // OPTIMIZATION: Accept swap status from parent to avoid per-card subscriptions
+    initialSwapStatus?: "initial" | "pending_sent" | "pending_received" | "approved" | "rejected";
+    onSwapStatusChange?: (userId: string, status: "initial" | "pending_sent" | "pending_received" | "approved" | "rejected") => void;
 }
 
-export default function GamerCard({ username, tag, games, bio, online, hiddenTags, avatarSeed, id, currentUserId }: GamerCardProps) {
-    const [status, setStatus] = useState<"initial" | "pending_sent" | "pending_received" | "approved" | "rejected">("initial");
+export default function GamerCard({ username, tag, games, bio, online, hiddenTags, avatarSeed, id, currentUserId, initialSwapStatus, onSwapStatusChange }: GamerCardProps) {
+    const [status, setStatus] = useState<"initial" | "pending_sent" | "pending_received" | "approved" | "rejected">(initialSwapStatus || "initial");
     const [isLoading, setIsLoading] = useState(false);
     const [copiedTag, setCopiedTag] = useState<string | null>(null);
     const [xp, setXp] = useState(Math.floor(Math.random() * 500) + 100);
     const [showXpGain, setShowXpGain] = useState(false);
     // State for revealed tags
     const [revealedTags, setRevealedTags] = useState<{ [key: string]: string } | null>(null);
+
+    // OPTIMIZATION: Update local status when parent provides new status
+    useEffect(() => {
+        if (initialSwapStatus) {
+            setStatus(initialSwapStatus);
+        }
+    }, [initialSwapStatus]);
 
     const level = Math.floor(xp / 100);
     const progress = xp % 100;
@@ -51,11 +61,12 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
         }
     };
 
-    // Check Swap Status on Mount & Realtime
+    // OPTIMIZATION: Only fetch initial status, no per-card realtime subscription
+    // Parent components should manage realtime subscriptions for all cards
     useEffect(() => {
-        if (!currentUserId || !id) return;
+        if (!currentUserId || !id || initialSwapStatus) return;
 
-        // 1. Initial Fetch
+        // Only fetch if parent didn't provide initial status
         const checkStatus = async () => {
             const { data } = await supabase
                 .from('swap_requests')
@@ -64,71 +75,26 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                 .maybeSingle();
 
             if (data) {
-                updateLocalStatus(data);
-            }
-        };
-
-        const updateLocalStatus = (data: any) => {
-            // If approved, verify we are part of it and fetch tags
-            if (data.status === 'approved') {
-                setStatus('approved');
-                fetchRealTags(); // Fetch real tags on approval
-            } else if (data.status === 'pending') {
-                if (data.sender_id === currentUserId) {
-                    setStatus('pending_sent');
-                } else {
-                    setStatus('pending_received');
+                const newStatus = determineStatus(data, currentUserId);
+                setStatus(newStatus);
+                if (newStatus === 'approved') {
+                    fetchRealTags();
                 }
-            } else if (data.status === 'rejected') {
-                setStatus('rejected');
             }
         };
 
         checkStatus();
+    }, [currentUserId, id, initialSwapStatus]);
 
-        // 2. Realtime Listener
-        console.log("Setting up realtime for:", { currentUserId, id });
-
-        const channel = supabase
-            .channel(`swap_status_${id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'swap_requests',
-                    filter: `sender_id=eq.${currentUserId}`
-                },
-                (payload) => {
-                    console.log("Realtime Event (Sender):", payload);
-                    if (payload.new && (payload.new as any).receiver_id === id) {
-                        updateLocalStatus(payload.new);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'swap_requests',
-                    filter: `receiver_id=eq.${currentUserId}`
-                },
-                (payload) => {
-                    console.log("Realtime Event (Receiver):", payload);
-                    if (payload.new && (payload.new as any).sender_id === id) {
-                        updateLocalStatus(payload.new);
-                    }
-                }
-            )
-            .subscribe((status) => {
-                console.log("Subscription status:", status);
-            });
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [currentUserId, id]);
+    // Helper function to determine status from swap request data
+    const determineStatus = (data: any, userId: string) => {
+        if (data.status === 'approved') return 'approved';
+        if (data.status === 'rejected') return 'rejected';
+        if (data.status === 'pending') {
+            return data.sender_id === userId ? 'pending_sent' : 'pending_received';
+        }
+        return 'initial';
+    };
 
 
     const handleSendRequest = async () => {
@@ -150,6 +116,10 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             if (error) throw error;
 
             setStatus('pending_sent');
+            // Notify parent of status change
+            if (onSwapStatusChange) {
+                onSwapStatusChange(id, 'pending_sent');
+            }
             toast.success("בקשה נשלחה!", { description: "תקבל התראה כשהמשתמש יאשר." });
         } catch (error: any) {
             console.error(error);
@@ -178,6 +148,10 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             if (error) throw error;
 
             setStatus(newStatus as any);
+            // Notify parent of status change
+            if (onSwapStatusChange) {
+                onSwapStatusChange(id, newStatus as any);
+            }
 
             if (approved) {
                 setXp(prev => prev + 50);

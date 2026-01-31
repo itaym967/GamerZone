@@ -135,8 +135,12 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
 
     // 2. Subscribe to Realtime Messages with Auto-Reconnect
     const setupRealtimeSubscription = useCallback(() => {
-        if (!currentUserId || isSubscribedRef.current) {
-            console.log('⚠️ Skipping subscription setup:', { currentUserId, isSubscribed: isSubscribedRef.current });
+        if (!currentUserId || isSubscribedRef.current || document.hidden) {
+            console.log('⚠️ Skipping subscription setup:', {
+                currentUserId,
+                isSubscribed: isSubscribedRef.current,
+                tabHidden: document.hidden
+            });
             return;
         }
 
@@ -155,7 +159,9 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
                 {
                     event: 'INSERT',
                     schema: 'public',
-                    table: 'messages'
+                    table: 'messages',
+                    // ✅ OPTIMIZATION: Only subscribe to messages where current user is sender or receiver
+                    filter: `or(sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId})`
                 },
                 (payload) => {
                     console.log('🎉 REALTIME EVENT RECEIVED:', {
@@ -203,7 +209,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
                 if (status === 'SUBSCRIBED') {
                     console.log('✅ Successfully subscribed to realtime messages');
                     console.log('🔍 Channel state:', channelRef.current?.state);
-                    console.log('⚡ Listening for INSERT events on public.messages table');
+                    console.log('⚡ Listening for INSERT events on public.messages table (filtered by user)');
                     isSubscribedRef.current = true;
                 } else if (status === 'CHANNEL_ERROR') {
                     console.error('❌ Realtime subscription error');
@@ -255,21 +261,33 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
         }
     }, [setupRealtimeSubscription])
 
-    // 3. Handle Page Visibility Changes (reconnect when tab becomes active)
+    // 3. Handle Page Visibility Changes (pause when hidden, resume when visible)
     useEffect(() => {
         if (!currentUserId) return;
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
-                console.log('Tab became visible, checking connection...');
+                console.log('📱 Tab became visible, checking connection...');
                 // If we're not subscribed, reconnect
                 if (!isSubscribedRef.current) {
-                    console.log('Reconnecting after tab became visible...');
+                    console.log('🔄 Reconnecting after tab became visible...');
                     if (channelRef.current) {
                         supabase.removeChannel(channelRef.current);
                     }
                     setupRealtimeSubscription();
                 }
+            } else {
+                // ✅ OPTIMIZATION: Pause subscription when tab is hidden
+                console.log('💤 Tab hidden, pausing realtime subscription...');
+                if (channelRef.current) {
+                    supabase.removeChannel(channelRef.current);
+                    channelRef.current = null;
+                }
+                if (typingChannelRef.current) {
+                    supabase.removeChannel(typingChannelRef.current);
+                    typingChannelRef.current = null;
+                }
+                isSubscribedRef.current = false;
             }
         };
 
@@ -308,9 +326,9 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
         };
     }, [currentUserId, setupRealtimeSubscription])
 
-    // 5. Typing Indicator Subscription
+    // 5. Typing Indicator Subscription (only when tab is visible)
     useEffect(() => {
-        if (!currentUserId || !activeChatId) {
+        if (!currentUserId || !activeChatId || document.hidden) {
             return;
         }
 
