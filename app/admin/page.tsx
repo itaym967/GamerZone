@@ -149,6 +149,13 @@ export default function AdminPage() {
 
             if (error) throw error;
 
+            // Update local state immediately
+            setUsers(users.map(u =>
+                u.id === user.id
+                    ? { ...u, is_banned: isBanning, ban_reason: reason || undefined }
+                    : u
+            ));
+
             toast.success(isBanning ? `המשתמש ${user.username} הוקפא` : `המשתמש ${user.username} שוחרר`);
 
             const notificationTitle = isBanning ? 'חשבונך הוקפא' : 'חשבונך שוחרר';
@@ -187,8 +194,8 @@ export default function AdminPage() {
                 admin_id: currentUser
             });
 
-            fetchData();
-
+            // We can still fetch to be sure, but we don't rely on it for UI feedback
+            // fetchData(); 
         } catch (error: any) {
             toast.error("שגיאה בביצוע הפעולה");
             console.error(error);

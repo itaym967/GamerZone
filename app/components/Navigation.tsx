@@ -34,16 +34,19 @@ export default function Navigation() {
             setUser(user);
 
             if (user) {
-                const { data: profile } = await supabase
+                const { data: profile, error } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', user.id)
                     .single();
 
-                setProfile(profile);
-
-                if (profile?.role === 'admin') {
-                    setIsAdmin(true);
+                if (error) {
+                    console.error("Navigation: Error fetching profile", error);
+                } else {
+                    setProfile(profile);
+                    if (profile?.role === 'admin') {
+                        setIsAdmin(true);
+                    }
                 }
             }
         };
@@ -56,9 +59,13 @@ export default function Navigation() {
                 setUser(session?.user);
                 // Re-fetch profile on sign-in
                 if (session?.user) {
-                    const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-                    setProfile(data);
-                    if (data?.role === 'admin') setIsAdmin(true);
+                    const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                    if (!error && data) {
+                        setProfile(data);
+                        if (data?.role === 'admin') setIsAdmin(true);
+                    } else if (error) {
+                        console.error("Navigation (Realtime): Error fetching profile", error);
+                    }
                 }
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);

@@ -51,6 +51,14 @@ export default function SignupPage() {
                 toast.error("יותר מדי ניסיונות", {
                     description: "אנא המתן דקה לפני ניסיון נוסף. (Supabase Rate Limit)"
                 });
+            } else if (error?.message === "User already registered" || error?.code === "user_already_exists") {
+                toast.error("המשתמש כבר קיים", {
+                    description: "כתובת האימייל הזו כבר רשומה במערכת.",
+                    action: {
+                        label: "התחבר",
+                        onClick: () => router.push("/login")
+                    }
+                });
             } else {
                 toast.error("שגיאה בהרשמה", {
                     description: error.message || "אירעה שגיאה בלתי צפויה"
