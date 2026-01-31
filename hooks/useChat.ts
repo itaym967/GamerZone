@@ -559,7 +559,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
         }
     }, [currentUserId, supabase]);
 
-    const markAsRead = useCallback(async (messageIds: string[]) => {
+    const markAsRead = useCallback(async (messageIds: string[], senderId?: string) => {
         if (!currentUserId || messageIds.length === 0) return;
 
         try {
@@ -573,10 +573,17 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             if (error) {
                 console.error('Error marking messages as read:', error);
             } else {
-                // Update local state
+                // Update local messages state
                 setMessages(prev => prev.map(m =>
                     messageIds.includes(m.id) ? { ...m, is_read: true } : m
                 ));
+
+                // Update local contacts state (clear unread badge)
+                if (senderId) {
+                    setContacts(prev => prev.map(c =>
+                        c.id === senderId ? { ...c, unread_count: 0 } : c
+                    ));
+                }
             }
         } catch (err) {
             console.error('Unexpected error marking messages as read:', err);

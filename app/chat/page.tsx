@@ -106,7 +106,7 @@ function ChatContent() {
 
         if (unreadMessages.length > 0) {
             const unreadIds = unreadMessages.map(m => m.id);
-            markAsRead(unreadIds);
+            markAsRead(unreadIds, activeChat.id);
         }
     }, [messages, activeChat, user, markAsRead]);
 
