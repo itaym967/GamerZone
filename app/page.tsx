@@ -10,6 +10,7 @@ import Link from "next/link";
 
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 interface Gamer {
   id: string;
@@ -23,6 +24,7 @@ interface Gamer {
 }
 
 export default function Dashboard() {
+  const { user, isLoading: authLoading } = useAuth();
   const [gamers, setGamers] = useState<Gamer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
@@ -30,46 +32,37 @@ export default function Dashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const supabase = createClient();
 
+  // Sync auth state
+  useEffect(() => {
+    if (!authLoading) {
+      setIsLoggedIn(!!user);
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    }
+  }, [user, authLoading]);
+
+  // Fetch dashboard data
   useEffect(() => {
     let mounted = true;
 
     async function fetchGamers() {
+      if (authLoading) return; // Wait for auth
+
       try {
-        // Fetch requests independently to prevent one failure from stopping the other
-        const userPromise = supabase.auth.getUser()
-          .then(res => ({ user: res.data.user, error: null }))
-          .catch(err => ({ user: null, error: err }));
-
-        const dashboardPromise = (async () => {
-          try {
-            const { data, error } = await supabase.rpc('get_dashboard_data');
-            return { data, error };
-          } catch (err) {
-            return { data: null, error: err };
-          }
-        })();
-
-        // Wait for both results
-        const [userResult, dashboardResult] = await Promise.all([userPromise, dashboardPromise]);
+        const { data, error } = await supabase.rpc('get_dashboard_data');
 
         if (!mounted) return;
 
-        const user = userResult.user;
-        setIsLoggedIn(!!user);
-        if (user) setCurrentUserId(user.id);
-
-        // Warn on user error but don't stop
-        if (userResult.error && userResult.error?.code !== 'PGRST301') {
-          console.warn("Error fetching user session:", userResult.error);
+        if (error) {
+          console.error("Dashboard: Error fetching data", error);
+          // Don't throw entire page error, just show toast or empty state
+          toast.error("שגיאה בטעינת נתונים");
+          return;
         }
 
-        // Throw dashboard error if critical
-        if (dashboardResult.error) {
-          throw dashboardResult.error;
-        }
-
-        if (dashboardResult.data) {
-          const profiles = dashboardResult.data as any[];
+        if (data) {
+          const profiles = data as any[];
 
           // Filter out current user
           const currentUserProfile = profiles.find(p => p.id === user?.id);
@@ -109,10 +102,7 @@ export default function Dashboard() {
           }
         }
       } catch (err: any) {
-        if (err.code !== 'PGRST301') {
-          console.error("Error fetching gamers:", err);
-          toast.error("שגיאה בטעינת שחקנים");
-        }
+        console.error("Error processing dashboard:", err);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -125,7 +115,7 @@ export default function Dashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [authLoading, user]);
 
   return (
     <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all">

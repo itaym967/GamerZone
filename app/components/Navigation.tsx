@@ -1,13 +1,12 @@
 "use client";
 
-import { Home, Search, MessageCircle, User, Settings, Gamepad2, ShieldAlert, LogOut, Bell, LogIn } from "lucide-react";
+import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import OptimizedAvatar from "./OptimizedAvatar";
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
     { icon: Home, label: "בית", href: "/" },
@@ -22,67 +21,11 @@ const authenticatedNavItems = [
 export default function Navigation() {
     const pathname = usePathname();
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<any>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const { user, profile, isAdmin, signOut, isLoading } = useAuth();
     const { subscribeToPush, subscription } = usePushNotifications();
-    const supabase = createClient();
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-
-            if (user) {
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
-
-                if (error) {
-                    console.error("Navigation: Error fetching profile", error);
-                } else {
-                    setProfile(profile);
-                    if (profile?.role === 'admin') {
-                        setIsAdmin(true);
-                    }
-                }
-            }
-        };
-
-        fetchUser();
-
-        // Realtime Auth Listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN') {
-                setUser(session?.user);
-                // Re-fetch profile on sign-in
-                if (session?.user) {
-                    const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-                    if (!error && data) {
-                        setProfile(data);
-                        if (data?.role === 'admin') setIsAdmin(true);
-                    } else if (error) {
-                        console.error("Navigation (Realtime): Error fetching profile", error);
-                    }
-                }
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-                setProfile(null);
-                setIsAdmin(false);
-                router.push('/login');
-            }
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []);
 
     const handleSignOut = async () => {
-        await supabase.auth.signOut();
-        // Router push is handled by the auth state listener
+        await signOut();
     };
 
     // Combine nav items based on auth state
@@ -122,7 +65,16 @@ export default function Navigation() {
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-white/5 space-y-3">
-                    {user && !subscription && (
+                    {isLoading ? (
+                        // Loading Skeleton
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5 animate-pulse">
+                            <div className="w-8 h-8 rounded-full bg-white/10" />
+                            <div className="flex-1 space-y-2">
+                                <div className="h-3 w-20 bg-white/10 rounded" />
+                                <div className="h-2 w-12 bg-white/10 rounded" />
+                            </div>
+                        </div>
+                    ) : user && !subscription ? (
                         <button
                             onClick={() => subscribeToPush()}
                             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 transition-all font-medium"
@@ -130,9 +82,9 @@ export default function Navigation() {
                             <Bell size={20} />
                             <span>הפעל התראות</span>
                         </button>
-                    )}
+                    ) : null}
 
-                    {user ? (
+                    {isLoading ? null : user ? (
                         <>
                             {/* Mini Profile Summary */}
                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">

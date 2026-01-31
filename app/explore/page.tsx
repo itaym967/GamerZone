@@ -6,6 +6,7 @@ import GamerCard from "../components/GamerCard";
 import { Search, Filter } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 interface Gamer {
     id: string;
@@ -38,6 +39,7 @@ const FILTERS = {
 };
 
 export default function ExplorePage() {
+    const { user, isLoading: authLoading } = useAuth();
     const [gamers, setGamers] = useState<Gamer[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -46,10 +48,21 @@ export default function ExplorePage() {
     const [onlineOnly, setOnlineOnly] = useState(false);
     const supabase = createClient();
 
+    // Sync auth state
+    useEffect(() => {
+        if (!authLoading) {
+            if (user) {
+                setCurrentUserId(user.id);
+            }
+        }
+    }, [user, authLoading]);
+
     useEffect(() => {
         let mounted = true;
 
         async function fetchGamers() {
+            if (authLoading) return;
+
             try {
                 // Timeout wrapper
                 const withTimeout = (promise: Promise<any>, ms: number, name: string) => {
@@ -58,16 +71,6 @@ export default function ExplorePage() {
                         new Promise((_, reject) => setTimeout(() => reject(new Error(`${name} timed out`)), ms))
                     ]);
                 };
-
-                // Fetch requests independently
-                const userPromise = supabase.auth.getUser()
-                    .then(res => {
-                        return { user: res.data.user, error: null };
-                    })
-                    .catch(err => {
-                        console.error("Explore: User fetch error", err);
-                        return { user: null, error: err };
-                    });
 
                 const dashboardPromise = (async () => {
                     try {
@@ -79,22 +82,14 @@ export default function ExplorePage() {
                     }
                 })();
 
-                // Wait for both with timeout (45s)
-                const [userResult, dashboardResult] = await withTimeout(
-                    Promise.all([userPromise, dashboardPromise]),
+                // Wait for data with timeout (45s)
+                const dashboardResult = await withTimeout(
+                    dashboardPromise,
                     45000,
-                    "Initial Fetch"
+                    "Data Fetch"
                 );
 
                 if (!mounted) return;
-
-                const user = userResult.user;
-                if (user) setCurrentUserId(user.id);
-
-                // Log user error if any
-                if (userResult.error && userResult.error?.code !== 'PGRST301') {
-                    console.warn("Error fetching user session:", userResult.error);
-                }
 
                 // Handle critical dashboard error
                 if (dashboardResult.error) {
@@ -151,7 +146,7 @@ export default function ExplorePage() {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [authLoading, user]);
 
     const filteredGamers = gamers.filter((gamer) => {
         const matchesSearch = gamer.username.toLowerCase().includes(searchTerm.toLowerCase()) ||

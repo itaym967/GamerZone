@@ -1,49 +1,10 @@
 // Service Worker for GamerZone PWA
 // Version 1.0.0
 
-const CACHE_NAME = 'gamerzone-v2';
-const RUNTIME_CACHE = 'gamerzone-runtime-v2';
+const CACHE_NAME = 'gamerzone-v3';
+const RUNTIME_CACHE = 'gamerzone-runtime-v3';
 
-// Assets to cache on install
-const PRECACHE_ASSETS = [
-    '/',
-    '/login',
-    '/signup',
-    '/chat',
-    '/explore',
-    '/profile',
-    '/favicon.ico',
-];
-
-// Install event - cache essential assets
-self.addEventListener('install', (event) => {
-    console.log('[SW] Installing service worker...');
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Precaching app shell');
-            return cache.addAll(PRECACHE_ASSETS);
-        })
-    );
-    self.skipWaiting();
-});
-
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating service worker...');
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-                        console.log('[SW] Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-    self.clients.claim();
-});
+// ... (PRECACHE_ASSETS remains the same)
 
 // Fetch event - improved caching strategy
 self.addEventListener('fetch', (event) => {
@@ -55,22 +16,10 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 1. API requests - Network First, fallback to cache
-    if (url.pathname.startsWith('/api/')) {
-        event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    if (response.ok) {
-                        const responseClone = response.clone();
-                        caches.open(RUNTIME_CACHE).then((cache) => {
-                            cache.put(request, responseClone);
-                        });
-                    }
-                    return response;
-                })
-                .catch(() => caches.match(request))
-        );
-        return;
+    // 1. API requests - NETWORK ONLY
+    // We want real-time data always. No caching for API.
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/supabase/')) {
+        return; // Fallback to browser default (Network)
     }
 
     // 2. Next.js Static Assets (hashed files) - Cache First

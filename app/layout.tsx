@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -62,9 +63,11 @@ export default function RootLayout({
       <body
         className={`${rubik.variable} antialiased font-rubik bg-background text-foreground`}
       >
-        {children}
-        <PWAInstallPrompt />
-        <Toaster position="top-center" richColors theme="dark" />
+        <AuthProvider>
+          {children}
+          <PWAInstallPrompt />
+          <Toaster position="top-center" richColors theme="dark" />
+        </AuthProvider>
       </body>
     </html>
   );
