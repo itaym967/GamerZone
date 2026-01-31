@@ -50,6 +50,7 @@ export default function Navigation() {
                 <nav className="flex-1 space-y-2">
                     {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
+                        const isLiveBoard = item.href === '/lfg';
                         return (
                             <Link
                                 key={item.href}
@@ -57,7 +58,12 @@ export default function Navigation() {
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative ${isActive ? "bg-white/10 text-primary" : "text-gray-400 hover:text-white hover:bg-white/5"
                                     }`}
                             >
-                                <item.icon size={20} className={isActive ? "text-primary" : "group-hover:text-primary transition-colors"} />
+                                <div className="relative">
+                                    <item.icon size={20} className={isActive ? "text-primary" : "group-hover:text-primary transition-colors"} />
+                                    {isLiveBoard && (
+                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                                    )}
+                                </div>
                                 <span className="font-medium">{item.label}</span>
                                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-primary shadow-[0_0_10px_#00ff9d]" />}
                             </Link>
@@ -125,6 +131,7 @@ export default function Navigation() {
                 <div className="flex justify-around items-center p-3">
                     {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
+                        const isLiveBoard = item.href === '/lfg';
                         return (
                             <Link
                                 key={item.href}
@@ -132,8 +139,11 @@ export default function Navigation() {
                                 className={`flex flex-col items-center gap-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"
                                     }`}
                             >
-                                <div className={`p-1.5 rounded-full transition-all ${isActive ? "bg-primary/20" : ""}`}>
+                                <div className={`p-1.5 rounded-full transition-all relative ${isActive ? "bg-primary/20" : ""}`}>
                                     <item.icon size={24} />
+                                    {isLiveBoard && (
+                                        <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                                    )}
                                 </div>
                                 <span className="text-[10px] font-medium">{item.label}</span>
                             </Link>

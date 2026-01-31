@@ -3,11 +3,22 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { ChevronLeft, Gamepad2, Mic, Globe } from 'lucide-react'
+import { ChevronLeft, Gamepad2, Mic } from 'lucide-react'
 import Link from 'next/link'
+import Navigation from '@/app/components/Navigation'
 
 const GAMES = ['Fortnite', 'Call of Duty', 'FIFA', 'Valorant', 'Minecraft', 'Roblox', 'Apex Legends', 'Overwatch 2']
-const MODES = ['Ranked', 'Casual', 'Creative', 'Tournament', 'Zero Build', 'Battle Royale']
+
+const GAME_MODES: { [key: string]: string[] } = {
+    'Fortnite': ['Battle Royale', 'Zero Build', 'Ranked', 'Creative', 'Team Rumble', 'Arena'],
+    'Call of Duty': ['Multiplayer', 'Warzone', 'Ranked', 'Search & Destroy', 'Team Deathmatch', 'Domination'],
+    'FIFA': ['Ultimate Team', 'Career Mode', 'Pro Clubs', 'Seasons', 'Friendlies', 'Volta'],
+    'Valorant': ['Unrated', 'Competitive', 'Spike Rush', 'Deathmatch', 'Escalation', 'Team Deathmatch'],
+    'Minecraft': ['Survival', 'Creative', 'Hardcore', 'Adventure', 'Skyblock', 'Bedwars'],
+    'Roblox': ['Roleplay', 'Obby', 'Tycoon', 'Simulator', 'Fighting', 'Racing'],
+    'Apex Legends': ['Battle Royale', 'Ranked', 'Arenas', 'Control', 'Mixtape'],
+    'Overwatch 2': ['Quick Play', 'Competitive', 'Arcade', 'Custom Games', 'Mystery Heroes']
+}
 
 export default function CreateLFGPage() {
     const router = useRouter()
@@ -18,7 +29,7 @@ export default function CreateLFGPage() {
         mode: '',
         description: '',
         mic_required: false,
-        region: 'EU' // Default
+        region: 'ישראל' // Always Israel
     })
 
     // Check auth on load? Middleware handles it mostly, but good to be safe.
@@ -49,93 +60,80 @@ export default function CreateLFGPage() {
             router.refresh()
         } catch (error) {
             console.error(error)
-            alert('Failed to modify post')
+            alert('שגיאה בפרסום המודעה')
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen pb-24 pt-16 px-4 max-w-lg mx-auto">
-            <div className="mb-6 flex items-center gap-3">
-                <Link href="/lfg" className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
-                    <ChevronLeft className="text-white" />
-                </Link>
-                <h1 className="text-2xl font-bold text-white">Create Post</h1>
-            </div>
+        <div className="min-h-screen pb-24 md:pb-0 md:pr-64">
+            <Navigation />
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-
-                {/* Game Selection */}
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                        <Gamepad2 size={16} className="text-purple-400" />
-                        Select Game
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {GAMES.map(game => (
-                            <button
-                                key={game}
-                                type="button"
-                                onClick={() => setFormData({ ...formData, game })}
-                                className={`p-3 rounded-xl text-sm font-medium transition-all text-left border ${formData.game === game ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
-                            >
-                                {game}
-                            </button>
-                        ))}
-                    </div>
+            <div className="pt-6 px-4 max-w-lg mx-auto">
+                <div className="mb-6 flex items-center gap-3">
+                    <Link href="/lfg" className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
+                        <ChevronLeft className="text-white" />
+                    </Link>
+                    <h1 className="text-2xl font-bold text-white">פרסום מודעה חדשה</h1>
                 </div>
 
-                {/* Mode Input */}
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/80">Game Mode</label>
-                    <div className="flex gap-2 flex-wrap mb-2">
-                        {MODES.map(mode => (
-                            <button
-                                key={mode}
-                                type="button"
-                                onClick={() => setFormData({ ...formData, mode })}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${formData.mode === mode ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
-                            >
-                                {mode}
-                            </button>
-                        ))}
-                    </div>
-                    <input
-                        type="text"
-                        required
-                        maxLength={30}
-                        placeholder="or type custom mode..."
-                        value={formData.mode}
-                        onChange={e => setFormData({ ...formData, mode: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
-                    />
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-6">
 
-                {/* Region & Mic */}
-                <div className="grid grid-cols-2 gap-4">
+                    {/* Game Selection */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                            <Globe size={16} className="text-green-400" />
-                            Region
+                            <Gamepad2 size={16} className="text-purple-400" />
+                            בחר משחק
                         </label>
-                        <select
-                            value={formData.region}
-                            onChange={e => setFormData({ ...formData, region: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 appearance-none"
-                        >
-                            <option value="EU">Europe</option>
-                            <option value="NA">North America</option>
-                            <option value="SA">South America</option>
-                            <option value="AS">Asia</option>
-                            <option value="OC">Oceania</option>
-                        </select>
+                        <div className="grid grid-cols-2 gap-2">
+                            {GAMES.map(game => (
+                                <button
+                                    key={game}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, game })}
+                                    className={`p-3 rounded-xl text-sm font-medium transition-all text-left border ${formData.game === game ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
+                                >
+                                    {game}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 pt-6 pb-6">
+                    {/* Mode Input */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/80">מצב משחק</label>
+                        {formData.game && (
+                            <div className="flex gap-2 flex-wrap mb-2">
+                                {GAME_MODES[formData.game]?.map((mode: string) => (
+                                    <button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, mode })}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${formData.mode === mode ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
+                                    >
+                                        {mode}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <input
+                            type="text"
+                            required
+                            maxLength={30}
+                            placeholder={formData.game ? "או הקלד מצב משחק מותאם אישית..." : "בחר משחק תחילה..."}
+                            value={formData.mode}
+                            onChange={e => setFormData({ ...formData, mode: e.target.value })}
+                            disabled={!formData.game}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors text-right disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                    </div>
+
+                    {/* Mic Required */}
+                    <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                         <label className="text-sm font-medium text-white/80 flex items-center gap-2">
                             <Mic size={16} className="text-red-400" />
-                            Mic Required
+                            מיקרופון חובה
                         </label>
                         <input
                             type="checkbox"
@@ -144,38 +142,38 @@ export default function CreateLFGPage() {
                             className="w-5 h-5 accent-blue-600 rounded"
                         />
                     </div>
-                </div>
 
-                {/* Description */}
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/80">Description</label>
-                    <textarea
-                        required
-                        maxLength={140}
-                        rows={3}
-                        placeholder="e.g., Need 1 sweat for ranked, must have 2.0 KD..."
-                        value={formData.description}
-                        onChange={e => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
-                    />
-                    <div className="text-right text-xs text-white/40">
-                        {formData.description.length}/140
+                    {/* Description */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/80">תיאור</label>
+                        <textarea
+                            required
+                            maxLength={140}
+                            rows={3}
+                            placeholder="לדוגמה: מחפש שחקן אחד לרנקד, חייב 2.0 KD..."
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors resize-none text-right"
+                        />
+                        <div className="text-right text-xs text-white/40">
+                            {formData.description.length}/140
+                        </div>
                     </div>
-                </div>
 
-                {/* Submit */}
-                <button
-                    type="submit"
-                    disabled={loading || !formData.game || !formData.mode}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
-                >
-                    {loading ? 'Posting...' : 'Post to Board'}
-                </button>
-                <p className="text-center text-xs text-white/40">
-                    Post will automatically expire in 1 hour.
-                </p>
+                    {/* Submit */}
+                    <button
+                        type="submit"
+                        disabled={loading || !formData.game || !formData.mode}
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                        {loading ? 'מפרסם...' : 'פרסם ללוח'}
+                    </button>
+                    <p className="text-center text-xs text-white/40">
+                        המודעה תפוג אוטומטית תוך שעה.
+                    </p>
 
-            </form>
+                </form>
+            </div>
         </div>
     )
 }

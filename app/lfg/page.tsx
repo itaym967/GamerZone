@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Plus, Search, Filter } from 'lucide-react'
 import LFGCard from './components/LFGCard'
 import { useAuth } from '@/context/AuthContext'
+import Navigation from '../components/Navigation'
 
 type PostWithProfile = Database['public']['Tables']['lfg_posts']['Row'] & {
     profiles: Database['public']['Tables']['profiles']['Row'] | null
@@ -95,17 +96,19 @@ export default function LFGPage() {
     }, [selectedGame])
 
     return (
-        <div className="min-h-screen pb-24 md:pb-8">
+        <div className="min-h-screen pb-24 md:pb-0 md:pr-64">
+            <Navigation />
+
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 pt-14 pb-4 px-4">
+            <div className="sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 pt-4 pb-4 px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-2xl font-bold text-white">Live Board</h1>
+                        <h1 className="text-2xl font-bold text-white">לוח חיפוש שחקנים</h1>
                         <Link href="/lfg/create">
                             <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-blue-600/20 active:scale-95">
                                 <Plus size={18} />
-                                <span className="hidden sm:inline">Create Post</span>
-                                <span className="sm:hidden">Post</span>
+                                <span className="hidden sm:inline">פרסם מודעה</span>
+                                <span className="sm:hidden">פרסם</span>
                             </button>
                         </Link>
                     </div>
@@ -116,7 +119,7 @@ export default function LFGPage() {
                             onClick={() => setSelectedGame(null)}
                             className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${!selectedGame ? 'bg-white text-black border-white' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'}`}
                         >
-                            All Games
+                            כל המשחקים
                         </button>
                         {GAMES.map(game => (
                             <button
@@ -144,9 +147,9 @@ export default function LFGPage() {
                         <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Search className="text-white/40" size={32} />
                         </div>
-                        <h3 className="text-white font-semibold text-lg">No active posts</h3>
+                        <h3 className="text-white font-semibold text-lg">אין מודעות פעילות</h3>
                         <p className="text-white/40 text-sm mt-1 max-w-xs mx-auto">
-                            Be the first to look for a group in this category!
+                            היה הראשון לחפש קבוצה בקטגוריה זו!
                         </p>
                     </div>
                 ) : (

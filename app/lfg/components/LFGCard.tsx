@@ -50,9 +50,8 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
             // Let's defer strict "Find existing" to a robust solution later if needed.
             // For now, let's just create a NEW chat for this interaction if we don't handle it elsewhere?
             // Actually, creating duplicate DMs is bad. 
-            // Let's assume we redirect to /chat?userId={targetId} and let the Chat page handle "get or create".
-
-            router.push(`/chat?userId=${post.user_id}`)
+            // Redirect to chat with target parameter
+            router.push(`/chat?target=${post.user_id}`)
 
         } catch (error) {
             console.error('Error connecting:', error)
@@ -67,7 +66,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all duration-300 group">
             {/* Header */}
             <div className="flex items-center gap-3 mb-3">
-                <Link href={`/profile/${post.user_id}`} className="shrink-0">
+                <div className="shrink-0">
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
                         <OptimizedAvatar
                             seed={post.profiles?.avatar_url || post.profiles?.username || '?'}
@@ -75,13 +74,11 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
                             size={40}
                         />
                     </div>
-                </Link>
+                </div>
                 <div className="flex-1 min-w-0">
-                    <Link href={`/profile/${post.user_id}`} className="block">
-                        <h3 className="font-bold text-white truncate hover:text-blue-400 transition-colors">
-                            {post.profiles?.username || 'Unknown Gamer'}
-                        </h3>
-                    </Link>
+                    <h3 className="font-bold text-white truncate">
+                        {post.profiles?.username || 'Unknown Gamer'}
+                    </h3>
                     <div className="flex items-center gap-2 text-xs text-white/40">
                         <span className="flex items-center gap-1">
                             <Clock size={10} />
@@ -130,12 +127,12 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
                     className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-[0.98] text-white font-semibold transition-all flex items-center justify-center gap-2 group-hover:bg-blue-600 group-hover:text-white"
                 >
                     <MessageCircle size={18} />
-                    {loading ? 'Connecting...' : 'Connect'}
+                    {loading ? 'מתחבר...' : 'התחבר'}
                 </button>
             )}
             {isOwner && (
                 <div className="w-full py-2.5 text-center text-white/30 text-sm italic">
-                    Your Post
+                    המודעה שלך
                 </div>
             )}
         </div>
