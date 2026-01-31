@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, RefreshCw, Gamepad2, LogOut } from "lucide-react";
+import { Save, RefreshCw, Gamepad2 } from "lucide-react";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
 import { toast } from "sonner";
@@ -249,25 +249,13 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <div className="pt-4 space-y-3">
+                        <div className="pt-4">
                             <button
                                 onClick={handleSave}
                                 className="w-full bg-primary text-black font-bold py-3 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
                             >
                                 <Save size={18} />
                                 <span>שמור שינויים</span>
-                            </button>
-
-                            <button
-                                onClick={async () => {
-                                    await supabase.auth.signOut();
-                                    router.push('/login');
-                                    router.refresh();
-                                }}
-                                className="w-full bg-white/5 text-red-400 font-bold py-3 rounded-xl hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 border border-white/5"
-                            >
-                                <LogOut size={18} />
-                                <span>התנתק מהחשבון</span>
                             </button>
                         </div>
                     </div>

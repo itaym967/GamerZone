@@ -66,6 +66,12 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
     useEffect(() => {
         if (!currentUserId || !id || initialSwapStatus) return;
 
+        // Validate that currentUserId is a valid UUID (not 'preview' or other invalid values)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(currentUserId) || !uuidRegex.test(id)) {
+            return;
+        }
+
         // Only fetch if parent didn't provide initial status
         const checkStatus = async () => {
             const { data } = await supabase
