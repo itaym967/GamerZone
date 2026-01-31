@@ -214,7 +214,7 @@ function ChatContent() {
                                 <div className="relative">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
                                         <OptimizedAvatar
-                                            seed={contact.avatar_url}
+                                            seed={contact.avatar_url || contact.username}
                                             size={40}
                                             style="avataaars"
                                             className="rounded-full bg-black"
@@ -254,7 +254,7 @@ function ChatContent() {
                                 </button>
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
                                     <OptimizedAvatar
-                                        seed={activeChat.avatar_url}
+                                        seed={activeChat.avatar_url || activeChat.username}
                                         size={40}
                                         style="avataaars"
                                         className="rounded-full bg-black"

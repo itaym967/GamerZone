@@ -17,17 +17,22 @@ interface AdminLog {
     action: string;
     details: any;
     created_at: string;
-    admin_id: string;
+    admin_id: string | null;
 }
 
 interface Profile {
     id: string;
-    username: string;
-    full_name: string;
-    role: string;
-    is_online: boolean;
-    is_banned: boolean;
-    ban_reason?: string;
+    username: string | null;
+    full_name: string | null;
+    role: string | null;
+    is_online: boolean | null;
+    is_banned: boolean | null;
+    ban_reason?: string | null;
+    avatar_url: string | null;
+    updated_at: string | null;
+    bio: string | null;
+    website: string | null;
+    onboarding_completed: boolean | null;
 }
 
 export default function AdminPage() {
@@ -411,7 +416,7 @@ export default function AdminPage() {
                                                         {user.is_online ? 'מחובר' : 'מנותק'}
                                                     </div>
                                                 </td>
-                                                <td className="p-4 text-sm text-gray-400 max-w-[150px] truncate" title={user.ban_reason}>
+                                                <td className="p-4 text-sm text-gray-400 max-w-[150px] truncate" title={user.ban_reason || undefined}>
                                                     {user.ban_reason || "-"}
                                                 </td>
                                                 <td className="p-4 flex gap-2">

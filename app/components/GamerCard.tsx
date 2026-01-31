@@ -160,6 +160,10 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
     };
 
     const handleApproveResponse = async (approved: boolean) => {
+        if (!currentUserId) {
+            toast.error("אנא התחבר כדי להגיב לבקשה");
+            return;
+        }
         setIsLoading(true);
         try {
             const newStatus = approved ? 'approved' : 'rejected';

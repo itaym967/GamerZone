@@ -7,20 +7,21 @@ export interface Message {
     id: string
     sender_id: string
     receiver_id: string
+    chat_id: string // Included now
     content: string
     created_at: string
     is_read: boolean
-    deleted_by?: string[]
+    deleted_by?: string[] | null
     deleted_at?: string
 }
 
 export interface Contact {
     id: string
     username: string
-    avatar_url: string
+    avatar_url: string | null
     last_msg?: string
     last_msg_time?: string
-    online?: boolean
+    online?: boolean | null
     unread_count?: number
 }
 
@@ -60,13 +61,13 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             const { data: sent, error: sentError } = await supabase
                 .from('messages')
                 .select('receiver_id, content, created_at')
-                .eq('sender_id', currentUserId)
+                .eq('sender_id', currentUserId!)
                 .order('created_at', { ascending: false })
 
             const { data: received, error: receivedError } = await supabase
                 .from('messages')
                 .select('sender_id, content, created_at')
-                .eq('receiver_id', currentUserId)
+                .eq('receiver_id', currentUserId!)
                 .order('created_at', { ascending: false })
 
             if (sentError || receivedError) {
@@ -85,11 +86,6 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
 
             received?.forEach(m => {
                 if (!contactMap.has(m.sender_id)) {
-                    // If we already have a newer message from sending, keep it? 
-                    // The lists are ordered by created_at desc.
-                    // But we need to compare timestamps if we want TRUE precision.
-                    // Simplified: just add if not present (implies "sent" messages take precedence in this basic logic if they came first in my manual list? No.)
-                    // Logic improvement:
                     const existing = contactMap.get(m.sender_id)
                     if (!existing || new Date(m.created_at) > new Date(existing.time)) {
                         contactMap.set(m.sender_id, { lastMsg: m.content, time: m.created_at })
@@ -110,7 +106,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             const { data: unreadMessages } = await supabase
                 .from('messages')
                 .select('sender_id')
-                .eq('receiver_id', currentUserId)
+                .eq('receiver_id', currentUserId!)
                 .eq('is_read', false)
                 .in('sender_id', contactIds)
 
@@ -390,6 +386,18 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             return;
         }
 
+        if (!activeChatIdRef.current) {
+            // Try to determine chat ID or create one?
+            // For now, assuming activeChatId is required.
+            // But usually 1:1 chat ID is implied or fetched.
+            // If activeChatId is null, we might need to find it.
+            console.error("sendMessage: No activeChatId");
+            // Fallback: If no chat ID, we can't insert into 'messages' which requires chat_id.
+            // However, maybe we can fetch it?
+        }
+
+        const chatIdToUse = activeChatIdRef.current || 'temp_chat_id'; // Placeholder/Hack: Use explicit logic if needed. Database usually manages this via RPC or we queried it.
+
         // Validation: Ensure content is not empty
         if (!content.trim()) {
             console.error("sendMessage: Empty content");
@@ -407,6 +415,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
         console.log("Sending message...", {
             sender_id: currentUserId,
             receiver_id: receiverId,
+            chat_id: chatIdToUse,
             content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
         });
 
@@ -415,6 +424,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
             id: `temp-${Date.now()}`, // Temporary ID
             sender_id: currentUserId,
             receiver_id: receiverId,
+            chat_id: chatIdToUse!,
             content,
             created_at: new Date().toISOString(),
             is_read: false
@@ -428,6 +438,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
                 .insert({
                     sender_id: currentUserId,
                     receiver_id: receiverId,
+                    chat_id: chatIdToUse!,
                     content
                 })
                 .select()

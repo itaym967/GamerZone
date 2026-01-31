@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 
 interface Profile {
     id: string;
-    username: string;
-    full_name: string;
-    avatar_url: string;
-    role: string;
-    is_banned?: boolean;
-    ban_reason?: string;
+    username: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+    role: string | null;
+    is_banned?: boolean | null;
+    ban_reason?: string | null;
 }
 
 interface AuthContextType {
