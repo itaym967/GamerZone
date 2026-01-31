@@ -1,10 +1,67 @@
 // Service Worker for GamerZone PWA
-// Version 1.0.1
+// Version 1.0.2 - Performance Optimized
 
-const CACHE_NAME = 'gamerzone-v5';
-const RUNTIME_CACHE = 'gamerzone-runtime-v5';
+const CACHE_NAME = 'gamerzone-v6';
+const RUNTIME_CACHE = 'gamerzone-runtime-v6';
+const DATA_CACHE = 'gamerzone-data-v1';
 
-// ... (PRECACHE_ASSETS remains the same)
+// Assets to precache for instant loading
+const PRECACHE_ASSETS = [
+    '/',
+    '/explore',
+    '/login',
+    '/signup',
+    '/manifest.json',
+    '/avatars/gamer.png',
+    '/avatars/samurai.png',
+    '/avatars/ninja.png',
+    '/avatars/hacker.png',
+    '/avatars/girl_pink.png',
+    '/avatars/girl_blue.png',
+];
+
+// Install event - precache critical assets
+self.addEventListener('install', (event) => {
+    console.log('[SW] Installing service worker v1.0.2');
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('[SW] Precaching critical assets');
+            return cache.addAll(PRECACHE_ASSETS);
+        }).then(() => {
+            // Skip waiting to activate immediately
+            return self.skipWaiting();
+        })
+    );
+});
+
+// Activate event - clean old caches
+self.addEventListener('activate', (event) => {
+    console.log('[SW] Activating service worker');
+    event.waitUntil(
+        Promise.all([
+            // Clean old caches
+            caches.keys().then((cacheNames) => {
+                return Promise.all(
+                    cacheNames
+                        .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE && name !== DATA_CACHE)
+                        .map((name) => {
+                            console.log('[SW] Deleting old cache:', name);
+                            return caches.delete(name);
+                        })
+                );
+            }),
+            // Enable navigation preload for faster page loads
+            (async () => {
+                if ('navigationPreload' in self.registration) {
+                    await self.registration.navigationPreload.enable();
+                    console.log('[SW] Navigation preload enabled');
+                }
+            })(),
+            // Take control of all clients immediately
+            self.clients.claim()
+        ])
+    );
+});
 
 // Fetch event - improved caching strategy
 self.addEventListener('fetch', (event) => {

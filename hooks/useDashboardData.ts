@@ -3,13 +3,15 @@
  * 
  * Centralized hook for caching dashboard/explore data to prevent redundant fetches.
  * Data is cached in sessionStorage and shared across pages.
+ * Optimized for PWA/mobile with offline support.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 const CACHE_KEY = 'gamerzone_dashboard_cache';
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const OFFLINE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes for offline mode
 
 interface Gamer {
     id: string;
@@ -33,7 +35,10 @@ function getCachedData(): CacheData | null {
         const cached = sessionStorage.getItem(CACHE_KEY);
         if (cached) {
             const parsed = JSON.parse(cached) as CacheData;
-            if (Date.now() - parsed.timestamp < CACHE_TTL) {
+            // Use longer TTL when offline for PWA support
+            const isOnline = navigator.onLine;
+            const ttl = isOnline ? CACHE_TTL : OFFLINE_CACHE_TTL;
+            if (Date.now() - parsed.timestamp < ttl) {
                 return parsed;
             }
         }
@@ -55,8 +60,31 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
     const [gamers, setGamers] = useState<Gamer[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentUsername, setCurrentUsername] = useState<string | null>(null);
-    const supabase = createClient();
+    const [isOffline, setIsOffline] = useState(false);
+    const supabase = useMemo(() => createClient(), []);
     const fetchedRef = useRef(false);
+
+    // Listen for online/offline status changes (PWA support)
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOffline(false);
+            // Refresh data when coming back online
+            if (fetchedRef.current) {
+                fetchedRef.current = false;
+                setLoading(true);
+            }
+        };
+        const handleOffline = () => setIsOffline(true);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        setIsOffline(!navigator.onLine);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
 
     const fetchGamers = useCallback(async (forceRefresh = false) => {
         if (authLoading) return;
@@ -159,6 +187,7 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
         gamers,
         loading,
         currentUsername,
-        refresh
+        refresh,
+        isOffline
     };
 }

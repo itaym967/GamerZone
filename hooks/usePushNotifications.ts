@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 
 export function usePushNotifications() {
     const [subscription, setSubscription] = useState<PushSubscription | null>(null)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
 
     useEffect(() => {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -25,10 +25,27 @@ export function usePushNotifications() {
         }
     }
 
-    async function subscribeToPush() {
+    const saveSubscription = useCallback(async (sub: PushSubscription) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { error } = await supabase
+            .from('push_subscriptions')
+            .upsert({
+                user_id: user.id,
+                endpoint: sub.endpoint,
+                p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh')!) as any)),
+                auth: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth')!) as any)),
+            }, { onConflict: 'endpoint' })
+
+        if (error) {
+            console.error('Error saving subscription:', error)
+        }
+    }, [supabase])
+
+    const subscribeToPush = useCallback(async () => {
         try {
             const registration = await navigator.serviceWorker.ready
-
 
             // 1. Get possible keys
             const envVarKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -70,25 +87,7 @@ export function usePushNotifications() {
             console.error('Failed to subscribe:', error)
             toast.error('שגיאה בהפעלת התראות')
         }
-    }
-
-    async function saveSubscription(sub: PushSubscription) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        const { error } = await supabase
-            .from('push_subscriptions')
-            .upsert({
-                user_id: user.id,
-                endpoint: sub.endpoint,
-                p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh')!) as any)),
-                auth: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth')!) as any)),
-            }, { onConflict: 'endpoint' })
-
-        if (error) {
-            console.error('Error saving subscription:', error)
-        }
-    }
+    }, [saveSubscription])
 
     return { subscription, subscribeToPush }
 }
