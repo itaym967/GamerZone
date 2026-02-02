@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback, useState, useEffect } from "react";
 import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,9 +24,27 @@ export default function Navigation() {
     const pathname = usePathname();
     const { user, profile, isAdmin, signOut, isLoading } = useAuth();
     const { subscribeToPush, subscription } = usePushNotifications();
+    const [showSkeleton, setShowSkeleton] = useState(false);
+    const [isSigningOut, setIsSigningOut] = useState(false);
+
+    // Only show skeleton after a delay to prevent flashing
+    useEffect(() => {
+        if (isLoading) {
+            const timer = setTimeout(() => setShowSkeleton(true), 300);
+            return () => clearTimeout(timer);
+        } else {
+            setShowSkeleton(false);
+        }
+    }, [isLoading]);
 
     const handleSignOut = useCallback(async () => {
-        await signOut();
+        setIsSigningOut(true);
+        try {
+            await signOut();
+        } catch (error) {
+            console.error('Sign out error:', error);
+            setIsSigningOut(false);
+        }
     }, [signOut]);
 
     // Memoize nav items to prevent recalculation on every render
@@ -72,8 +90,8 @@ export default function Navigation() {
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-white/5 space-y-3" suppressHydrationWarning>
-                    {isLoading ? (
-                        // Loading Skeleton
+                    {showSkeleton ? (
+                        // Loading Skeleton - only shown after delay
                         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5 animate-pulse">
                             <div className="w-8 h-8 rounded-full bg-white/10" />
                             <div className="flex-1 space-y-2">
@@ -91,7 +109,7 @@ export default function Navigation() {
                         </button>
                     ) : null}
 
-                    {isLoading ? null : user ? (
+                    {showSkeleton ? null : user ? (
                         <>
                             {/* Mini Profile Summary */}
                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
@@ -108,10 +126,15 @@ export default function Navigation() {
 
                             <button
                                 onClick={handleSignOut}
-                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-medium text-sm"
+                                disabled={isSigningOut}
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <LogOut size={18} />
-                                <span>התנתק</span>
+                                {isSigningOut ? (
+                                    <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
+                                ) : (
+                                    <LogOut size={18} />
+                                )}
+                                <span>{isSigningOut ? 'מתנתק...' : 'התנתק'}</span>
                             </button>
                         </>
                     ) : (

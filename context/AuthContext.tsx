@@ -157,9 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 timeoutId = setTimeout(() => {
                     if (mounted) {
                         console.warn('AuthContext: Session check timeout - forcing completion');
+                        setUser(null);
+                        setProfile(null);
+                        clearCachedProfile();
                         setIsLoading(false);
                     }
-                }, 5000);
+                }, 10000);
 
                 const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -239,9 +242,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [supabase, fetchProfile, router]);
 
     const signOut = useCallback(async () => {
-        clearCachedProfile();
-        await supabase.auth.signOut();
-        router.push('/login');
+        try {
+            // Clear state immediately for instant UI feedback
+            setUser(null);
+            setProfile(null);
+            setIsAdmin(false);
+            clearCachedProfile();
+            
+            // Clean up realtime subscription
+            if (profileChannelRef.current) {
+                supabase.removeChannel(profileChannelRef.current);
+                profileChannelRef.current = null;
+            }
+            
+            // Sign out from Supabase
+            await supabase.auth.signOut();
+            
+            // Force router refresh and redirect
+            router.refresh();
+            router.push('/login');
+        } catch (error) {
+            console.error('Error during sign out:', error);
+            // Even if sign out fails, clear local state
+            setUser(null);
+            setProfile(null);
+            setIsAdmin(false);
+            clearCachedProfile();
+            router.push('/login');
+        }
     }, [supabase, router]);
 
     const refreshProfile = useCallback(async () => {

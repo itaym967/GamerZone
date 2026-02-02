@@ -1,9 +1,9 @@
 // Service Worker for GamerZone PWA
-// Version 1.0.3 - Fixed navigation preload cancellation
+// Version 1.0.4 - Fixed auth caching and loading issues
 
-const CACHE_NAME = 'gamerzone-v7';
-const RUNTIME_CACHE = 'gamerzone-runtime-v7';
-const DATA_CACHE = 'gamerzone-data-v1';
+const CACHE_NAME = 'gamerzone-v8';
+const RUNTIME_CACHE = 'gamerzone-runtime-v8';
+const DATA_CACHE = 'gamerzone-data-v2';
 
 // Assets to precache for instant loading
 const PRECACHE_ASSETS = [
@@ -92,8 +92,14 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2. API requests - NETWORK ONLY
-    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/supabase/')) {
+    // 2. API requests and Auth-related requests - NETWORK ONLY (never cache)
+    if (url.pathname.startsWith('/api/') || 
+        url.pathname.startsWith('/supabase/') ||
+        url.pathname.startsWith('/auth/') ||
+        url.pathname === '/login' ||
+        url.pathname === '/signup' ||
+        url.pathname === '/logout' ||
+        url.href.includes('supabase.co')) {
         return;
     }
 
@@ -116,8 +122,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 4. Navigation Requests - Network First with Preload
+    // 4. Navigation Requests - Network First with Preload (but never cache auth pages)
     if (request.mode === 'navigate') {
+        // Never cache auth-related pages
+        const authPages = ['/login', '/signup', '/logout', '/auth/callback', '/forgot-password', '/update-password'];
+        const isAuthPage = authPages.some(page => url.pathname.startsWith(page));
+        
         event.respondWith(
             (async () => {
                 try {
@@ -140,7 +150,8 @@ self.addEventListener('fetch', (event) => {
                     if (preloadResponse) return preloadResponse;
 
                     const networkResponse = await fetch(request);
-                    if (networkResponse.ok) {
+                    // Only cache non-auth pages
+                    if (networkResponse.ok && !isAuthPage) {
                         const responseClone = networkResponse.clone();
                         caches.open(RUNTIME_CACHE).then((cache) => {
                             cache.put(request, responseClone);
@@ -148,6 +159,14 @@ self.addEventListener('fetch', (event) => {
                     }
                     return networkResponse;
                 } catch (error) {
+                    // Never serve cached auth pages when offline
+                    if (isAuthPage) {
+                        return new Response("Auth pages require network connection", { 
+                            status: 503, 
+                            statusText: "Offline" 
+                        });
+                    }
+                    
                     const cachedResponse = await caches.match(request);
                     if (cachedResponse) return cachedResponse;
 

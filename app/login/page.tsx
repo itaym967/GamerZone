@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import Logo from "../components/Logo";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
-import { clearAuthCookies } from "@/utils/supabase/auth-helpers";
+import { safeSignOut, isRefreshTokenError } from "@/utils/supabase/auth-helpers";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -25,14 +25,13 @@ export default function LoginPage() {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
                 
-                // If there's a refresh token error, clear cookies
-                if (error && (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token'))) {
-                    clearAuthCookies();
-                    await supabase.auth.signOut();
+                // If there's a refresh token error, use safe sign out
+                if (error && isRefreshTokenError(error)) {
+                    await safeSignOut();
                 }
             } catch (err) {
                 // Silently handle errors on login page
-                clearAuthCookies();
+                await safeSignOut();
             }
         };
         
@@ -41,6 +40,10 @@ export default function LoginPage() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Prevent multiple simultaneous login attempts
+        if (isLoading) return;
+        
         setIsLoading(true);
 
         try {
@@ -49,7 +52,14 @@ export default function LoginPage() {
                 password,
             });
 
-            if (error) throw error;
+            if (error) {
+                // Handle refresh token errors
+                if (isRefreshTokenError(error)) {
+                    await safeSignOut();
+                    throw new Error("פג תוקף ההתחברות. נסה שוב.");
+                }
+                throw error;
+            }
 
             if (session?.user) {
                 // Check if user is banned
@@ -60,10 +70,11 @@ export default function LoginPage() {
                     .single();
 
                 if (profile?.is_banned) {
-                    await supabase.auth.signOut();
+                    await safeSignOut();
                     toast.error("החשבון הוקפא", {
                         description: profile.ban_reason || "חשבונך הוקפא על ידי מנהל המערכת."
                     });
+                    setIsLoading(false);
                     return;
                 }
                 
@@ -78,7 +89,6 @@ export default function LoginPage() {
                     ? "פרטי ההתחברות שגויים"
                     : error.message
             });
-        } finally {
             setIsLoading(false);
         }
     };

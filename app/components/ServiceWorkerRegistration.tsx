@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Service Worker Registration Component
@@ -28,10 +29,15 @@ export default function ServiceWorkerRegistration() {
                                     // New service worker available
                                     console.log('[SW] New service worker available');
 
-                                    // Optionally show update notification
-                                    if (confirm('עדכון חדש זמין! לחץ OK כדי לרענן את האפליקציה.')) {
-                                        window.location.reload();
-                                    }
+                                    // Show toast notification instead of intrusive confirm
+                                    toast.info('עדכון חדש זמין!', {
+                                        description: 'לחץ כאן כדי לרענן את האפליקציה',
+                                        duration: 10000,
+                                        action: {
+                                            label: 'רענן',
+                                            onClick: () => window.location.reload()
+                                        }
+                                    });
                                 }
                             });
                         }
