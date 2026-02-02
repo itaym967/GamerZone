@@ -88,17 +88,13 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
 
     const fetchGamers = useCallback(async (forceRefresh = false) => {
         if (authLoading) {
-            console.log("Dashboard: Skipping fetch, auth still loading");
             return;
         }
-
-        console.log("Dashboard: Fetching gamers, forceRefresh:", forceRefresh);
 
         // Try cache first unless forcing refresh
         if (!forceRefresh) {
             const cached = getCachedData();
             if (cached) {
-                console.log("Dashboard: Using cached data");
                 const filteredGamers = currentUserId 
                     ? cached.gamers.filter(g => g.id !== currentUserId)
                     : cached.gamers;
@@ -113,14 +109,12 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
                 
                 // Background refresh if cache is older than 1 minute
                 if (Date.now() - cached.timestamp > 60 * 1000) {
-                    console.log("Dashboard: Cache stale, refreshing in background");
                     fetchGamers(true);
                 }
                 return;
             }
         }
 
-        console.log("Dashboard: Fetching from database");
         try {
             // Fetch profiles with their gamertags
             const { data: profiles, error } = await supabase
@@ -143,8 +137,6 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
                 setLoading(false);
                 return;
             }
-
-            console.log("Dashboard: Fetched", profiles?.length || 0, "profiles");
 
             if (profiles) {
                 // Find current user's profile
@@ -196,18 +188,15 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
 
     useEffect(() => {
         if (authLoading) {
-            console.log("Dashboard: Auth loading, waiting...");
             // Reset fetchedRef when auth starts loading to allow fetch after auth completes
             fetchedRef.current = false;
             return;
         }
         
         if (fetchedRef.current) {
-            console.log("Dashboard: Already fetched, skipping");
             return;
         }
         
-        console.log("Dashboard: Auth ready, initiating fetch");
         fetchedRef.current = true;
         fetchGamers(false);
     }, [authLoading, fetchGamers]);
