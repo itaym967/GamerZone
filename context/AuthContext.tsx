@@ -149,10 +149,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         let mounted = true;
+        let timeoutId: NodeJS.Timeout;
 
         const initAuth = async () => {
             try {
+                // Set a timeout to prevent infinite loading
+                timeoutId = setTimeout(() => {
+                    if (mounted) {
+                        console.warn('AuthContext: Session check timeout - forcing completion');
+                        setIsLoading(false);
+                    }
+                }, 5000);
+
                 const { data: { session }, error } = await supabase.auth.getSession();
+
+                // Clear timeout on successful response
+                clearTimeout(timeoutId);
 
                 // Handle refresh token errors
                 if (error) {
@@ -183,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setProfile(null);
                 clearCachedProfile();
             } finally {
+                clearTimeout(timeoutId);
                 if (mounted) setIsLoading(false);
             }
         };
@@ -217,6 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return () => {
             mounted = false;
+            if (timeoutId) clearTimeout(timeoutId);
             subscription.unsubscribe();
             if (profileChannelRef.current) {
                 supabase.removeChannel(profileChannelRef.current);

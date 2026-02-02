@@ -64,6 +64,8 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
     const supabase = useMemo(() => createClient(), []);
     const fetchedRef = useRef(false);
     const lastUserIdRef = useRef<string | null>(null);
+    const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isFetchingRef = useRef(false);
 
     // Listen for online/offline status changes (PWA support)
     useEffect(() => {
@@ -92,6 +94,12 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
             return;
         }
 
+        // Prevent concurrent fetches
+        if (isFetchingRef.current && !forceRefresh) {
+            return;
+        }
+        isFetchingRef.current = true;
+
         // Try cache first unless forcing refresh
         if (!forceRefresh) {
             const cached = getCachedData();
@@ -108,9 +116,12 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
                     setCurrentUsername(currentUserGamer.username);
                 }
                 
-                // Background refresh if cache is older than 1 minute
-                if (Date.now() - cached.timestamp > 60 * 1000) {
-                    fetchGamers(true);
+                // Background refresh if cache is older than 1 minute (but don't set loading)
+                if (Date.now() - cached.timestamp > 60 * 1000 && !isFetchingRef.current) {
+                    isFetchingRef.current = true;
+                    fetchGamers(true).finally(() => {
+                        isFetchingRef.current = false;
+                    });
                 }
                 return;
             }
@@ -184,10 +195,16 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
             console.error("Error processing dashboard:", err);
         } finally {
             setLoading(false);
+            isFetchingRef.current = false;
         }
     }, [authLoading, currentUserId, supabase]);
 
     useEffect(() => {
+        // Clear any existing timeout
+        if (loadingTimeoutRef.current) {
+            clearTimeout(loadingTimeoutRef.current);
+        }
+
         if (authLoading) {
             // Reset fetchedRef when auth starts loading to allow fetch after auth completes
             fetchedRef.current = false;
@@ -206,7 +223,25 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
         }
         
         fetchedRef.current = true;
-        fetchGamers(false);
+        
+        // Set timeout fallback - if loading takes more than 10 seconds, force stop
+        loadingTimeoutRef.current = setTimeout(() => {
+            console.warn('Dashboard loading timeout - forcing completion');
+            setLoading(false);
+            isFetchingRef.current = false;
+        }, 10000);
+        
+        fetchGamers(false).finally(() => {
+            if (loadingTimeoutRef.current) {
+                clearTimeout(loadingTimeoutRef.current);
+            }
+        });
+
+        return () => {
+            if (loadingTimeoutRef.current) {
+                clearTimeout(loadingTimeoutRef.current);
+            }
+        };
     }, [authLoading, currentUserId, fetchGamers]);
 
     const refresh = useCallback(() => {
