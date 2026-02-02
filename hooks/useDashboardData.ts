@@ -197,6 +197,8 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
     useEffect(() => {
         if (authLoading) {
             console.log("Dashboard: Auth loading, waiting...");
+            // Reset fetchedRef when auth starts loading to allow fetch after auth completes
+            fetchedRef.current = false;
             return;
         }
         
