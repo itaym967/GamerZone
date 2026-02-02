@@ -114,16 +114,28 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
         }
 
         try {
-            const { data, error } = await supabase.rpc('get_dashboard_data');
+            // Fetch profiles with their gamertags
+            const { data: profiles, error } = await supabase
+                .from('profiles')
+                .select(`
+                    id,
+                    username,
+                    bio,
+                    avatar_url,
+                    is_online,
+                    gamertags (
+                        platform,
+                        is_hidden
+                    )
+                `)
+                .order('username', { ascending: true });
 
             if (error) {
                 console.error("Dashboard: Error fetching data", error);
                 return;
             }
 
-            if (data) {
-                const profiles = data as any[];
-
+            if (profiles) {
                 // Find current user's profile
                 const currentUserProfile = profiles.find(p => p.id === currentUserId);
                 if (currentUserProfile) {
