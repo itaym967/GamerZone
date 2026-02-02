@@ -51,9 +51,9 @@ export default function ExplorePage() {
 
     const filteredGamers = useMemo(() => {
         return gamers.filter((gamer) => {
-            const matchesSearch = gamer.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gamer.tag.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesGame = activeGame === "All" || gamer.games.includes(activeGame);
+            const matchesSearch = (gamer.username?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (gamer.tag?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+            const matchesGame = activeGame === "All" || gamer.games?.includes(activeGame);
             const matchesOnline = !onlineOnly || gamer.online;
 
             return matchesSearch && matchesGame && matchesOnline;
