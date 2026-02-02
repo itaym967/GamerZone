@@ -156,7 +156,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const initAuth = async () => {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                // Handle refresh token errors
+                if (error) {
+                    if (error.message?.includes('refresh_token_not_found') || 
+                        error.message?.includes('Invalid Refresh Token')) {
+                        // Clear invalid session
+                        await supabase.auth.signOut();
+                        setUser(null);
+                        setProfile(null);
+                        clearCachedProfile();
+                        if (mounted) setIsLoading(false);
+                        return;
+                    }
+                }
 
                 if (session?.user) {
                     setUser(session.user);
@@ -166,8 +180,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setProfile(null);
                     clearCachedProfile();
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("AuthContext: Error checking session", error);
+                // Clear session on any error to prevent loops
+                setUser(null);
+                setProfile(null);
+                clearCachedProfile();
             } finally {
                 if (mounted) setIsLoading(false);
             }
@@ -188,6 +206,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 clearCachedProfile();
                 router.refresh();
             } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+                setUser(session.user);
+            } else if (event === 'USER_UPDATED' && session?.user) {
                 setUser(session.user);
             }
 

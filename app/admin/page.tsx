@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Navigation from "../components/Navigation";
-import { ShieldAlert, Trash2, Plus, Shield, Ban, Lock, Unlock, Zap, Activity, Database, TrendingDown, CheckCircle2, AlertCircle } from "lucide-react";
+import { ShieldAlert, Trash2, Plus, Shield, Ban, Lock, Unlock, Zap, Activity, Database, TrendingDown, CheckCircle2, AlertCircle, Sparkles, Brain, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/client";
@@ -72,6 +72,9 @@ export default function AdminPage() {
 
     // Form Inputs
     const [newWord, setNewWord] = useState("");
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState<{ analysis: string; suggestions: string[] } | null>(null);
+    const [showAnalysis, setShowAnalysis] = useState(false);
 
     useEffect(() => {
         checkAdminAccess();
@@ -266,6 +269,64 @@ export default function AdminPage() {
         }
     };
 
+    const analyzeWithAI = async () => {
+        if (blockedWords.length === 0) {
+            toast.error("אין מילים לניתוח. הוסף מילים לרשימה השחורה תחילה.");
+            return;
+        }
+
+        setIsAnalyzing(true);
+        setShowAnalysis(true);
+        try {
+            const response = await fetch('/api/deepseek/analyze-toxicity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ blockedWords: blockedWords.map(w => w.word) })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'שגיאה בניתוח הרעלנות');
+            }
+
+            setAnalysisResult(data);
+            toast.success('הניתוח הושלם בהצלחה!');
+
+            // Log the analysis
+            await supabase.from('admin_logs').insert({
+                action: 'AI_TOXICITY_ANALYSIS',
+                details: { wordCount: blockedWords.length, suggestionsCount: data.suggestions.length },
+                admin_id: currentUser
+            });
+        } catch (error: any) {
+            console.error('AI analysis error:', error);
+            toast.error(error.message || 'שגיאה בניתוח AI');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const addSuggestedWord = async (word: string) => {
+        if (blockedWords.some(w => w.word === word)) {
+            toast.info("המילה כבר קיימת ברשימה");
+            return;
+        }
+
+        try {
+            const { error } = await supabase.from('blocked_words').insert([{ word }]);
+            if (error) throw error;
+
+            toast.success(`המילה "${word}" נוספה לרשימה`);
+            fetchData();
+
+            await supabase.from('admin_logs').insert({ action: 'ADD_WORD_FROM_AI', details: { word } });
+        } catch (error: any) {
+            toast.error("שגיאה בהוספת מילה");
+            console.error(error);
+        }
+    };
+
     const handleFreeze = async (user: Profile) => {
         const isBanning = !user.is_banned;
 
@@ -425,38 +486,99 @@ export default function AdminPage() {
                 ) : (
                     <>
                         {activeTab === 'blacklist' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                {/* Add New Word */}
-                                <div className="lg:col-span-1">
-                                    <div className="bg-[#0e0e1b] p-6 rounded-2xl border border-white/5 sticky top-6">
-                                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                            <Plus size={18} className="text-red-500" />
-                                            הוספת מילה חוסמת
-                                        </h3>
-                                        <form onSubmit={addWord} className="space-y-4">
+                            <div className="space-y-8">
+                                {/* AI Analysis Section */}
+                                <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <Brain className="text-purple-400" size={28} />
                                             <div>
-                                                <label className="block text-sm text-gray-400 mb-1">המילה לחסימה</label>
-                                                <input
-                                                    type="text"
-                                                    value={newWord}
-                                                    onChange={(e) => setNewWord(e.target.value)}
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-red-500/50 text-right"
-                                                    placeholder="למשל: noob"
-                                                />
-                                                <p className="text-xs text-gray-500 mt-2">
-                                                    * מילים אלו יסוננו אוטומטית מהצ'אט.
-                                                </p>
+                                                <h3 className="text-lg font-bold text-white">ניתוח רעלנות עם AI</h3>
+                                                <p className="text-sm text-gray-400">קבל המלצות חכמות לשיפור הרשימה השחורה</p>
                                             </div>
-                                            <button
-                                                type="submit"
-                                                disabled={!newWord.trim()}
-                                                className="w-full bg-red-600 text-white font-bold py-2.5 rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                הוסף לרשימה
-                                            </button>
-                                        </form>
+                                        </div>
+                                        <button
+                                            onClick={analyzeWithAI}
+                                            disabled={isAnalyzing || blockedWords.length === 0}
+                                            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold px-6 py-3 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isAnalyzing ? (
+                                                <>
+                                                    <Loader2 size={18} className="animate-spin" />
+                                                    <span>מנתח...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles size={18} />
+                                                    <span>נתח עם AI</span>
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
+
+                                    {/* Analysis Results */}
+                                    {showAnalysis && analysisResult && (
+                                        <div className="mt-6 space-y-4">
+                                            {/* Analysis Text */}
+                                            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+                                                <h4 className="text-sm font-bold text-purple-400 mb-2">ניתוח:</h4>
+                                                <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{analysisResult.analysis}</p>
+                                            </div>
+
+                                            {/* Suggestions */}
+                                            {analysisResult.suggestions.length > 0 && (
+                                                <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+                                                    <h4 className="text-sm font-bold text-blue-400 mb-3">המלצות למילים נוספות:</h4>
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                        {analysisResult.suggestions.map((word, idx) => (
+                                                            <button
+                                                                key={idx}
+                                                                onClick={() => addSuggestedWord(word)}
+                                                                className="flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 p-2 rounded-lg transition-all group"
+                                                            >
+                                                                <span className="text-sm text-white">{word}</span>
+                                                                <Plus size={14} className="text-gray-500 group-hover:text-blue-400" />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    {/* Add New Word */}
+                                    <div className="lg:col-span-1">
+                                        <div className="bg-[#0e0e1b] p-6 rounded-2xl border border-white/5 sticky top-6">
+                                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                                <Plus size={18} className="text-red-500" />
+                                                הוספת מילה חוסמת
+                                            </h3>
+                                            <form onSubmit={addWord} className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm text-gray-400 mb-1">המילה לחסימה</label>
+                                                    <input
+                                                        type="text"
+                                                        value={newWord}
+                                                        onChange={(e) => setNewWord(e.target.value)}
+                                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-red-500/50 text-right"
+                                                        placeholder="למשל: noob"
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-2">
+                                                        * מילים אלו יסוננו אוטומטית מהצ'אט.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="submit"
+                                                    disabled={!newWord.trim()}
+                                                    className="w-full bg-red-600 text-white font-bold py-2.5 rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    הוסף לרשימה
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
 
                                 {/* List */}
                                 <div className="lg:col-span-2">
@@ -479,6 +601,7 @@ export default function AdminPage() {
                                         )}
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         )}
 

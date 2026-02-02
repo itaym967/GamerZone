@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Logo from "../components/Logo";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
+import { clearAuthCookies } from "@/utils/supabase/auth-helpers";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -20,6 +21,26 @@ export default function SignupPage() {
         username: "",
         password: ""
     });
+
+    // Clear any stale auth cookies on mount to prevent refresh token errors
+    useEffect(() => {
+        const clearStaleSession = async () => {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                // If there's a refresh token error, clear cookies
+                if (error && (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token'))) {
+                    clearAuthCookies();
+                    await supabase.auth.signOut();
+                }
+            } catch (err) {
+                // Silently handle errors on signup page
+                clearAuthCookies();
+            }
+        };
+        
+        clearStaleSession();
+    }, [supabase]);
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();

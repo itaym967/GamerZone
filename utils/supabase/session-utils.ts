@@ -42,10 +42,46 @@ export async function updateSession(request: NextRequest) {
         return response
     }
 
-    // This will refresh session if needed - required for Server Components
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    // Try to get user with error handling for refresh token failures
+    let user = null
+    try {
+        const { data, error } = await supabase.auth.getUser()
+        
+        // If refresh token is invalid, clear auth cookies and redirect to login
+        if (error) {
+            if (error.message?.includes('refresh_token_not_found') || 
+                error.message?.includes('Invalid Refresh Token')) {
+                // Clear all auth-related cookies
+                const cookiesToClear = request.cookies.getAll()
+                    .filter(cookie => 
+                        cookie.name.startsWith('sb-') || 
+                        cookie.name.includes('auth-token')
+                    )
+                
+                cookiesToClear.forEach(cookie => {
+                    response.cookies.delete(cookie.name)
+                })
+                
+                // Only redirect to login if on a protected route
+                if (PROTECTED_ROUTES.some(route => path.startsWith(route))) {
+                    return NextResponse.redirect(new URL('/login', request.url))
+                }
+                
+                return response
+            }
+            // For other errors, log but continue
+            console.error('Auth error:', error.message)
+        }
+        
+        user = data?.user || null
+    } catch (error: any) {
+        console.error('Session update error:', error.message)
+        // On any error, if on protected route, redirect to login
+        if (PROTECTED_ROUTES.some(route => path.startsWith(route))) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+        return response
+    }
 
     if (user) {
         // Only fetch profile for paths that actually need it (admin, onboarding)

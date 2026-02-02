@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense, useMemo } from "react";
-import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2, Check, CheckCheck } from "lucide-react";
+import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2, Check, CheckCheck, Sparkles, Bot } from "lucide-react";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { useChat, Contact } from "@/hooks/useChat";
+import { useChat, Contact, Message } from "@/hooks/useChat";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -22,6 +22,20 @@ function ChatContent() {
 
     const [blockedWords, setBlockedWords] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [isBotTyping, setIsBotTyping] = useState(false);
+    const [botMessages, setBotMessages] = useState<Message[]>([]);
+
+    // GamerBot special contact
+    const GAMERBOT_ID = 'gamerbot-ai';
+    const gamerbotContact: Contact = {
+        id: GAMERBOT_ID,
+        username: 'GamerBot ✨',
+        avatar_url: 'bot',
+        last_msg: 'שלום! אני כאן לעזור לך עם כל שאלה על משחקים 🎮',
+        last_msg_time: '',
+        online: true,
+        unread_count: 0
+    };
 
     const supabase = useMemo(() => createClient(), []);
 
@@ -84,7 +98,7 @@ function ChatContent() {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, isTyping]);
+    }, [messages, botMessages, isTyping, isBotTyping]);
 
     // Trigger fetch when activeChat changes (including from param)
     useEffect(() => {
@@ -125,6 +139,68 @@ function ChatContent() {
 
         if (!activeChat) {
             toast.error('אנא בחר שיחה');
+            return;
+        }
+
+        // GamerBot special handling
+        if (activeChat.id === GAMERBOT_ID) {
+            const userMessage = input.trim();
+            setInput("");
+
+            // Add user message to chat
+            const userMsg: Message = {
+                id: `user-${Date.now()}`,
+                sender_id: user?.id || 'guest',
+                receiver_id: GAMERBOT_ID,
+                content: userMessage,
+                created_at: new Date().toISOString(),
+                is_read: true
+            };
+            setBotMessages(prev => [...prev, userMsg]);
+
+            // Show bot typing
+            setIsBotTyping(true);
+
+            try {
+                const response = await fetch('/api/deepseek/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMessage })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'שגיאה בתקשורת עם הבוט');
+                }
+
+                // Add bot response
+                const botMsg: Message = {
+                    id: `bot-${Date.now()}`,
+                    sender_id: GAMERBOT_ID,
+                    receiver_id: user?.id || 'guest',
+                    content: data.response,
+                    created_at: new Date().toISOString(),
+                    is_read: true
+                };
+                setBotMessages(prev => [...prev, botMsg]);
+            } catch (error: any) {
+                console.error('GamerBot error:', error);
+                toast.error(error.message || 'שגיאה בתקשורת עם הבוט');
+                
+                // Add error message
+                const errorMsg: Message = {
+                    id: `bot-error-${Date.now()}`,
+                    sender_id: GAMERBOT_ID,
+                    receiver_id: user?.id || 'guest',
+                    content: 'סליחה, נתקלתי בבעיה טכנית. נסה שוב בעוד רגע 🔧',
+                    created_at: new Date().toISOString(),
+                    is_read: true
+                };
+                setBotMessages(prev => [...prev, errorMsg]);
+            } finally {
+                setIsBotTyping(false);
+            }
             return;
         }
 
@@ -202,6 +278,31 @@ function ChatContent() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                        {/* GamerBot - Always first */}
+                        <button
+                            onClick={() => handleSelectContact(gamerbotContact)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all border border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 ${activeChat?.id === GAMERBOT_ID ? 'ring-2 ring-primary' : ''}`}
+                        >
+                            <div className="relative">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px] flex items-center justify-center">
+                                    <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+                                        <Bot size={20} className="text-primary" />
+                                    </div>
+                                </div>
+                                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0e0e1b] rounded-full"></span>
+                            </div>
+                            <div className="flex-1 text-right min-w-0">
+                                <div className="flex justify-between items-center mb-0.5">
+                                    <span className="text-white font-medium text-sm truncate flex items-center gap-1">
+                                        GamerBot
+                                        <Sparkles size={12} className="text-primary" />
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-400 truncate opacity-80">{gamerbotContact.last_msg}</p>
+                            </div>
+                        </button>
+
+                        {/* Regular contacts */}
                         {contacts.map((contact) => (
                             <button
                                 key={contact.id}
@@ -289,7 +390,7 @@ function ChatContent() {
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
                         <AnimatePresence initial={false}>
-                            {activeChat && messages.map((msg) => (
+                            {activeChat && (activeChat.id === GAMERBOT_ID ? botMessages : messages).map((msg) => (
                                 <motion.div
                                     key={msg.id}
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -326,12 +427,22 @@ function ChatContent() {
                                     </div>
                                 </motion.div>
                             ))}
-                            {isTyping && activeChat && (
+                            {(isTyping || isBotTyping) && activeChat && (
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                                    <div className="bg-[#1a1a2e] border border-white/5 px-4 py-3 rounded-2xl rounded-tr-sm flex gap-1 items-center">
-                                        <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                        <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                        <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></span>
+                                    <div className={`px-4 py-3 rounded-2xl rounded-tr-sm flex gap-1 items-center ${
+                                        isBotTyping 
+                                            ? 'bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30' 
+                                            : 'bg-[#1a1a2e] border border-white/5'
+                                    }`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s] ${
+                                            isBotTyping ? 'bg-primary' : 'bg-gray-500'
+                                        }`}></span>
+                                        <span className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s] ${
+                                            isBotTyping ? 'bg-primary' : 'bg-gray-500'
+                                        }`}></span>
+                                        <span className={`w-1.5 h-1.5 rounded-full animate-bounce ${
+                                            isBotTyping ? 'bg-primary' : 'bg-gray-500'
+                                        }`}></span>
                                     </div>
                                 </motion.div>
                             )}

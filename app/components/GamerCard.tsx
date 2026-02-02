@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy, Shield, X } from "lucide-react";
+import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy, Shield, X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { createClient } from "@/utils/supabase/client";
@@ -31,6 +31,9 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
     const [showXpGain, setShowXpGain] = useState(false);
     // State for revealed tags
     const [revealedTags, setRevealedTags] = useState<{ [key: string]: string } | null>(null);
+    // Bio enhancer state
+    const [isEnhancingBio, setIsEnhancingBio] = useState(false);
+    const [showBioEnhancer, setShowBioEnhancer] = useState(false);
 
     // OPTIMIZATION: Update local status when parent provides new status
     useEffect(() => {
@@ -186,6 +189,53 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
         setTimeout(() => setCopiedTag(null), 2000);
     };
 
+    const handleEnhanceBio = async () => {
+        if (!currentUserId || currentUserId !== id) {
+            toast.error("אתה יכול לשפר רק את הביו שלך");
+            return;
+        }
+
+        if (!bio || bio.trim().length < 10) {
+            toast.error("הביו קצר מדי לשיפור. הוסף לפחות 10 תווים.");
+            return;
+        }
+
+        setIsEnhancingBio(true);
+        try {
+            const response = await fetch('/api/deepseek/enhance-bio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bio, userId: currentUserId })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'שגיאה בשיפור הביו');
+            }
+
+            // Update bio in database
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ bio: data.enhancedBio })
+                .eq('id', currentUserId);
+
+            if (updateError) throw updateError;
+
+            toast.success('הביו שופר בהצלחה! ✨', {
+                description: 'הדף יתרענן כדי להציג את השינויים'
+            });
+
+            // Refresh page to show updated bio
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error: any) {
+            console.error('Bio enhancement error:', error);
+            toast.error(error.message || 'שגיאה בשיפור הביו');
+        } finally {
+            setIsEnhancingBio(false);
+        }
+    };
+
     // Determine which tags to show: revealed ones (if fetched) or hidden (from props, likely masked)
     const displayTags = revealedTags || hiddenTags;
 
@@ -238,9 +288,37 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                 </div>
             </div>
 
-            <p className="mt-4 text-sm text-gray-300 line-clamp-2 min-h-[40px] flex-grow">
-                {bio}
-            </p>
+            <div 
+                className="mt-4 relative group/bio"
+                onMouseEnter={() => currentUserId === id && setShowBioEnhancer(true)}
+                onMouseLeave={() => setShowBioEnhancer(false)}
+            >
+                <p className="text-sm text-gray-300 line-clamp-2 min-h-[40px] flex-grow">
+                    {bio}
+                </p>
+                {/* Bio Enhancer Button - Only show for own card */}
+                {currentUserId === id && (
+                    <AnimatePresence>
+                        {showBioEnhancer && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                onClick={handleEnhanceBio}
+                                disabled={isEnhancingBio}
+                                className="absolute top-0 left-0 p-1.5 bg-gradient-to-r from-primary to-secondary rounded-lg hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="שפר את הביו שלך עם AI"
+                            >
+                                {isEnhancingBio ? (
+                                    <Loader2 size={14} className="text-black animate-spin" />
+                                ) : (
+                                    <Sparkles size={14} className="text-black" />
+                                )}
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
+                )}
+            </div>
 
             {/* Revealed Gamertags Section */}
             <AnimatePresence>

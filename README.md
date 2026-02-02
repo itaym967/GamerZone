@@ -1,36 +1,133 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GamerZone 🎮
+
+A modern gaming social platform built with Next.js, Supabase, and AI-powered features.
+
+## Features
+
+### Core Features
+- **Player Discovery**: Browse and connect with gamers
+- **Real-time Chat**: Instant messaging with typing indicators
+- **Swap System**: Exchange gamertags securely
+- **LFG Board**: Find teammates for your favorite games
+- **Admin Panel**: Comprehensive moderation tools
+
+### AI-Powered Features ✨
+- **GamerBot**: Intelligent chat assistant for gaming questions and tips
+- **Bio Enhancer**: AI-powered profile improvement
+- **Toxicity Analysis**: Smart moderation with AI suggestions
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Database**: Supabase (PostgreSQL + Realtime)
+- **Authentication**: Supabase Auth
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **AI**: DeepSeek API
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- npm/yarn/pnpm
+- Supabase account
+- DeepSeek API key (for AI features)
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd GamerZone
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `.env.local` and add your credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+DEEPSEEK_API_KEY=your_deepseek_api_key
+```
 
-## Learn More
+4. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+5. Open [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## DeepSeek AI Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+For detailed AI features setup, see [DEEPSEEK_SETUP.md](./DEEPSEEK_SETUP.md)
 
-## Deploy on Vercel
+**Quick setup**:
+1. Get API key from [DeepSeek Platform](https://platform.deepseek.com/)
+2. Add to `.env.local`: `DEEPSEEK_API_KEY=sk-...`
+3. Restart dev server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+├── app/
+│   ├── api/
+│   │   └── deepseek/        # AI API routes
+│   ├── components/          # React components
+│   ├── admin/              # Admin panel
+│   ├── chat/               # Chat interface
+│   └── ...
+├── hooks/                  # Custom React hooks
+├── utils/
+│   ├── supabase/          # Supabase utilities
+│   └── deepseek.ts        # AI utilities
+└── context/               # React context providers
+```
+
+## Key Features Documentation
+
+### GamerBot
+AI chatbot in the chat interface that answers gaming questions in Hebrew.
+
+### Bio Enhancer
+Hover over your bio on your player card and click the ✨ icon to improve it with AI.
+
+### Toxicity Analysis
+Admin panel tool that analyzes blocked words and suggests improvements.
+
+## Development
+
+```bash
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run linter
+npm run lint
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## License
+
+This project is private and proprietary.
