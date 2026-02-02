@@ -476,7 +476,7 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
                 );
             }
 
-            // Trigger Push Notification (non-blocking)
+            // Trigger Push Notification (non-blocking, silent failure)
             if (receiverId !== currentUserId) {
                 fetch('/api/send-push', {
                     method: 'POST',
@@ -487,7 +487,13 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
                         message: content,
                         url: `/chat?target=${currentUserId}`
                     })
-                }).catch(err => console.error("Failed to trigger push notification:", err));
+                }).then(res => {
+                    if (!res.ok) {
+                        console.warn('Push notification failed (non-critical):', res.status);
+                    }
+                }).catch(err => {
+                    console.warn("Push notification unavailable (non-critical):", err.message);
+                });
             }
         } catch (err) {
             // Remove optimistic message on unexpected error

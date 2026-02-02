@@ -15,7 +15,7 @@ function ChatContent() {
     const searchParams = useSearchParams();
     const targetId = searchParams.get("target");
 
-    const { user } = useAuth();
+    const { user, isLoading: authLoading } = useAuth();
     const [activeChat, setActiveChat] = useState<Contact | null>(null);
     const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
     const [input, setInput] = useState("");
@@ -224,17 +224,6 @@ function ChatContent() {
             const regex = new RegExp(foundWord, "gi");
             finalContent = input.replace(regex, "*".repeat(foundWord.length));
             toast.warning("הודעתך סוננה עקב שפה לא נאותה");
-
-            // Log the attempt (optional, based on new admin specs)
-            const logResult = await supabase.from('admin_logs').insert({
-                action: 'CHAT_FILTER',
-                target_id: user.id,
-                details: { word: foundWord, original: input }
-            });
-
-            if (logResult.error) {
-                console.error('Failed to log filter event:', logResult.error);
-            }
         }
 
         // Clear input immediately for better UX
@@ -257,6 +246,17 @@ function ChatContent() {
     const handleDeleteMessage = async (messageId: string) => {
         await deleteMessage(messageId);
     };
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#050510]">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-white">טוען...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen pb-24 md:pb-0 md:pr-64 flex bg-[#050510]">
