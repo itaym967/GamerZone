@@ -47,22 +47,29 @@ export default function SignupPage() {
         setIsLoading(true);
 
         try {
-            const { error } = await supabase.auth.signUp({
+            const { data, error } = await supabase.auth.signUp({
                 email: form.email,
                 password: form.password,
                 options: {
                     data: {
                         username: form.username,
-                        full_name: form.username, // Default to username as name for now
+                        full_name: form.username,
                         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username}`
-                    }
+                    },
+                    emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`
                 }
             });
 
             if (error) throw error;
 
-            toast.success("הרשמה בוצעה בהצלחה! בדוק את המייל לאימות.");
-            router.push("/login");
+            // If email confirmation is disabled, redirect to onboarding
+            if (data?.session) {
+                toast.success("ברוך הבא ל-GamerZone! 🎮");
+                router.push("/onboarding");
+            } else {
+                toast.success("הרשמה בוצעה בהצלחה! בדוק את המייל לאימות.");
+                router.push("/login");
+            }
 
         } catch (error: any) {
             console.error(error); // Debugging

@@ -195,19 +195,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (event === 'SIGNED_IN' && session?.user) {
                 setUser(session.user);
                 await fetchProfile(session.user.id, false);
+                if (mounted) setIsLoading(false);
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setProfile(null);
                 setIsAdmin(false);
                 clearCachedProfile();
+                if (mounted) setIsLoading(false);
                 router.refresh();
             } else if (event === 'TOKEN_REFRESHED' && session?.user) {
                 setUser(session.user);
+                if (mounted) setIsLoading(false);
             } else if (event === 'USER_UPDATED' && session?.user) {
                 setUser(session.user);
+                if (mounted) setIsLoading(false);
+            } else {
+                // For INITIAL_SESSION and other events
+                if (mounted) setIsLoading(false);
             }
-
-            setIsLoading(false);
         });
 
         return () => {

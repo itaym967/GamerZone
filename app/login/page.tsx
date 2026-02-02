@@ -66,10 +66,12 @@ export default function LoginPage() {
                     });
                     return;
                 }
+                
+                toast.success("ברוך הבא ל-GamerZone! 🎮");
+                // Small delay to ensure auth state propagates before redirect
+                await new Promise(resolve => setTimeout(resolve, 100));
+                router.replace("/");
             }
-
-            toast.success("ברוך הבא ל-GamerZone! 🎮");
-            router.replace("/");
         } catch (error: any) {
             toast.error("שגיאה בהתחברות", {
                 description: error.message === "Invalid login credentials"

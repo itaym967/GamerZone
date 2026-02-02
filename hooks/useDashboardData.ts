@@ -63,6 +63,7 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
     const [isOffline, setIsOffline] = useState(false);
     const supabase = useMemo(() => createClient(), []);
     const fetchedRef = useRef(false);
+    const lastUserIdRef = useRef<string | null>(null);
 
     // Listen for online/offline status changes (PWA support)
     useEffect(() => {
@@ -193,13 +194,20 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
             return;
         }
         
+        // Reset and refetch if user ID changed (login/logout)
+        if (lastUserIdRef.current !== currentUserId) {
+            lastUserIdRef.current = currentUserId;
+            fetchedRef.current = false;
+            setLoading(true);
+        }
+        
         if (fetchedRef.current) {
             return;
         }
         
         fetchedRef.current = true;
         fetchGamers(false);
-    }, [authLoading, fetchGamers]);
+    }, [authLoading, currentUserId, fetchGamers]);
 
     const refresh = useCallback(() => {
         fetchedRef.current = false;

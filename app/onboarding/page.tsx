@@ -2,20 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Gamepad2, User, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Gamepad2, User, Sparkles, Bot, MessageSquare, Zap, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import Logo from "../components/Logo";
+import AvatarCreator from "../components/AvatarCreator";
 
 export default function OnboardingPage() {
     const router = useRouter();
     const supabase = createClient();
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
 
     // Form Data
+    const [avatarUrl, setAvatarUrl] = useState("");
     const [bio, setBio] = useState("");
     const [gamertags, setGamertags] = useState<{ platform: string; tag: string }[]>([]);
     const [newPlatform, setNewPlatform] = useState("Valorant");
@@ -37,11 +39,15 @@ export default function OnboardingPage() {
             }
             setUserId(user.id);
             // Pre-fill existing data if any?
-            const { data } = await supabase.from('profiles').select('bio').eq('id', user.id).single();
+            const { data } = await supabase.from('profiles').select('bio, avatar_url, username').eq('id', user.id).single();
             if (data?.bio) setBio(data.bio);
+            if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+            if (!data?.avatar_url && data?.username) {
+                setAvatarUrl(`https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`);
+            }
         };
         checkUser();
-    }, []);
+    }, [supabase, router]);
 
     const handleAddGamertag = () => {
         if (!newTag.trim()) return;
@@ -84,6 +90,7 @@ export default function OnboardingPage() {
                 .upsert({
                     id: finalUserId,
                     bio: bio,
+                    avatar_url: avatarUrl,
                     onboarding_completed: true,
                     updated_at: new Date().toISOString()
                 });
@@ -138,17 +145,100 @@ export default function OnboardingPage() {
 
                     {/* Progress Bar */}
                     <div className="flex items-center justify-center gap-2 mt-6">
-                        <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-white/10'}`} />
-                        <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-white/10'}`} />
-                        <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 3 ? 'bg-primary' : 'bg-white/10'}`} />
+                        <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 0 ? 'bg-primary' : 'bg-white/10'}`} />
+                        <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-white/10'}`} />
+                        <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-white/10'}`} />
+                        <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 3 ? 'bg-primary' : 'bg-white/10'}`} />
+                        <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 4 ? 'bg-primary' : 'bg-white/10'}`} />
                     </div>
                 </div>
 
-                <div className="bg-[#0e0e1b] border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl min-h-[400px]">
+                <div className="bg-[#0e0e1b] border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl min-h-[500px]">
                     <AnimatePresence mode="wait">
+                        {step === 0 && (
+                            <motion.div
+                                key="step0"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-8 text-center"
+                            >
+                                <div className="py-6">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-4xl mx-auto mb-6 animate-bounce">
+                                        🎮
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-white mb-4">ברוכים הבאים ל-GamerZone!</h2>
+                                    <p className="text-gray-400 max-w-md mx-auto mb-8">
+                                        הפלטפורמה המובילה לגיימרים בישראל למצוא שותפים למשחק, לשתף gamertags ולבנות את הסקוואד המושלם
+                                    </p>
+
+                                    {/* Features Grid */}
+                                    <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto mb-8">
+                                        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-4">
+                                            <Bot className="text-primary mx-auto mb-2" size={32} />
+                                            <h3 className="text-white font-bold text-sm mb-1">GamerBot AI</h3>
+                                            <p className="text-xs text-gray-400">בוט חכם שעונה על שאלות על משחקים</p>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-xl p-4">
+                                            <MessageSquare className="text-secondary mx-auto mb-2" size={32} />
+                                            <h3 className="text-white font-bold text-sm mb-1">צ'אט בזמן אמת</h3>
+                                            <p className="text-xs text-gray-400">שלח הודעות לשחקנים אחרים מיידית</p>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-4">
+                                            <Zap className="text-primary mx-auto mb-2" size={32} />
+                                            <h3 className="text-white font-bold text-sm mb-1">Live Board</h3>
+                                            <p className="text-xs text-gray-400">מצא שחקנים שמחפשים קבוצה עכשיו</p>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-xl p-4">
+                                            <Users className="text-secondary mx-auto mb-2" size={32} />
+                                            <h3 className="text-white font-bold text-sm mb-1">גלה שחקנים</h3>
+                                            <p className="text-xs text-gray-400">חפש לפי משחק, סגנון ועוד</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-center pt-4">
+                                    <button onClick={nextStep} className="bg-primary text-black font-bold py-4 px-12 rounded-xl hover:bg-primary/80 transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
+                                        <span>בוא נתחיל!</span>
+                                        <ArrowLeft size={20} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
                         {step === 1 && (
                             <motion.div
                                 key="step1"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex items-center gap-3 text-xl font-bold text-white mb-6">
+                                    <User className="text-primary" />
+                                    <span>בחר את האווטאר שלך</span>
+                                </div>
+
+                                <AvatarCreator
+                                    onSelect={setAvatarUrl}
+                                    initialSeed={userId || ""}
+                                />
+
+                                <div className="flex justify-between pt-4">
+                                    <button onClick={prevStep} className="text-gray-400 hover:text-white font-medium py-3 px-6 transition-colors">
+                                        חזרה
+                                    </button>
+                                    <button onClick={nextStep} className="bg-white text-black font-bold py-3 px-8 rounded-xl hover:bg-gray-200 transition-colors flex items-center gap-2">
+                                        <span>המשך</span>
+                                        <ArrowLeft size={18} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 2 && (
+                            <motion.div
+                                key="step2"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
@@ -179,9 +269,9 @@ export default function OnboardingPage() {
                             </motion.div>
                         )}
 
-                        {step === 2 && (
+                        {step === 3 && (
                             <motion.div
-                                key="step2"
+                                key="step3"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
@@ -257,9 +347,9 @@ export default function OnboardingPage() {
                             </motion.div>
                         )}
 
-                        {step === 3 && (
+                        {step === 4 && (
                             <motion.div
-                                key="step3"
+                                key="step4"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}

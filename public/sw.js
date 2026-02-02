@@ -1,8 +1,8 @@
 // Service Worker for GamerZone PWA
-// Version 1.0.2 - Performance Optimized
+// Version 1.0.3 - Fixed navigation preload cancellation
 
-const CACHE_NAME = 'gamerzone-v6';
-const RUNTIME_CACHE = 'gamerzone-runtime-v6';
+const CACHE_NAME = 'gamerzone-v7';
+const RUNTIME_CACHE = 'gamerzone-runtime-v7';
 const DATA_CACHE = 'gamerzone-data-v1';
 
 // Assets to precache for instant loading
@@ -121,8 +121,22 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             (async () => {
                 try {
-                    // Use navigation preload if available
-                    const preloadResponse = await event.preloadResponse;
+                    // Use navigation preload if available, with proper error handling
+                    // to prevent "preloadResponse cancelled" warnings on redirects
+                    let preloadResponse;
+                    try {
+                        preloadResponse = await Promise.race([
+                            event.preloadResponse,
+                            // Timeout to prevent hanging if preload is cancelled
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('preload_timeout')), 3000)
+                            )
+                        ]);
+                    } catch (preloadError) {
+                        // Preload was cancelled (e.g., due to redirect) or timed out - fall through to fetch
+                        preloadResponse = null;
+                    }
+                    
                     if (preloadResponse) return preloadResponse;
 
                     const networkResponse = await fetch(request);

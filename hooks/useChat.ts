@@ -376,6 +376,13 @@ export function useChat(currentUserId: string | undefined, activeChatId: string 
 
     // 6. Methods
     const fetchMessages = async (otherUserId: string) => {
+        // Skip database fetch for GamerBot (client-side only)
+        if (otherUserId === 'gamerbot-ai') {
+            setMessages([]);
+            setIsLoading(false);
+            return;
+        }
+
         setIsLoading(true)
         const { data, error } = await supabase
             .from('messages')
