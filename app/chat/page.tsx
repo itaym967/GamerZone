@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense, useMemo } from "react";
-import { Send, MoreVertical, Phone, Video, Search, Plus, ArrowRight, Trash2, Check, CheckCheck, Sparkles, Bot } from "lucide-react";
+import { Send, MoreVertical, Search, Plus, ArrowRight, Trash2, Check, CheckCheck, Sparkles, Bot } from "lucide-react";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -376,8 +376,6 @@ function ChatContent() {
                                 >
                                     <Trash2 size={18} />
                                 </button>
-                                <button className="p-2 hover:bg-white/10 rounded-lg text-white"><Phone size={18} /></button>
-                                <button className="p-2 hover:bg-white/10 rounded-lg text-white"><Video size={18} /></button>
                                 <button className="p-2 hover:bg-white/10 rounded-lg text-white"><MoreVertical size={18} /></button>
                             </div>
                         </header>
