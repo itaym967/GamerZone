@@ -52,6 +52,7 @@ artifacts/
 brain/
 *.md
 !README.md
+investor-screenshots/README.md
 
 # Supabase Local & Migrations
 supabase/migrations/*.sql
