@@ -365,6 +365,15 @@ export default function AdminPage() {
 
             toast.success(isBanning ? `המשתמש ${user.username} הוקפא` : `המשתמש ${user.username} שוחרר`);
 
+            // Immediately revoke user session if freezing
+            if (isBanning) {
+                fetch('/api/admin/revoke-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id })
+                }).catch(e => console.error('Failed to revoke session:', e));
+            }
+
             // Notifications & Logging...
             const notificationTitle = isBanning ? 'חשבונך הוקפא' : 'חשבונך שוחרר';
             const notificationMessage = isBanning
