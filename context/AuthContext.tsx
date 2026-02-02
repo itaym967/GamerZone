@@ -66,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isAdmin, setIsAdmin] = useState(false);
     const supabase = useMemo(() => createClient(), []);
     const router = useRouter();
-    const initRef = useRef(false);
     const profileChannelRef = useRef<any>(null);
 
     const fetchProfile = useCallback(async (userId: string, useCache = true) => {
@@ -149,9 +148,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [supabase, router]);
 
     useEffect(() => {
-        if (initRef.current) return;
-        initRef.current = true;
-
         let mounted = true;
 
         const initAuth = async () => {
