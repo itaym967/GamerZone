@@ -143,6 +143,107 @@ export type Database = {
                     }
                 ]
             }
+            parties: {
+                Row: {
+                    id: string
+                    leader_id: string
+                    game: string
+                    mode: string
+                    title: string
+                    max_members: number
+                    skill_level_required: string | null
+                    mic_required: boolean | null
+                    region: string | null
+                    language: string | null
+                    status: string
+                    created_at: string
+                    expires_at: string
+                    game_started_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    leader_id: string
+                    game: string
+                    mode: string
+                    title: string
+                    max_members?: number
+                    skill_level_required?: string | null
+                    mic_required?: boolean | null
+                    region?: string | null
+                    language?: string | null
+                    status?: string
+                    created_at?: string
+                    expires_at?: string
+                    game_started_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    leader_id?: string
+                    game?: string
+                    mode?: string
+                    title?: string
+                    max_members?: number
+                    skill_level_required?: string | null
+                    mic_required?: boolean | null
+                    region?: string | null
+                    language?: string | null
+                    status?: string
+                    created_at?: string
+                    expires_at?: string
+                    game_started_at?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "parties_leader_id_fkey"
+                        columns: ["leader_id"]
+                        isOneToOne: false
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            party_members: {
+                Row: {
+                    id: string
+                    party_id: string
+                    user_id: string
+                    joined_at: string
+                    role: string
+                    is_ready: boolean | null
+                }
+                Insert: {
+                    id?: string
+                    party_id: string
+                    user_id: string
+                    joined_at?: string
+                    role?: string
+                    is_ready?: boolean | null
+                }
+                Update: {
+                    id?: string
+                    party_id?: string
+                    user_id?: string
+                    joined_at?: string
+                    role?: string
+                    is_ready?: boolean | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "party_members_party_id_fkey"
+                        columns: ["party_id"]
+                        isOneToOne: false
+                        referencedRelation: "parties"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "party_members_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             messages: {
                 Row: {
                     id: string

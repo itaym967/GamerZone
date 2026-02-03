@@ -12,7 +12,8 @@ import { useAuth } from "@/context/AuthContext";
 const navItems = [
     { icon: Home, label: "בית", href: "/" },
     { icon: Search, label: "גלה שחקנים", href: "/explore" },
-    { icon: Users, label: "לוח חי", href: "/lfg" },
+    { icon: Users, label: "מוצא קבוצות", href: "/party-finder" },
+    { icon: Gamepad2, label: "לוח חי", href: "/lfg" },
 ];
 
 const authenticatedNavItems = [
