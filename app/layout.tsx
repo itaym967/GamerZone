@@ -3,6 +3,7 @@ import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import OfflineIndicator from "./components/OfflineIndicator";
+import FloatingGamerBot from "./components/FloatingGamerBot";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
@@ -68,6 +69,7 @@ export default function RootLayout({
           <OfflineIndicator />
           {children}
           <PWAInstallPrompt />
+          <FloatingGamerBot />
           <Toaster position="top-center" richColors theme="dark" />
         </AuthProvider>
       </body>
