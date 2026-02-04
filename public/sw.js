@@ -1,9 +1,9 @@
 // Service Worker for GamerZone PWA
-// Version 1.0.4 - Fixed auth caching and loading issues
+// Version 1.0.6 - Properly consume preloadResponse to eliminate warnings
 
-const CACHE_NAME = 'gamerzone-v8';
-const RUNTIME_CACHE = 'gamerzone-runtime-v8';
-const DATA_CACHE = 'gamerzone-data-v2';
+const CACHE_NAME = 'gamerzone-v10';
+const RUNTIME_CACHE = 'gamerzone-runtime-v10';
+const DATA_CACHE = 'gamerzone-data-v4';
 
 // Assets to precache for instant loading
 const PRECACHE_ASSETS = [
@@ -131,33 +131,40 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             (async () => {
                 try {
-                    // Use navigation preload if available, with proper error handling
-                    // to prevent "preloadResponse cancelled" warnings on redirects
-                    let preloadResponse;
-                    try {
-                        preloadResponse = await Promise.race([
-                            event.preloadResponse,
-                            // Timeout to prevent hanging if preload is cancelled
-                            new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('preload_timeout')), 3000)
-                            )
-                        ]);
-                    } catch (preloadError) {
-                        // Preload was cancelled (e.g., due to redirect) or timed out - fall through to fetch
-                        preloadResponse = null;
-                    }
+                    // Properly consume preloadResponse to prevent cancellation warnings
+                    // We must await it or use it in waitUntil to avoid browser warnings
+                    let response;
                     
-                    if (preloadResponse) return preloadResponse;
-
-                    const networkResponse = await fetch(request);
-                    // Only cache non-auth pages
-                    if (networkResponse.ok && !isAuthPage) {
-                        const responseClone = networkResponse.clone();
-                        caches.open(RUNTIME_CACHE).then((cache) => {
-                            cache.put(request, responseClone);
-                        });
+                    if (event.preloadResponse) {
+                        // Consume the preload response promise properly
+                        const preloadResponse = await event.preloadResponse.catch(() => null);
+                        
+                        if (preloadResponse) {
+                            response = preloadResponse;
+                            // Cache non-auth pages
+                            if (!isAuthPage) {
+                                event.waitUntil(
+                                    caches.open(RUNTIME_CACHE).then((cache) => {
+                                        cache.put(request, response.clone());
+                                    })
+                                );
+                            }
+                            return response;
+                        }
                     }
-                    return networkResponse;
+
+                    // Fall back to regular fetch if no preload
+                    response = await fetch(request);
+                    
+                    // Only cache non-auth pages
+                    if (response.ok && !isAuthPage) {
+                        event.waitUntil(
+                            caches.open(RUNTIME_CACHE).then((cache) => {
+                                cache.put(request, response.clone());
+                            })
+                        );
+                    }
+                    return response;
                 } catch (error) {
                     // Never serve cached auth pages when offline
                     if (isAuthPage) {
