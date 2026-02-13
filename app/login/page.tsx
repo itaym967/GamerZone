@@ -20,24 +20,24 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const supabase = createClient();
 
-    // Clear any stale auth cookies on mount to prevent refresh token errors
+    // Redirect if already logged in
     useEffect(() => {
-        const clearStaleSession = async () => {
+        const checkSession = async () => {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
-                
-                // If there's a refresh token error, use safe sign out
                 if (error && isRefreshTokenError(error)) {
                     await safeSignOut();
+                    return;
                 }
-            } catch (err) {
+                if (session?.user) {
+                    router.replace('/');
+                }
+            } catch {
                 // Silently handle errors on login page
-                await safeSignOut();
             }
         };
-        
-        clearStaleSession();
-    }, [supabase]);
+        checkSession();
+    }, [supabase, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,7 +54,6 @@ export default function LoginPage() {
             });
 
             if (error) {
-                // Handle refresh token errors
                 if (isRefreshTokenError(error)) {
                     await safeSignOut();
                     throw new Error("פג תוקף ההתחברות. נסה שוב.");
@@ -63,27 +62,8 @@ export default function LoginPage() {
             }
 
             if (session?.user) {
-                // Check if user is banned
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('is_banned, ban_reason')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (profile?.is_banned) {
-                    await safeSignOut();
-                    toast.error("החשבון הוקפא", {
-                        description: profile.ban_reason || "חשבונך הוקפא על ידי מנהל המערכת."
-                    });
-                    setIsLoading(false);
-                    return;
-                }
-                
                 toast.success("ברוך הבא ל-GamerZone! 🎮");
-                // Clear all stale caches before navigating to dashboard
                 clearAllCachesOnAuthChange();
-                // Small delay to ensure auth state propagates before redirect
-                await new Promise(resolve => setTimeout(resolve, 100));
                 router.replace("/");
             }
         } catch (error: any) {
@@ -92,6 +72,7 @@ export default function LoginPage() {
                     ? "פרטי ההתחברות שגויים"
                     : error.message
             });
+        } finally {
             setIsLoading(false);
         }
     };

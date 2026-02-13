@@ -219,12 +219,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!mounted) return;
 
             if (event === 'SIGNED_IN' && session?.user) {
-                // Clear ALL caches to prevent stale guest/old-user data
                 clearAllCachesOnAuthChange();
                 setUser(session.user);
                 await fetchProfile(session.user.id, false);
                 if (mounted) setIsLoading(false);
-                router.refresh();
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setProfile(null);
