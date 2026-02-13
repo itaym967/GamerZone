@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _adminClient: SupabaseClient | null = null;
+
+function getSupabaseAdmin(): SupabaseClient {
+  if (!_adminClient) {
+    _adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _adminClient;
+}
 
 /**
  * GET /api/parental-consent?token=xxx
@@ -19,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Find the parental control record by token
-    const { data: control, error: fetchError } = await supabaseAdmin
+    const { data: control, error: fetchError } = await getSupabaseAdmin()
       .from('parental_controls')
       .select('*')
       .eq('consent_token', token)
@@ -41,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Grant consent
     const now = new Date().toISOString();
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from('parental_controls')
       .update({
         consent_granted: true,
@@ -59,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Update the child's profile
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('profiles')
       .update({
         parental_consent: true,
@@ -69,7 +76,7 @@ export async function GET(request: NextRequest) {
       .eq('id', control.child_id);
 
     // Log the activity
-    await supabaseAdmin.from('minor_activity_log').insert({
+    await getSupabaseAdmin().from('minor_activity_log').insert({
       user_id: control.child_id,
       activity_type: 'login',
       details: { action: 'parental_consent_granted', parent_email: control.parent_email },
@@ -121,7 +128,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create or update parental control record
-    const { error: upsertError } = await supabaseAdmin
+    const { error: upsertError } = await getSupabaseAdmin()
       .from('parental_controls')
       .upsert(
         {
@@ -149,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update child profile with parental email
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('profiles')
       .update({
         parental_email: parentEmail,
