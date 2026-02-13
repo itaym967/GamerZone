@@ -64,6 +64,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${rubik.variable} antialiased font-rubik bg-background text-foreground`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <OfflineIndicator />

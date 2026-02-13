@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { useAuth } from "@/context/AuthContext";
 
@@ -17,6 +18,7 @@ const navItems = [
 ];
 
 const authenticatedNavItems = [
+    { icon: Bell, label: "התראות", href: "/notifications" },
     { icon: MessageCircle, label: "צ'אט", href: "/chat" },
     { icon: User, label: "פרופיל", href: "/profile" },
 ];
@@ -25,6 +27,7 @@ export default function Navigation() {
     const pathname = usePathname();
     const { user, profile, isAdmin, signOut, isLoading } = useAuth();
     const { subscribeToPush, subscription } = usePushNotifications();
+    const { unreadCount } = useNotifications(user?.id);
     const [showSkeleton, setShowSkeleton] = useState(false);
     const [isSigningOut, setIsSigningOut] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
@@ -87,6 +90,11 @@ export default function Navigation() {
                                     <item.icon size={20} className={isActive ? "text-primary" : "group-hover:text-primary transition-colors"} />
                                     {isLiveBoard && (
                                         <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                                    )}
+                                    {item.href === '/notifications' && unreadCount > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-blue-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center px-1 shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
                                     )}
                                 </div>
                                 <span className="font-medium">{item.label}</span>
@@ -179,6 +187,11 @@ export default function Navigation() {
                                     <item.icon size={24} />
                                     {isLiveBoard && (
                                         <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                                    )}
+                                    {item.href === '/notifications' && unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-blue-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5 shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
                                     )}
                                 </div>
                                 <span className="text-[10px] font-medium">{item.label}</span>

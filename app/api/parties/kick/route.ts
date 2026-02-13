@@ -51,7 +51,8 @@ export async function POST(request: Request) {
                 user_id: userId,
                 title: 'הוצאת מהקבוצה',
                 message: 'מנהיג הקבוצה הוציא אותך מהקבוצה',
-                type: 'party_kick'
+                type: 'party_kick',
+                action_url: '/party-finder'
             })
 
         if (notificationError) {

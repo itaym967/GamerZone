@@ -39,7 +39,8 @@ export async function POST(request: Request) {
                 user_id: memberId,
                 title: 'הקבוצה נסגרה',
                 message: 'מנהיג הקבוצה סגר את הקבוצה',
-                type: 'party_closed'
+                type: 'party_closed',
+                action_url: '/party-finder'
             }))
 
             const { error: notificationError } = await supabase

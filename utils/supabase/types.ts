@@ -284,8 +284,9 @@ export type Database = {
                     type: string
                     title: string
                     message: string
+                    is_read: boolean
+                    action_url: string | null
                     created_at: string
-                    read: boolean
                 }
                 Insert: {
                     id?: string
@@ -293,8 +294,9 @@ export type Database = {
                     type: string
                     title: string
                     message: string
+                    is_read?: boolean
+                    action_url?: string | null
                     created_at?: string
-                    read?: boolean
                 }
                 Update: {
                     id?: string
@@ -302,8 +304,9 @@ export type Database = {
                     type?: string
                     title?: string
                     message?: string
+                    is_read?: boolean
+                    action_url?: string | null
                     created_at?: string
-                    read?: boolean
                 }
                 Relationships: []
             }

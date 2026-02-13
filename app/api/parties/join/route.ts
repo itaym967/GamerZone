@@ -74,7 +74,8 @@ export async function POST(request: Request) {
                 user_id: party.leader_id,
                 title: 'חבר חדש הצטרף לקבוצה',
                 message: `שחקן הצטרף לקבוצה שלך`,
-                type: 'party_join'
+                type: 'party_join',
+                action_url: '/party-finder'
             })
 
         if (notificationError) {

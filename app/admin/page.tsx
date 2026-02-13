@@ -384,7 +384,8 @@ export default function AdminPage() {
                 user_id: user.id,
                 title: notificationTitle,
                 message: notificationMessage,
-                type: isBanning ? 'error' : 'success'
+                type: isBanning ? 'error' : 'success',
+                action_url: '/profile'
             });
 
             // Fire and forget push

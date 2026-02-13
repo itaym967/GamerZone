@@ -63,7 +63,8 @@ export async function POST(request: Request) {
                         user_id: newLeader.user_id,
                         title: 'הפכת למנהיג הקבוצה',
                         message: 'המנהיג הקודם עזב והנהגת הקבוצה הועברה אליך',
-                        type: 'party_leader'
+                        type: 'party_leader',
+                        action_url: '/party-finder'
                     })
 
                 if (notificationError) {
