@@ -4,6 +4,7 @@
  */
 
 import { createClient } from './client'
+import { clearAllCachesOnAuthChange } from '@/utils/cache-utils'
 
 /**
  * Clear all Supabase auth cookies from the browser
@@ -36,10 +37,7 @@ export async function safeSignOut() {
         console.error('Error during sign out:', error)
     } finally {
         clearAuthCookies()
-        // Clear session storage
-        if (typeof window !== 'undefined') {
-            sessionStorage.clear()
-        }
+        clearAllCachesOnAuthChange()
     }
 }
 

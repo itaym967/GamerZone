@@ -1,16 +1,11 @@
 // Service Worker for GamerZone PWA
 // Version 1.0.6 - Properly consume preloadResponse to eliminate warnings
 
-const CACHE_NAME = 'gamerzone-v10';
-const RUNTIME_CACHE = 'gamerzone-runtime-v10';
-const DATA_CACHE = 'gamerzone-data-v4';
+const CACHE_NAME = 'gamerzone-v11';
+const RUNTIME_CACHE = 'gamerzone-runtime-v11';
 
-// Assets to precache for instant loading
+// Only precache truly static assets - NEVER cache HTML pages
 const PRECACHE_ASSETS = [
-    '/',
-    '/explore',
-    '/login',
-    '/signup',
     '/manifest.json',
     '/avatars/gamer.png',
     '/avatars/samurai.png',
@@ -43,24 +38,31 @@ self.addEventListener('activate', (event) => {
             caches.keys().then((cacheNames) => {
                 return Promise.all(
                     cacheNames
-                        .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE && name !== DATA_CACHE)
+                        .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
                         .map((name) => {
                             console.log('[SW] Deleting old cache:', name);
                             return caches.delete(name);
                         })
                 );
             }),
-            // Enable navigation preload for faster page loads
-            (async () => {
-                if ('navigationPreload' in self.registration) {
-                    await self.registration.navigationPreload.enable();
-                    console.log('[SW] Navigation preload enabled');
-                }
-            })(),
             // Take control of all clients immediately
             self.clients.claim()
         ])
     );
+});
+
+// Listen for messages from the app (e.g. auth state changes)
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'CLEAR_CACHES') {
+        console.log('[SW] Clearing all runtime caches due to auth change');
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames
+                    .filter((name) => name === RUNTIME_CACHE)
+                    .map((name) => caches.delete(name))
+            );
+        });
+    }
 });
 
 // Fetch event - improved caching strategy
@@ -92,14 +94,17 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2. API requests and Auth-related requests - NETWORK ONLY (never cache)
+    // 2. API requests, Auth, and Next.js data requests - NETWORK ONLY (never cache)
     if (url.pathname.startsWith('/api/') || 
         url.pathname.startsWith('/supabase/') ||
         url.pathname.startsWith('/auth/') ||
+        url.pathname.startsWith('/_next/data/') ||
         url.pathname === '/login' ||
         url.pathname === '/signup' ||
         url.pathname === '/logout' ||
-        url.href.includes('supabase.co')) {
+        url.href.includes('supabase.co') ||
+        request.headers.get('RSC') === '1' ||
+        request.headers.get('Next-Router-State-Tree')) {
         return;
     }
 
@@ -122,64 +127,22 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 4. Navigation Requests - Network First with Preload (but never cache auth pages)
+    // 4. Navigation Requests - NETWORK ONLY (never cache HTML pages)
+    // HTML pages contain auth-dependent content and must always be fresh
     if (request.mode === 'navigate') {
-        // Never cache auth-related pages
-        const authPages = ['/login', '/signup', '/logout', '/auth/callback', '/forgot-password', '/update-password'];
-        const isAuthPage = authPages.some(page => url.pathname.startsWith(page));
-        
         event.respondWith(
             (async () => {
                 try {
-                    // Properly consume preloadResponse to prevent cancellation warnings
-                    // We must await it or use it in waitUntil to avoid browser warnings
-                    let response;
-                    
+                    // Consume preloadResponse if available to avoid warnings
                     if (event.preloadResponse) {
-                        // Consume the preload response promise properly
                         const preloadResponse = await event.preloadResponse.catch(() => null);
-                        
-                        if (preloadResponse) {
-                            response = preloadResponse;
-                            // Cache non-auth pages
-                            if (!isAuthPage) {
-                                event.waitUntil(
-                                    caches.open(RUNTIME_CACHE).then((cache) => {
-                                        cache.put(request, response.clone());
-                                    })
-                                );
-                            }
-                            return response;
-                        }
+                        if (preloadResponse) return preloadResponse;
                     }
-
-                    // Fall back to regular fetch if no preload
-                    response = await fetch(request);
-                    
-                    // Only cache non-auth pages
-                    if (response.ok && !isAuthPage) {
-                        event.waitUntil(
-                            caches.open(RUNTIME_CACHE).then((cache) => {
-                                cache.put(request, response.clone());
-                            })
-                        );
-                    }
-                    return response;
+                    return await fetch(request);
                 } catch (error) {
-                    // Never serve cached auth pages when offline
-                    if (isAuthPage) {
-                        return new Response("Auth pages require network connection", { 
-                            status: 503, 
-                            statusText: "Offline" 
-                        });
-                    }
-                    
-                    const cachedResponse = await caches.match(request);
-                    if (cachedResponse) return cachedResponse;
-
+                    // Only serve offline fallback page when network fails
                     const offlinePage = await caches.match('/offline.html');
                     if (offlinePage) return offlinePage;
-
                     return new Response("Offline", { status: 503, statusText: "Offline" });
                 }
             })()
@@ -187,26 +150,8 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 5. Fallback - Stale While Revalidate (only for GET requests)
-    if (request.method !== 'GET') {
-        // Don't cache non-GET requests (POST, PUT, DELETE, etc.)
-        return;
-    }
-
-    event.respondWith(
-        caches.match(request).then((cachedResponse) => {
-            const fetchPromise = fetch(request).then((networkResponse) => {
-                if (networkResponse.ok) {
-                    const responseClone = networkResponse.clone();
-                    caches.open(RUNTIME_CACHE).then((cache) => {
-                        cache.put(request, responseClone);
-                    });
-                }
-                return networkResponse;
-            });
-            return cachedResponse || fetchPromise;
-        })
-    );
+    // 5. All other requests - Network only (no dangerous SWR fallback)
+    // This prevents caching Next.js RSC payloads and dynamic data
 });
 
 // Push notification event

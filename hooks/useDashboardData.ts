@@ -9,9 +9,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
-const CACHE_KEY = 'gamerzone_dashboard_cache';
+const CACHE_KEY_PREFIX = 'gamerzone_dashboard_cache';
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 const OFFLINE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes for offline mode
+
+function getCacheKey(userId: string | null): string {
+    return userId ? `${CACHE_KEY_PREFIX}_${userId}` : `${CACHE_KEY_PREFIX}_guest`;
+}
 
 interface Gamer {
     id: string;
@@ -29,13 +33,12 @@ interface CacheData {
     timestamp: number;
 }
 
-function getCachedData(): CacheData | null {
+function getCachedData(userId: string | null): CacheData | null {
     if (typeof window === 'undefined') return null;
     try {
-        const cached = sessionStorage.getItem(CACHE_KEY);
+        const cached = sessionStorage.getItem(getCacheKey(userId));
         if (cached) {
             const parsed = JSON.parse(cached) as CacheData;
-            // Use longer TTL when offline for PWA support
             const isOnline = navigator.onLine;
             const ttl = isOnline ? CACHE_TTL : OFFLINE_CACHE_TTL;
             if (Date.now() - parsed.timestamp < ttl) {
@@ -46,10 +49,10 @@ function getCachedData(): CacheData | null {
     return null;
 }
 
-function setCachedData(gamers: Gamer[]) {
+function setCachedData(gamers: Gamer[], userId: string | null) {
     if (typeof window === 'undefined') return;
     try {
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+        sessionStorage.setItem(getCacheKey(userId), JSON.stringify({
             gamers,
             timestamp: Date.now()
         }));
@@ -102,7 +105,7 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
 
         // Try cache first unless forcing refresh
         if (!forceRefresh) {
-            const cached = getCachedData();
+            const cached = getCachedData(currentUserId);
             if (cached) {
                 const filteredGamers = currentUserId 
                     ? cached.gamers.filter(g => g.id !== currentUserId)
@@ -181,8 +184,8 @@ export function useDashboardData(currentUserId: string | null, authLoading: bool
                     };
                 });
 
-                // Cache all gamers (including current user for username lookup)
-                setCachedData(formattedGamers);
+                // Cache all gamers scoped to current user
+                setCachedData(formattedGamers, currentUserId);
 
                 // Filter out current user for display
                 const filteredGamers = currentUserId 

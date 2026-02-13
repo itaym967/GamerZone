@@ -9,6 +9,7 @@ import Logo from "../components/Logo";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { safeSignOut, isRefreshTokenError } from "@/utils/supabase/auth-helpers";
+import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -79,6 +80,8 @@ export default function LoginPage() {
                 }
                 
                 toast.success("ברוך הבא ל-GamerZone! 🎮");
+                // Clear all stale caches before navigating to dashboard
+                clearAllCachesOnAuthChange();
                 // Small delay to ensure auth state propagates before redirect
                 await new Promise(resolve => setTimeout(resolve, 100));
                 router.replace("/");

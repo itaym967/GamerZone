@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
 
 interface Profile {
     id: string;
@@ -209,14 +210,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!mounted) return;
 
             if (event === 'SIGNED_IN' && session?.user) {
+                // Clear ALL caches to prevent stale guest/old-user data
+                clearAllCachesOnAuthChange();
                 setUser(session.user);
                 await fetchProfile(session.user.id, false);
                 if (mounted) setIsLoading(false);
+                router.refresh();
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setProfile(null);
                 setIsAdmin(false);
-                clearCachedProfile();
+                clearAllCachesOnAuthChange();
                 if (mounted) setIsLoading(false);
                 router.refresh();
             } else if (event === 'TOKEN_REFRESHED' && session?.user) {
@@ -247,7 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             setProfile(null);
             setIsAdmin(false);
-            clearCachedProfile();
+            // Clear ALL caches (sessionStorage + SW)
+            clearAllCachesOnAuthChange();
             
             // Clean up realtime subscription
             if (profileChannelRef.current) {
@@ -267,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             setProfile(null);
             setIsAdmin(false);
-            clearCachedProfile();
+            clearAllCachesOnAuthChange();
             router.push('/login');
         }
     }, [supabase, router]);

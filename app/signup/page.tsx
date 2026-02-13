@@ -9,6 +9,7 @@ import Logo from "../components/Logo";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { clearAuthCookies } from "@/utils/supabase/auth-helpers";
+import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -65,6 +66,7 @@ export default function SignupPage() {
             // If email confirmation is disabled, redirect to onboarding
             if (data?.session) {
                 toast.success("ברוך הבא ל-GamerZone! 🎮");
+                clearAllCachesOnAuthChange();
                 router.push("/onboarding");
             } else {
                 toast.success("הרשמה בוצעה בהצלחה! בדוק את המייל לאימות.");
