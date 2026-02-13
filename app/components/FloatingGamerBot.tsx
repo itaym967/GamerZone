@@ -36,6 +36,9 @@ export default function FloatingGamerBot() {
         }
     }, [messages, isTyping]);
 
+    // Hide bot for unauthenticated users (after all hooks)
+    if (!user) return null;
+
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
 

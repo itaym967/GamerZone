@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const PROFILE_CHECK_PATHS = ['/admin', '/onboarding']
-const PROTECTED_ROUTES = ['/admin', '/onboarding', '/chat', '/profile', '/settings']
-const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/auth', '/forgot-password', '/update-password']
+const PROTECTED_ROUTES = ['/admin', '/onboarding', '/chat', '/profile', '/settings', '/friends', '/notifications', '/explore', '/party-finder', '/lfg']
+const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/auth', '/forgot-password', '/update-password', '/parental-consent']
 
 export async function updateSession(request: NextRequest) {
     let response = NextResponse.next({
