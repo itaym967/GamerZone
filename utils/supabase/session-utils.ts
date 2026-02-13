@@ -69,8 +69,10 @@ export async function updateSession(request: NextRequest) {
                 
                 return response
             }
-            // For other errors, log but continue
-            console.error('Auth error:', error.message)
+            // For other errors, log but continue (skip expected "session missing" for guests)
+            if (!error.message?.includes('Auth session missing')) {
+                console.error('Auth error:', error.message)
+            }
         }
         
         user = data?.user || null
