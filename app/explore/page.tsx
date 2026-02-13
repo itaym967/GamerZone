@@ -3,10 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import Navigation from "../components/Navigation";
 import GamerCard from "../components/GamerCard";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSwapStatus } from "@/hooks/useSwapStatus";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useFriendship } from "@/hooks/useFriendship";
+import { toast } from "sonner";
 
 const FILTERS = {
     games: [
@@ -32,6 +34,7 @@ export default function ExplorePage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeGame, setActiveGame] = useState("All");
     const [onlineOnly, setOnlineOnly] = useState(false);
+    const [friendsOnly, setFriendsOnly] = useState(false);
 
     const currentUserId = useMemo(() => user?.id || null, [user?.id]);
 
@@ -40,6 +43,15 @@ export default function ExplorePage() {
 
     // Use centralized swap status management
     const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
+
+    // Friend system
+    const { getFriendshipStatus, sendRequest, isFriend } = useFriendship(currentUserId);
+
+    const handleSendFriendRequest = async (targetId: string) => {
+        const { error } = await sendRequest(targetId);
+        if (error) toast.error(error);
+        else toast.success('בקשת חברות נשלחה!');
+    };
 
     // Fetch swap statuses when gamers are loaded
     useEffect(() => {
@@ -55,10 +67,11 @@ export default function ExplorePage() {
                 (gamer.tag?.toLowerCase() || '').includes(searchTerm.toLowerCase());
             const matchesGame = activeGame === "All" || gamer.games?.includes(activeGame);
             const matchesOnline = !onlineOnly || gamer.online;
+            const matchesFriends = !friendsOnly || isFriend(gamer.id);
 
-            return matchesSearch && matchesGame && matchesOnline;
+            return matchesSearch && matchesGame && matchesOnline && matchesFriends;
         });
-    }, [gamers, searchTerm, activeGame, onlineOnly]);
+    }, [gamers, searchTerm, activeGame, onlineOnly, friendsOnly, isFriend]);
 
     return (
         <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all bg-[#050510]">
@@ -99,6 +112,20 @@ export default function ExplorePage() {
                             <span className="whitespace-nowrap">מחוברים בלבד</span>
                         </button>
 
+                        {/* Friends Only Toggle */}
+                        {currentUserId && (
+                            <button
+                                onClick={() => setFriendsOnly(!friendsOnly)}
+                                className={`h-12 px-4 rounded-xl border flex items-center gap-2 transition-all ${friendsOnly
+                                    ? "bg-green-500/20 border-green-500 text-green-400 font-bold"
+                                    : "bg-black/20 border-white/10 text-gray-400 hover:text-white"
+                                    }`}
+                            >
+                                <Users size={16} />
+                                <span className="whitespace-nowrap">חברים בלבד</span>
+                            </button>
+                        )}
+
                         {/* Game Select */}
                         <div className="relative min-w-[160px]">
                             <select
@@ -127,6 +154,8 @@ export default function ExplorePage() {
                                 currentUserId={currentUserId}
                                 initialSwapStatus={getSwapStatus(gamer.id)}
                                 onSwapStatusChange={updateSwapStatus}
+                                friendshipStatus={getFriendshipStatus(gamer.id).status}
+                                onSendFriendRequest={handleSendFriendRequest}
                             />
                         ))}
                     </div>

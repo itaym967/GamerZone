@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useCallback, useState, useEffect } from "react";
-import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn, Users } from "lucide-react";
+import { Home, Search, MessageCircle, User, Gamepad2, ShieldAlert, LogOut, Bell, LogIn, Users, HeartHandshake } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
@@ -18,6 +18,7 @@ const navItems = [
 ];
 
 const authenticatedNavItems = [
+    { icon: HeartHandshake, label: "חברים", href: "/friends" },
     { icon: Bell, label: "התראות", href: "/notifications" },
     { icon: MessageCircle, label: "צ'אט", href: "/chat" },
     { icon: User, label: "פרופיל", href: "/profile" },

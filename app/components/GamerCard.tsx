@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy, Shield, X, Sparkles } from "lucide-react";
+import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy, Shield, X, Sparkles, UserPlus, UserCheck, Clock } from "lucide-react";
 import { toast } from "sonner";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { createClient } from "@/utils/supabase/client";
@@ -21,9 +21,12 @@ interface GamerCardProps {
     // OPTIMIZATION: Accept swap status from parent to avoid per-card subscriptions
     initialSwapStatus?: "initial" | "pending_sent" | "pending_received" | "approved" | "rejected";
     onSwapStatusChange?: (userId: string, status: "initial" | "pending_sent" | "pending_received" | "approved" | "rejected") => void;
+    // Friend system props
+    friendshipStatus?: "none" | "pending_sent" | "pending_received" | "accepted";
+    onSendFriendRequest?: (targetId: string) => void;
 }
 
-export default function GamerCard({ username, tag, games, bio, online, hiddenTags, avatarSeed, id, currentUserId, initialSwapStatus, onSwapStatusChange }: GamerCardProps) {
+export default function GamerCard({ username, tag, games, bio, online, hiddenTags, avatarSeed, id, currentUserId, initialSwapStatus, onSwapStatusChange, friendshipStatus = 'none', onSendFriendRequest }: GamerCardProps) {
     const [status, setStatus] = useState<"initial" | "pending_sent" | "pending_received" | "approved" | "rejected">(initialSwapStatus || "initial");
     const [isLoading, setIsLoading] = useState(false);
     const [copiedTag, setCopiedTag] = useState<string | null>(null);
@@ -419,6 +422,34 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
                     >
                         <Shield size={18} />
                         <span>חברים</span>
+                    </button>
+                )}
+
+                {/* Friend Button */}
+                {currentUserId && currentUserId !== id && (
+                    <button
+                        onClick={() => friendshipStatus === 'none' && onSendFriendRequest?.(id)}
+                        disabled={friendshipStatus !== 'none'}
+                        className={`p-2 rounded-xl transition-colors ${
+                            friendshipStatus === 'accepted'
+                                ? 'bg-green-500/20 text-green-400 cursor-default'
+                                : friendshipStatus === 'pending_sent'
+                                    ? 'bg-white/5 text-yellow-400 cursor-wait'
+                                    : friendshipStatus === 'pending_received'
+                                        ? 'bg-blue-500/20 text-blue-400 cursor-default'
+                                        : 'bg-white/5 hover:bg-white/10 text-white hover:text-green-400'
+                        }`}
+                        title={
+                            friendshipStatus === 'accepted' ? 'חברים'
+                                : friendshipStatus === 'pending_sent' ? 'בקשה נשלחה'
+                                    : friendshipStatus === 'pending_received' ? 'ממתין לאישורך'
+                                        : 'הוסף חבר'
+                        }
+                    >
+                        {friendshipStatus === 'accepted' ? <UserCheck size={18} />
+                            : friendshipStatus === 'pending_sent' ? <Clock size={18} />
+                                : friendshipStatus === 'pending_received' ? <UserCheck size={18} />
+                                    : <UserPlus size={18} />}
                     </button>
                 )}
 

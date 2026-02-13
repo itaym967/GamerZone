@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useSwapStatus } from "@/hooks/useSwapStatus";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useFriendship } from "@/hooks/useFriendship";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
@@ -22,6 +24,15 @@ export default function Dashboard() {
 
   // Use centralized swap status management
   const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
+
+  // Friend system
+  const { getFriendshipStatus, sendRequest } = useFriendship(currentUserId);
+
+  const handleSendFriendRequest = async (targetId: string) => {
+    const { error } = await sendRequest(targetId);
+    if (error) toast.error(error);
+    else toast.success('בקשת חברות נשלחה!');
+  };
 
   // Fetch swap statuses when gamers are loaded
   useEffect(() => {
@@ -84,6 +95,8 @@ export default function Dashboard() {
                     currentUserId={currentUserId}
                     initialSwapStatus={getSwapStatus(gamer.id)}
                     onSwapStatusChange={updateSwapStatus}
+                    friendshipStatus={getFriendshipStatus(gamer.id).status}
+                    onSendFriendRequest={handleSendFriendRequest}
                   />
                 ))
               ) : (
