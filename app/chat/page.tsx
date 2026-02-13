@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense, useMemo } from "react";
-import { Send, MoreVertical, Search, Plus, ArrowRight, Trash2, Check, CheckCheck, Sparkles, Bot } from "lucide-react";
+import { Send, MoreVertical, Search, Plus, ArrowRight, Trash2, Check, CheckCheck, Sparkles, Bot, ShieldAlert, Flag } from "lucide-react";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,12 +10,14 @@ import { useChat, Contact, Message } from "@/hooks/useChat";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import ReportMessageModal from "../components/ReportMessageModal";
+import { filterContent } from "@/utils/kid-safety";
 
 function ChatContent() {
     const searchParams = useSearchParams();
     const targetId = searchParams.get("target");
 
-    const { user, isLoading: authLoading } = useAuth();
+    const { user, profile, isLoading: authLoading } = useAuth();
     const [activeChat, setActiveChat] = useState<Contact | null>(null);
     const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
     const [input, setInput] = useState("");
@@ -24,6 +26,14 @@ function ChatContent() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isBotTyping, setIsBotTyping] = useState(false);
     const [botMessages, setBotMessages] = useState<Message[]>([]);
+
+    // Kid safety state
+    const [reportModal, setReportModal] = useState<{ open: boolean; messageId: string | null; userId: string | null }>({
+        open: false, messageId: null, userId: null
+    });
+    const isMinorAccount = profile?.is_minor || false;
+    const contentFilterLevel = profile?.account_type === 'supervised' ? 'strict' : profile?.account_type === 'minor' ? 'moderate' : 'standard' as const;
+    const isChatRestricted = profile?.chat_restricted || false;
 
     // GamerBot special contact
     const GAMERBOT_ID = 'gamerbot-ai';
@@ -216,14 +226,19 @@ function ChatContent() {
 
         let finalContent = input;
 
-        // Filter Logic
-        const lowerInput = input.toLowerCase();
-        const foundWord = blockedWords.find((word: string) => lowerInput.includes(word.toLowerCase()));
+        // Enhanced content filter using kid-safety module
+        const filterResult = filterContent(input, blockedWords, contentFilterLevel);
+        finalContent = filterResult.filtered;
 
-        if (foundWord) {
-            const regex = new RegExp(foundWord, "gi");
-            finalContent = input.replace(regex, "*".repeat(foundWord.length));
-            toast.warning("הודעתך סוננה עקב שפה לא נאותה");
+        if (filterResult.wasFiltered) {
+            const reasons = filterResult.reasons;
+            if (reasons.includes('personal_info')) {
+                toast.warning("מידע אישי הוסר מההודעה להגנתך");
+            } else if (reasons.includes('url_removed')) {
+                toast.warning("קישורים הוסרו מההודעה");
+            } else {
+                toast.warning("הודעתך סוננה עקב שפה לא נאותה");
+            }
         }
 
         // Clear input immediately for better UX
@@ -414,14 +429,25 @@ function ChatContent() {
                                                 )}
                                             </span>
                                         </div>
-                                        {/* Delete button - appears on hover */}
-                                        <button
-                                            onClick={() => handleDeleteMessage(msg.id)}
-                                            className={`absolute -top-2 ${msg.sender_id === user?.id ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-red-500/90 hover:bg-red-600 rounded-full text-white shadow-lg`}
-                                            title="מחק הודעה"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
+                                        {/* Action buttons - appear on hover */}
+                                        <div className={`absolute -top-2 ${msg.sender_id === user?.id ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 transition-opacity flex gap-1`}>
+                                            <button
+                                                onClick={() => handleDeleteMessage(msg.id)}
+                                                className="p-1.5 bg-red-500/90 hover:bg-red-600 rounded-full text-white shadow-lg"
+                                                title="מחק הודעה"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                            {msg.sender_id !== user?.id && (
+                                                <button
+                                                    onClick={() => setReportModal({ open: true, messageId: msg.id, userId: msg.sender_id })}
+                                                    className="p-1.5 bg-amber-500/90 hover:bg-amber-600 rounded-full text-white shadow-lg"
+                                                    title="דווח על הודעה"
+                                                >
+                                                    <Flag size={12} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}
@@ -446,6 +472,14 @@ function ChatContent() {
                             )}
                         </AnimatePresence>
                     </div>
+
+                    {/* Chat restriction notice for supervised accounts */}
+                    {isChatRestricted && activeChat && activeChat.id !== GAMERBOT_ID && (
+                        <div className="px-4 py-2 bg-amber-500/10 border-t border-amber-500/20 flex items-center gap-2 justify-end text-sm text-amber-400">
+                            <span>הצ׳אט מוגבל לחברים בלבד - סינון תוכן מוגבר פעיל</span>
+                            <ShieldAlert size={14} />
+                        </div>
+                    )}
 
                     {/* Input Area */}
                     <div className="p-4 border-t border-white/5 bg-[#0e0e1b]/80 backdrop-blur-lg">
@@ -476,6 +510,14 @@ function ChatContent() {
                     </div>
                 </section>
             </main>
+            {/* Report Modal */}
+            <ReportMessageModal
+                isOpen={reportModal.open}
+                onClose={() => setReportModal({ open: false, messageId: null, userId: null })}
+                messageId={reportModal.messageId}
+                reportedUserId={reportModal.userId}
+                reporterId={user?.id || ''}
+            />
         </div>
     );
 }

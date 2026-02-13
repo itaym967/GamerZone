@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Navigation from "../components/Navigation";
-import { ShieldAlert, Trash2, Plus, Shield, Ban, Lock, Unlock, Zap, Activity, Database, TrendingDown, CheckCircle2, AlertCircle, Sparkles, Brain, Loader2 } from "lucide-react";
+import { ShieldAlert, Trash2, Plus, Shield, Ban, Lock, Unlock, Zap, Activity, Database, TrendingDown, CheckCircle2, AlertCircle, Sparkles, Brain, Loader2, ShieldCheck, Users, Flag, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/client";
@@ -34,6 +34,25 @@ interface Profile {
     bio: string | null;
     website: string | null;
     onboarding_completed: boolean | null;
+    is_minor?: boolean;
+    account_type?: string;
+    date_of_birth?: string | null;
+    parental_consent?: boolean;
+    chat_restricted?: boolean;
+}
+
+interface ContentReport {
+    id: string;
+    reporter_id: string;
+    reported_user_id: string | null;
+    reported_message_id: string | null;
+    report_type: string;
+    description: string | null;
+    status: string;
+    admin_notes: string | null;
+    resolved_by: string | null;
+    resolved_at: string | null;
+    created_at: string;
 }
 
 interface DBMetrics {
@@ -52,7 +71,9 @@ export default function AdminPage() {
     const router = useRouter();
     const supabase = createClient();
 
-    const [activeTab, setActiveTab] = useState<"blacklist" | "logs" | "users" | "management">("blacklist");
+    const [activeTab, setActiveTab] = useState<"blacklist" | "logs" | "users" | "management" | "safety">("blacklist");
+    const [reports, setReports] = useState<ContentReport[]>([]);
+    const [minorUsers, setMinorUsers] = useState<Profile[]>([]);
     const [blockedWords, setBlockedWords] = useState<BlockedWord[]>([]);
     const [logs, setLogs] = useState<AdminLog[]>([]);
     const [users, setUsers] = useState<Profile[]>([]);
@@ -119,6 +140,22 @@ export default function AdminPage() {
             } else if (activeTab === 'management') {
                 // Fetch database metrics
                 await fetchDBMetrics();
+            } else if (activeTab === 'safety') {
+                // Fetch content reports
+                const { data: reportsData } = await supabase
+                    .from('content_reports')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                setReports(reportsData || []);
+
+                // Fetch minor users
+                const { data: minorsData } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('is_minor', true)
+                    .order('username', { ascending: true });
+                setMinorUsers(minorsData || []);
             }
         } catch (error: any) {
             console.error("Error fetching data:", error);
@@ -487,6 +524,14 @@ export default function AdminPage() {
                         ניהול מערכת
                         {activeTab === 'management' && <div className="absolute bottom-0 right-0 w-full h-0.5 bg-red-500 rounded-t-full" />}
                     </button>
+                    <button
+                        onClick={() => setActiveTab("safety")}
+                        className={`pb-3 px-4 text-sm font-bold transition-all relative whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'safety' ? 'text-green-500' : 'text-gray-500 hover:text-white'}`}
+                    >
+                        <ShieldCheck size={14} />
+                        בטיחות ילדים
+                        {activeTab === 'safety' && <div className="absolute bottom-0 right-0 w-full h-0.5 bg-green-500 rounded-t-full" />}
+                    </button>
                 </div>
 
                 {loading ? (
@@ -706,6 +751,182 @@ export default function AdminPage() {
                                         <p>אין לוגים להצגה.</p>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {activeTab === 'safety' && (
+                            <div className="space-y-6">
+                                {/* Header */}
+                                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <ShieldCheck className="text-green-400" size={28} />
+                                        <h2 className="text-2xl font-bold text-white">בטיחות ילדים ומודרציה</h2>
+                                    </div>
+                                    <p className="text-gray-400 text-sm">ניהול חשבונות קטינים, דיווחי תוכן, ובקרת הורים</p>
+                                </div>
+
+                                {/* Stats Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl p-5">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Users className="text-blue-400" size={18} />
+                                            <span className="text-sm text-gray-400">חשבונות קטינים</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-white">{minorUsers.length}</div>
+                                    </div>
+                                    <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl p-5">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Flag className="text-amber-400" size={18} />
+                                            <span className="text-sm text-gray-400">דיווחים ממתינים</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-white">{reports.filter(r => r.status === 'pending').length}</div>
+                                    </div>
+                                    <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl p-5">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Eye className="text-purple-400" size={18} />
+                                            <span className="text-sm text-gray-400">חשבונות מפוקחים</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-white">{minorUsers.filter(u => u.account_type === 'supervised').length}</div>
+                                    </div>
+                                    <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl p-5">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <ShieldCheck className="text-green-400" size={18} />
+                                            <span className="text-sm text-gray-400">עם אישור הורים</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-white">{minorUsers.filter(u => u.parental_consent).length}</div>
+                                    </div>
+                                </div>
+
+                                {/* Content Reports */}
+                                <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl overflow-hidden">
+                                    <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Flag className="text-amber-400" size={18} />
+                                            דיווחי תוכן
+                                        </h3>
+                                        <span className="text-xs text-gray-500">{reports.length} דיווחים</span>
+                                    </div>
+                                    {reports.length > 0 ? (
+                                        <table className="w-full text-right text-sm">
+                                            <thead className="bg-white/5 text-gray-400">
+                                                <tr>
+                                                    <th className="p-3 font-medium">זמן</th>
+                                                    <th className="p-3 font-medium">סוג</th>
+                                                    <th className="p-3 font-medium">תיאור</th>
+                                                    <th className="p-3 font-medium">סטטוס</th>
+                                                    <th className="p-3 font-medium">פעולות</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5 text-gray-300">
+                                                {reports.map((report) => (
+                                                    <tr key={report.id} className="hover:bg-white/5 transition-colors">
+                                                        <td className="p-3 font-mono text-xs opacity-60">{new Date(report.created_at).toLocaleString('he-IL')}</td>
+                                                        <td className="p-3">
+                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                                report.report_type === 'predatory_behavior' ? 'bg-red-500/20 text-red-400' :
+                                                                report.report_type === 'harassment' ? 'bg-orange-500/20 text-orange-400' :
+                                                                'bg-amber-500/20 text-amber-400'
+                                                            }`}>
+                                                                {report.report_type === 'harassment' ? 'הטרדה' :
+                                                                 report.report_type === 'inappropriate_content' ? 'תוכן לא הולם' :
+                                                                 report.report_type === 'spam' ? 'ספאם' :
+                                                                 report.report_type === 'predatory_behavior' ? 'התנהגות טורפנית' :
+                                                                 report.report_type === 'personal_info_sharing' ? 'שיתוף מידע אישי' : 'אחר'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 max-w-[200px] truncate">{report.description || '-'}</td>
+                                                        <td className="p-3">
+                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                                report.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                                report.status === 'reviewing' ? 'bg-blue-500/20 text-blue-400' :
+                                                                report.status === 'resolved' ? 'bg-green-500/20 text-green-400' :
+                                                                'bg-gray-500/20 text-gray-400'
+                                                            }`}>
+                                                                {report.status === 'pending' ? 'ממתין' :
+                                                                 report.status === 'reviewing' ? 'בבדיקה' :
+                                                                 report.status === 'resolved' ? 'טופל' : 'נדחה'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            {report.status === 'pending' && (
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        await supabase.from('content_reports').update({ status: 'resolved', resolved_by: currentUser, resolved_at: new Date().toISOString() }).eq('id', report.id);
+                                                                        toast.success('הדיווח סומן כטופל');
+                                                                        fetchData();
+                                                                    }}
+                                                                    className="px-3 py-1 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg text-xs font-bold transition-colors"
+                                                                >
+                                                                    סמן כטופל
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <div className="p-12 text-center text-gray-500">
+                                            <ShieldCheck size={32} className="mx-auto mb-3 opacity-50" />
+                                            <p>אין דיווחים ממתינים</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Minor Users List */}
+                                <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl overflow-hidden">
+                                    <div className="p-4 border-b border-white/5">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Users className="text-blue-400" size={18} />
+                                            חשבונות קטינים
+                                        </h3>
+                                    </div>
+                                    {minorUsers.length > 0 ? (
+                                        <table className="w-full text-right text-sm">
+                                            <thead className="bg-white/5 text-gray-400">
+                                                <tr>
+                                                    <th className="p-3 font-medium">שם משתמש</th>
+                                                    <th className="p-3 font-medium">סוג חשבון</th>
+                                                    <th className="p-3 font-medium">תאריך לידה</th>
+                                                    <th className="p-3 font-medium">אישור הורים</th>
+                                                    <th className="p-3 font-medium">הגבלות</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5 text-gray-300">
+                                                {minorUsers.map((minor) => (
+                                                    <tr key={minor.id} className="hover:bg-white/5 transition-colors">
+                                                        <td className="p-3 font-bold text-white">{minor.username || 'ללא שם'}</td>
+                                                        <td className="p-3">
+                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                                minor.account_type === 'supervised' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+                                                            }`}>
+                                                                {minor.account_type === 'supervised' ? 'מפוקח (מתחת ל-13)' : 'צעיר (13-17)'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 text-xs">{minor.date_of_birth || '-'}</td>
+                                                        <td className="p-3">
+                                                            {minor.parental_consent ? (
+                                                                <span className="text-green-400 text-xs font-bold flex items-center gap-1 justify-end"><CheckCircle2 size={14} /> מאושר</span>
+                                                            ) : (
+                                                                <span className="text-amber-400 text-xs font-bold flex items-center gap-1 justify-end"><AlertCircle size={14} /> ממתין</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <div className="flex gap-1 justify-end">
+                                                                {minor.chat_restricted && <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px]">צ׳אט מוגבל</span>}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <div className="p-12 text-center text-gray-500">
+                                            <Users size={32} className="mx-auto mb-3 opacity-50" />
+                                            <p>אין חשבונות קטינים רשומים</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 

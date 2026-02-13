@@ -366,6 +366,17 @@ export type Database = {
                     is_online: boolean | null
                     onboarding_completed: boolean | null
                     ban_reason: string | null
+                    date_of_birth: string | null
+                    account_type: string
+                    is_minor: boolean
+                    parental_email: string | null
+                    parental_consent: boolean
+                    parental_consent_at: string | null
+                    chat_restricted: boolean
+                    profile_restricted: boolean
+                    safe_mode: boolean
+                    max_daily_chat_minutes: number
+                    email: string | null
                 }
                 Insert: {
                     id: string
@@ -380,6 +391,17 @@ export type Database = {
                     is_online?: boolean | null
                     onboarding_completed?: boolean | null
                     ban_reason?: string | null
+                    date_of_birth?: string | null
+                    account_type?: string
+                    is_minor?: boolean
+                    parental_email?: string | null
+                    parental_consent?: boolean
+                    parental_consent_at?: string | null
+                    chat_restricted?: boolean
+                    profile_restricted?: boolean
+                    safe_mode?: boolean
+                    max_daily_chat_minutes?: number
+                    email?: string | null
                 }
                 Update: {
                     id?: string
@@ -394,6 +416,137 @@ export type Database = {
                     is_online?: boolean | null
                     onboarding_completed?: boolean | null
                     ban_reason?: string | null
+                    date_of_birth?: string | null
+                    account_type?: string
+                    is_minor?: boolean
+                    parental_email?: string | null
+                    parental_consent?: boolean
+                    parental_consent_at?: string | null
+                    chat_restricted?: boolean
+                    profile_restricted?: boolean
+                    safe_mode?: boolean
+                    max_daily_chat_minutes?: number
+                    email?: string | null
+                }
+                Relationships: []
+            }
+            parental_controls: {
+                Row: {
+                    id: string
+                    parent_email: string
+                    child_id: string
+                    consent_token: string | null
+                    consent_granted: boolean
+                    consent_granted_at: string | null
+                    activity_log_enabled: boolean
+                    allowed_contacts_only: boolean
+                    max_daily_chat_minutes: number
+                    chat_enabled: boolean
+                    explore_enabled: boolean
+                    lfg_enabled: boolean
+                    party_finder_enabled: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    parent_email: string
+                    child_id: string
+                    consent_token?: string | null
+                    consent_granted?: boolean
+                    consent_granted_at?: string | null
+                    activity_log_enabled?: boolean
+                    allowed_contacts_only?: boolean
+                    max_daily_chat_minutes?: number
+                    chat_enabled?: boolean
+                    explore_enabled?: boolean
+                    lfg_enabled?: boolean
+                    party_finder_enabled?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    parent_email?: string
+                    child_id?: string
+                    consent_token?: string | null
+                    consent_granted?: boolean
+                    consent_granted_at?: string | null
+                    activity_log_enabled?: boolean
+                    allowed_contacts_only?: boolean
+                    max_daily_chat_minutes?: number
+                    chat_enabled?: boolean
+                    explore_enabled?: boolean
+                    lfg_enabled?: boolean
+                    party_finder_enabled?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: []
+            }
+            content_reports: {
+                Row: {
+                    id: string
+                    reporter_id: string
+                    reported_user_id: string | null
+                    reported_message_id: string | null
+                    report_type: string
+                    description: string | null
+                    status: string
+                    admin_notes: string | null
+                    resolved_by: string | null
+                    resolved_at: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    reporter_id: string
+                    reported_user_id?: string | null
+                    reported_message_id?: string | null
+                    report_type: string
+                    description?: string | null
+                    status?: string
+                    admin_notes?: string | null
+                    resolved_by?: string | null
+                    resolved_at?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    reporter_id?: string
+                    reported_user_id?: string | null
+                    reported_message_id?: string | null
+                    report_type?: string
+                    description?: string | null
+                    status?: string
+                    admin_notes?: string | null
+                    resolved_by?: string | null
+                    resolved_at?: string | null
+                    created_at?: string
+                }
+                Relationships: []
+            }
+            minor_activity_log: {
+                Row: {
+                    id: string
+                    user_id: string
+                    activity_type: string
+                    details: Json | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    activity_type: string
+                    details?: Json | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    activity_type?: string
+                    details?: Json | null
+                    created_at?: string
                 }
                 Relationships: []
             }

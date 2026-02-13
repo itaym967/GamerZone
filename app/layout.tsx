@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import OfflineIndicator from "./components/OfflineIndicator";
 import FloatingGamerBot from "./components/FloatingGamerBot";
+import SafetyBanner from "./components/SafetyBanner";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
@@ -68,6 +69,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <OfflineIndicator />
+          <SafetyBanner />
           {children}
           <PWAInstallPrompt />
           <FloatingGamerBot />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, ShieldCheck, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "../components/Logo";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { clearAuthCookies } from "@/utils/supabase/auth-helpers";
 import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
+import { validateDateOfBirth, calculateAge, getAccountType, requiresCOPPAConsent, getSafetyMessage } from "@/utils/kid-safety";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -20,8 +21,12 @@ export default function SignupPage() {
     const [form, setForm] = useState({
         email: "",
         username: "",
-        password: ""
+        password: "",
+        dateOfBirth: "",
+        parentalEmail: ""
     });
+    const [ageInfo, setAgeInfo] = useState<{ age: number; accountType: string; needsConsent: boolean } | null>(null);
+    const [showParentalForm, setShowParentalForm] = useState(false);
 
     // Clear any stale auth cookies on mount to prevent refresh token errors
     useEffect(() => {
@@ -43,11 +48,43 @@ export default function SignupPage() {
         clearStaleSession();
     }, [supabase]);
 
+    const handleDateOfBirthChange = (value: string) => {
+        setForm({ ...form, dateOfBirth: value });
+        if (value) {
+            const age = calculateAge(value);
+            const accountType = getAccountType(value);
+            const needsConsent = requiresCOPPAConsent(value);
+            setAgeInfo({ age, accountType, needsConsent });
+            setShowParentalForm(needsConsent);
+        } else {
+            setAgeInfo(null);
+            setShowParentalForm(false);
+        }
+    };
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
+            // Validate date of birth
+            const dobError = validateDateOfBirth(form.dateOfBirth);
+            if (dobError) {
+                toast.error(dobError);
+                setIsLoading(false);
+                return;
+            }
+
+            // If under 13, require parental email
+            if (ageInfo?.needsConsent && !form.parentalEmail) {
+                toast.error("נדרש אימייל של הורה לגילאים מתחת ל-13");
+                setIsLoading(false);
+                return;
+            }
+
+            const accountType = getAccountType(form.dateOfBirth);
+            const isMinorUser = accountType !== 'standard';
+
             const { data, error } = await supabase.auth.signUp({
                 email: form.email,
                 password: form.password,
@@ -55,7 +92,10 @@ export default function SignupPage() {
                     data: {
                         username: form.username,
                         full_name: form.username,
-                        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username}`
+                        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${form.username}`,
+                        date_of_birth: form.dateOfBirth,
+                        account_type: accountType,
+                        is_minor: isMinorUser,
                     },
                     emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`
                 }
@@ -63,9 +103,41 @@ export default function SignupPage() {
 
             if (error) throw error;
 
+            // Update profile with kid safety fields
+            if (data?.user) {
+                await supabase.from('profiles').update({
+                    date_of_birth: form.dateOfBirth,
+                    account_type: accountType,
+                    is_minor: isMinorUser,
+                    safe_mode: isMinorUser,
+                    chat_restricted: accountType === 'supervised',
+                    profile_restricted: accountType === 'supervised',
+                    parental_email: form.parentalEmail || null,
+                    max_daily_chat_minutes: accountType === 'supervised' ? 60 : accountType === 'minor' ? 180 : 0,
+                }).eq('id', data.user.id);
+
+                // Request parental consent if under 13
+                if (ageInfo?.needsConsent && form.parentalEmail) {
+                    await fetch('/api/parental-consent', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            childId: data.user.id,
+                            parentEmail: form.parentalEmail,
+                        }),
+                    });
+                }
+            }
+
             // If email confirmation is disabled, redirect to onboarding
             if (data?.session) {
-                toast.success("ברוך הבא ל-GamerZone! 🎮");
+                if (isMinorUser) {
+                    toast.success("ברוך הבא ל-GamerZone! 🛡️", {
+                        description: getSafetyMessage(accountType)
+                    });
+                } else {
+                    toast.success("ברוך הבא ל-GamerZone! 🎮");
+                }
                 clearAllCachesOnAuthChange();
                 router.push("/onboarding");
             } else {
@@ -166,6 +238,57 @@ export default function SignupPage() {
                                 minLength={3}
                             />
                         </div>
+                        <div className="space-y-1 text-right">
+                            <label className="text-sm font-medium text-gray-400">תאריך לידה</label>
+                            <input
+                                type="date"
+                                value={form.dateOfBirth}
+                                onChange={(e) => handleDateOfBirthChange(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-primary/50 transition-colors text-right [color-scheme:dark]"
+                                required
+                                max={new Date().toISOString().split('T')[0]}
+                            />
+                            {ageInfo && (
+                                <div className={`mt-2 p-3 rounded-lg text-sm flex items-center gap-2 justify-end ${
+                                    ageInfo.needsConsent
+                                        ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                                        : ageInfo.accountType === 'minor'
+                                            ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                                            : 'bg-green-500/10 border border-green-500/20 text-green-400'
+                                }`}>
+                                    <span>
+                                        {ageInfo.needsConsent
+                                            ? 'נדרש אישור הורים (מתחת לגיל 13)'
+                                            : ageInfo.accountType === 'minor'
+                                                ? 'חשבון צעיר - סינון תוכן מוגבר יופעל'
+                                                : 'חשבון רגיל'
+                                        }
+                                    </span>
+                                    {ageInfo.needsConsent ? <AlertTriangle size={16} /> : <ShieldCheck size={16} />}
+                                </div>
+                            )}
+                        </div>
+
+                        {showParentalForm && (
+                            <div className="space-y-1 text-right bg-amber-500/5 border border-amber-500/10 rounded-xl p-4">
+                                <label className="text-sm font-medium text-amber-400 flex items-center gap-2 justify-end">
+                                    <span>אימייל הורה / אפוטרופוס</span>
+                                    <ShieldCheck size={14} />
+                                </label>
+                                <input
+                                    type="email"
+                                    placeholder="parent@example.com"
+                                    value={form.parentalEmail}
+                                    onChange={(e) => setForm({ ...form, parentalEmail: e.target.value })}
+                                    className="w-full bg-black/20 border border-amber-500/20 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600 text-right"
+                                    required={showParentalForm}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    נשלח קישור אישור לאימייל ההורה. החשבון יהיה מוגבל עד לאישור.
+                                </p>
+                            </div>
+                        )}
+
                         <div className="space-y-1 text-right">
                             <label className="text-sm font-medium text-gray-400">אימייל</label>
                             <input

@@ -13,6 +13,15 @@ interface Profile {
     role: string | null;
     is_banned?: boolean | null;
     ban_reason?: string | null;
+    date_of_birth?: string | null;
+    account_type?: string;
+    is_minor?: boolean;
+    parental_email?: string | null;
+    parental_consent?: boolean;
+    chat_restricted?: boolean;
+    profile_restricted?: boolean;
+    safe_mode?: boolean;
+    max_daily_chat_minutes?: number;
 }
 
 interface AuthContextType {
