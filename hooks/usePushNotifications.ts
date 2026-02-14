@@ -8,20 +8,20 @@ export function usePushNotifications() {
 
     useEffect(() => {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
-            registerServiceWorker()
+            checkExistingSubscription()
         }
     }, [])
 
-    async function registerServiceWorker() {
+    async function checkExistingSubscription() {
         try {
-            const registration = await navigator.serviceWorker.register('/sw.js', {
-                scope: '/',
-                updateViaCache: 'none',
-            })
+            // Use .ready instead of .register() to avoid double-registration
+            // which can trigger SW update loops. Registration is handled by
+            // ServiceWorkerRegistration component.
+            const registration = await navigator.serviceWorker.ready
             const sub = await registration.pushManager.getSubscription()
             setSubscription(sub)
         } catch (error) {
-            console.error('Service Worker registration failed:', error)
+            console.error('Push subscription check failed:', error)
         }
     }
 

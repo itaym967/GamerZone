@@ -15,6 +15,12 @@ export default function ServiceWorkerRegistration() {
     useEffect(() => {
         if (!('serviceWorker' in navigator)) return;
 
+        // Track whether we already had a controller when the page loaded.
+        // If not, the first controllerchange is just the initial activation
+        // and should NOT trigger a reload.
+        const hadController = !!navigator.serviceWorker.controller;
+        let reloading = false;
+
         navigator.serviceWorker
             .register('/sw.js')
             .then((registration) => {
@@ -48,10 +54,15 @@ export default function ServiceWorkerRegistration() {
             });
 
         // Handle controller change (new service worker activated)
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('[SW] Controller changed, reloading');
+        // Only reload if we already had a controller (i.e. this is an UPDATE,
+        // not the very first SW activation). Guard against multiple reloads.
+        const onControllerChange = () => {
+            if (!hadController || reloading) return;
+            reloading = true;
+            console.log('[SW] Controller changed (update), reloading');
             window.location.reload();
-        });
+        };
+        navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
 
         // Handle notification click navigation from SW
         const handleMessage = (event: MessageEvent) => {
@@ -63,6 +74,7 @@ export default function ServiceWorkerRegistration() {
         navigator.serviceWorker.addEventListener('message', handleMessage);
 
         return () => {
+            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
             navigator.serviceWorker.removeEventListener('message', handleMessage);
         };
     }, [router]);
