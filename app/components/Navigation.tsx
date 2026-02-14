@@ -9,6 +9,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { useAuth } from "@/context/AuthContext";
+import MobileNav from "./MobileNav";
 
 const navItems = [
     { icon: Home, label: "בית", href: "/" },
@@ -171,48 +172,17 @@ export default function Navigation() {
                 </div>
             </aside>
 
-            {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-pb mobile-bottom-nav transition-transform duration-200">
-                <div className="flex justify-around items-center p-3">
-                    {currentNavItems.map((item) => {
-                        const isActive = pathname === item.href;
-                        const isLiveBoard = item.href === '/lfg';
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex flex-col items-center gap-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"
-                                    }`}
-                            >
-                                <div className={`p-1.5 rounded-full transition-all relative ${isActive ? "bg-primary/20" : ""}`}>
-                                    <item.icon size={24} />
-                                    {isLiveBoard && (
-                                        <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-                                    )}
-                                    {item.href === '/notifications' && unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-blue-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5 shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                                            {unreadCount > 9 ? '9+' : unreadCount}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-[10px] font-medium">{item.label}</span>
-                            </Link>
-                        );
-                    })}
-
-                    {isMounted && !user && (
-                        <Link
-                            href="/login"
-                            className="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors"
-                        >
-                            <div className="p-1.5 rounded-full">
-                                <LogIn size={24} />
-                            </div>
-                            <span className="text-[10px] font-medium">התחבר</span>
-                        </Link>
-                    )}
-                </div>
-            </nav>
+            {/* Mobile Navigation - Bottom bar + Side drawer */}
+            <MobileNav
+                user={user}
+                profile={profile}
+                isAdmin={isAdmin}
+                isMounted={isMounted}
+                showSkeleton={showSkeleton}
+                isSigningOut={isSigningOut}
+                unreadCount={unreadCount}
+                onSignOut={handleSignOut}
+            />
         </>
     );
 }
