@@ -5,6 +5,8 @@ import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import OfflineIndicator from "./components/OfflineIndicator";
 import FloatingGamerBot from "./components/FloatingGamerBot";
 import SafetyBanner from "./components/SafetyBanner";
+import SplashScreen from "./components/SplashScreen";
+import KeyboardHandler from "./components/KeyboardHandler";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
@@ -58,16 +60,23 @@ export default function RootLayout({
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        {/* Apple Touch Icons - multiple sizes for different devices */}
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.svg" />
+        <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.svg" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="GamerZone" />
       </head>
       <body
         className={`${rubik.variable} antialiased font-rubik bg-background text-foreground`}
         suppressHydrationWarning
       >
         <AuthProvider>
+          <SplashScreen />
+          <KeyboardHandler />
           <OfflineIndicator />
           <SafetyBanner />
           {children}

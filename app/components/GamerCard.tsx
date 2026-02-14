@@ -7,6 +7,7 @@ import { Gamepad2, MessageSquare, Plus, Check, Loader2, Copy, Shield, X, Sparkle
 import { toast } from "sonner";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { createClient } from "@/utils/supabase/client";
+import { haptic } from "@/utils/haptics";
 
 interface GamerCardProps {
     username: string;
@@ -128,6 +129,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             if (error) throw error;
 
             setStatus('pending_sent');
+            haptic("success");
             // Notify parent of status change
             if (onSwapStatusChange) {
                 onSwapStatusChange(id, 'pending_sent');
@@ -164,6 +166,8 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             if (onSwapStatusChange) {
                 onSwapStatusChange(id, newStatus as any);
             }
+
+            haptic(approved ? "success" : "medium");
 
             if (approved) {
                 // Auto-create friendship when swap is approved
@@ -210,6 +214,7 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
+        haptic("light");
         setCopiedTag(text);
         toast.success(" הועתק!", { duration: 1500 });
         setTimeout(() => setCopiedTag(null), 2000);

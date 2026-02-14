@@ -1,12 +1,13 @@
 // Service Worker for GamerZone PWA
-// Version 1.0.6 - Properly consume preloadResponse to eliminate warnings
+// Version 2.0.0 - Full PWA audit: offline support, push improvements, background sync
 
-const CACHE_NAME = 'gamerzone-v11';
-const RUNTIME_CACHE = 'gamerzone-runtime-v11';
+const CACHE_NAME = 'gamerzone-v12';
+const RUNTIME_CACHE = 'gamerzone-runtime-v12';
 
-// Only precache truly static assets - NEVER cache HTML pages
+// Precache static assets + offline fallback page
 const PRECACHE_ASSETS = [
     '/manifest.json',
+    '/offline.html',
     '/avatars/gamer.png',
     '/avatars/samurai.png',
     '/avatars/ninja.png',
@@ -17,7 +18,7 @@ const PRECACHE_ASSETS = [
 
 // Install event - precache critical assets
 self.addEventListener('install', (event) => {
-    console.log('[SW] Installing service worker v1.0.2');
+    console.log('[SW] Installing service worker v2.0.0');
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             console.log('[SW] Precaching critical assets');
@@ -154,22 +155,34 @@ self.addEventListener('fetch', (event) => {
     // This prevents caching Next.js RSC payloads and dynamic data
 });
 
-// Push notification event
+// Push notification event - improved with tag-based dedup and renotify
 self.addEventListener('push', (event) => {
     console.log('[SW] Push notification received');
 
     if (event.data) {
-        const data = event.data.json();
+        let data;
+        try {
+            data = event.data.json();
+        } catch (e) {
+            console.error('[SW] Failed to parse push data:', e);
+            return;
+        }
+
+        // Tag-based dedup: same tag replaces previous notification
+        const tag = data.tag || `gz-${Date.now()}`;
         const options = {
             body: data.body || data.message,
             icon: '/icons/icon-192x192.svg',
             badge: '/icons/icon-72x72.svg',
             vibrate: [100, 50, 100],
-            tag: data.tag || 'default',
+            tag: tag,
+            renotify: true,
             requireInteraction: false,
+            silent: data.silent || false,
             data: {
                 dateOfArrival: Date.now(),
                 url: data.url || '/',
+                type: data.type || 'general',
             },
             actions: [
                 {
@@ -189,25 +202,30 @@ self.addEventListener('push', (event) => {
     }
 });
 
-// Notification click event
+// Notification click event - improved with full URL resolution
 self.addEventListener('notificationclick', (event) => {
-    console.log('[SW] Notification clicked');
+    console.log('[SW] Notification clicked:', event.action);
     event.notification.close();
 
     if (event.action === 'close') {
         return;
     }
 
-    const urlToOpen = event.notification.data.url;
+    const urlToOpen = new URL(event.notification.data.url || '/', self.location.origin).href;
 
     event.waitUntil(
         clients
             .matchAll({ type: 'window', includeUncontrolled: true })
             .then((clientList) => {
-                // Check if there's already a window open
+                // Try to focus existing window and navigate
                 for (const client of clientList) {
-                    if (client.url === urlToOpen && 'focus' in client) {
-                        return client.focus();
+                    if ('focus' in client) {
+                        client.focus();
+                        client.postMessage({
+                            type: 'NOTIFICATION_CLICK',
+                            url: urlToOpen
+                        });
+                        return;
                     }
                 }
                 // Open new window if none found
@@ -228,9 +246,65 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncMessages() {
-    // This would sync queued messages when back online
     console.log('[SW] Syncing offline messages...');
-    // Implementation would depend on your offline queue strategy
+    try {
+        // Read queued messages from IndexedDB
+        const db = await openOfflineDB();
+        const tx = db.transaction('outbox', 'readonly');
+        const store = tx.objectStore('outbox');
+        const messages = await getAllFromStore(store);
+
+        if (messages.length === 0) {
+            console.log('[SW] No offline messages to sync');
+            return;
+        }
+
+        console.log(`[SW] Syncing ${messages.length} offline messages`);
+
+        // Send each queued message
+        for (const msg of messages) {
+            try {
+                const response = await fetch('/api/send-offline-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(msg.data)
+                });
+
+                if (response.ok) {
+                    // Remove from outbox on success
+                    const deleteTx = db.transaction('outbox', 'readwrite');
+                    deleteTx.objectStore('outbox').delete(msg.id);
+                }
+            } catch (err) {
+                console.error('[SW] Failed to sync message:', err);
+            }
+        }
+    } catch (err) {
+        console.error('[SW] Sync failed:', err);
+    }
+}
+
+// IndexedDB helpers for offline queue
+function openOfflineDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('gamerzone-offline', 1);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('outbox')) {
+                db.createObjectStore('outbox', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function getAllFromStore(store) {
+    return new Promise((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
 }
 
 // Periodic background sync (for checking new messages)

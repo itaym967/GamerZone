@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import ReportMessageModal from "../components/ReportMessageModal";
 import { filterContent } from "@/utils/kid-safety";
+import { haptic } from "@/utils/haptics";
 
 function ChatContent() {
     const searchParams = useSearchParams();
@@ -244,6 +245,7 @@ function ChatContent() {
         // Clear input immediately for better UX
         const messageToSend = finalContent;
         setInput("");
+        haptic("light");
 
         // Send message
         await sendMessage(messageToSend, activeChat.id);
@@ -482,7 +484,7 @@ function ChatContent() {
                     )}
 
                     {/* Input Area */}
-                    <div className="p-4 border-t border-white/5 bg-[#0e0e1b]/80 backdrop-blur-lg">
+                    <div className="p-4 border-t border-white/5 bg-[#0e0e1b]/80 backdrop-blur-lg chat-input-area">
                         <form onSubmit={handleSend} className="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl p-1.5 focus-within:border-primary/50 transition-colors">
                             <button type="button" className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
                                 <Plus size={20} className="rotate-45" />

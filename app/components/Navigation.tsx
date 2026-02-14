@@ -172,7 +172,7 @@ export default function Navigation() {
             </aside>
 
             {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-pb">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#050510]/95 backdrop-blur-xl border-t border-white/10 z-50 safe-area-pb mobile-bottom-nav transition-transform duration-200">
                 <div className="flex justify-around items-center p-3">
                     {currentNavItems.map((item) => {
                         const isActive = pathname === item.href;
