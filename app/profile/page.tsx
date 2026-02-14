@@ -1,156 +1,50 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Save, Gamepad2 } from "lucide-react";
+import { useState } from "react";
+import { User, Gamepad2, BarChart3, Settings } from "lucide-react";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
-import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import ProfileEditTab from "./components/ProfileEditTab";
+import GamertagsTab from "./components/GamertagsTab";
+import StatsTab from "./components/StatsTab";
+import AccountTab from "./components/AccountTab";
+import { useProfileData } from "./hooks/useProfileData";
+import type { ProfileTab } from "./types";
+
+const TABS: { id: ProfileTab; label: string; icon: typeof User }[] = [
+    { id: "edit", label: "עריכת פרופיל", icon: User },
+    { id: "gamertags", label: "Gamertags", icon: Gamepad2 },
+    { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
+    { id: "account", label: "חשבון", icon: Settings },
+];
 
 export default function ProfilePage() {
-    const router = useRouter();
-    const { user, isLoading: authLoading } = useAuth();
-    const supabase = useMemo(() => createClient(), []);
-    const [isLoading, setIsLoading] = useState(true);
-    const userId = useMemo(() => user?.id || null, [user?.id]);
-
-    const [formData, setFormData] = useState({
-        username: "",
-        tag: "", // Derived from username usually, but let's allow custom logic if needed? Actually, let's keep it simple.
-        bio: "",
-        games: [] as string[],
-        hiddenTags: {} as { [key: string]: string }
-    });
-
-    const [avatarSeed, setAvatarSeed] = useState("/avatars/samurai.png");
-
-    useEffect(() => {
-        if (authLoading) return;
-        
-        if (!userId) {
-            router.push("/login");
-            return;
-        }
-
-        const fetchProfile = async () => {
-            try {
-                // Fetch Profile
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
-
-                if (profileError) throw profileError;
-
-                // Fetch Gamertags
-                const { data: tags, error: tagsError } = await supabase
-                    .from('gamertags')
-                    .select('*')
-                    .eq('user_id', userId);
-
-                if (tagsError) throw tagsError;
-
-                // Transform Tags
-                const gamesList: string[] = [];
-                const hiddenTagsMap: { [key: string]: string } = {};
-
-                tags?.forEach(t => {
-                    gamesList.push(t.platform);
-                    hiddenTagsMap[t.platform] = t.tag;
-                });
-
-                setFormData({
-                    username: profile.username || "",
-                    tag: "@" + (profile.username || "user").toLowerCase(),
-                    bio: profile.bio || "",
-                    games: gamesList,
-                    hiddenTags: hiddenTagsMap
-                });
-
-                if (profile.avatar_url) {
-                    setAvatarSeed(profile.avatar_url);
-                }
-
-            } catch (error) {
-                console.error("Error loading profile:", error);
-                toast.error("שגיאה בטעינת הפרופיל");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchProfile();
-    }, [authLoading, userId, router, supabase]);
-
-    const handleSave = async () => {
-        if (!userId) return;
-
-        try {
-            toast.loading("שומר שינויים...");
-
-            // 1. Update Profile
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update({
-                    username: formData.username,
-                    bio: formData.bio,
-                    avatar_url: avatarSeed,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', userId);
-
-            if (profileError) throw profileError;
-
-            // 2. Update Gamertags
-            // This is complex because we have a map in UI but rows in DB.
-            // Simplified strategy: Upsert each tag in hiddenTags.
-            // Note: This UI implementation is a bit limited (doesn't allow adding NEW games easily in this view, just editing existing).
-            // But let's support editing the values.
-
-            const updates = Object.entries(formData.hiddenTags).map(async ([platform, tag]) => {
-                // Check if exists to update, or insert? 
-                // We need to know which game corresponds to which row?
-                // Let's just upsert based on user_id + platform (if we had unique constraint).
-                // We DO NOT have a unique constraint on (user_id, platform) in the strict schema I saw earlier? 
-                // Actually we do usually. Let's assume we do.
-
-                // First delete old tag for this platform and insert new? Safe but heavy.
-                // let's try upsert.
-
-                // Wait, for this specific UI, let's just update the tags that are changed.
-                const { error } = await supabase
-                    .from('gamertags')
-                    .update({ tag: tag })
-                    .eq('user_id', userId)
-                    .eq('platform', platform);
-
-                if (error) {
-                    // If update failed (maybe didn't exist?), insert?
-                    // But the UI only shows existing games from `games` array.
-                }
-                return error;
-            });
-
-            await Promise.all(updates);
-
-            toast.dismiss();
-            toast.success("הפרופיל עודכן בהצלחה!", {
-                description: "הכרטיס שלך מעודכן ומוכן להחלפות."
-            });
-
-            router.refresh();
-
-        } catch (error: any) {
-            toast.dismiss();
-            toast.error("שגיאה בשמירה", { description: error.message });
-        }
-    };
+    const [activeTab, setActiveTab] = useState<ProfileTab>("edit");
+    const {
+        userId,
+        isLoading,
+        isSaving,
+        hasUnsavedChanges,
+        formData,
+        avatarSeed,
+        stats,
+        setAvatarSeed,
+        updateFormData,
+        handleSave,
+        addGamertag,
+        removeGamertag,
+        userEmail
+    } = useProfileData();
 
     if (isLoading) {
-        return <div className="min-h-screen bg-[#050510] flex items-center justify-center text-white">טוען פרופיל...</div>;
+        return (
+            <div className="min-h-screen bg-[#050510] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    <span className="text-gray-400 text-sm">טוען פרופיל...</span>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -158,108 +52,60 @@ export default function ProfilePage() {
             <Navigation />
 
             <main className="p-6 max-w-7xl mx-auto">
-                <header className="mb-8">
+                <header className="mb-6">
                     <h1 className="text-3xl font-bold text-white mb-2">הפרופיל שלי</h1>
                     <p className="text-gray-400">ככה אחרים רואים אותך ב-GamerZone</p>
                 </header>
 
+                {/* Tab Navigation */}
+                <div className="flex gap-1 mb-8 bg-white/5 p-1 rounded-xl overflow-x-auto">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                                activeTab === tab.id
+                                    ? "bg-primary text-black"
+                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                            }`}
+                        >
+                            <tab.icon size={16} />
+                            <span>{tab.label}</span>
+                            {tab.id === "edit" && hasUnsavedChanges && (
+                                <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-                    {/* Edit Form */}
-                    <div className="glass-panel p-6 rounded-2xl border border-white/5 space-y-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                                <Gamepad2 size={24} />
-                            </div>
-                            <h2 className="text-xl font-bold text-white">עריכת פרטים</h2>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">כינוי (Username)</label>
-                                <input
-                                    type="text"
-                                    value={formData.username}
-                                    onChange={(e) => setFormData({ ...formData, username: e.target.value, tag: "@" + e.target.value.toLowerCase() })}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-primary/50 text-right"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">תיוג (@Tag)</label>
-                                <input
-                                    type="text"
-                                    value={formData.tag}
-                                    readOnly
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-gray-400 cursor-not-allowed outline-none text-right dir-ltr"
-                                    dir="ltr"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">בחר דמות</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { id: '/avatars/samurai.png', name: 'Samurai' },
-                                        { id: '/avatars/hacker.png', name: 'Hacker' },
-                                        { id: '/avatars/girl_pink.png', name: 'Pink' },
-                                        { id: '/avatars/girl_blue.png', name: 'Blue' },
-                                        { id: '/avatars/ninja.png', name: 'Ninja' },
-                                        { id: '/avatars/gamer.png', name: 'Gamer' }
-                                        // TODO: Add more options or dynamic API
-                                    ].map((avatar) => (
-                                        <button
-                                            key={avatar.id}
-                                            onClick={() => setAvatarSeed(avatar.id)}
-                                            className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${avatarSeed === avatar.id ? 'border-primary shadow-[0_0_15px_rgba(0,255,157,0.3)] scale-105' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'
-                                                }`}
-                                        >
-                                            <img src={avatar.id} alt={avatar.name} className="w-full h-full object-cover" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">על עצמי (Bio)</label>
-                                <textarea
-                                    value={formData.bio}
-                                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                    rows={3}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-primary/50 text-right resize-none"
-                                />
-                            </div>
-
-                            <div className="border-t border-white/10 pt-4 mt-4">
-                                <h3 className="text-white font-bold mb-3">Gamertags (ערוך משחקים קיימים)</h3>
-                                <div className="space-y-3">
-                                    {Object.keys(formData.hiddenTags).length === 0 && <p className="text-gray-500 text-sm">לא הוספת משחקים עדיין via Onboarding.</p>}
-                                    {Object.entries(formData.hiddenTags).map(([game, tag]) => (
-                                        <div key={game} className="flex items-center gap-2">
-                                            <span className="w-24 text-sm text-gray-400">{game}:</span>
-                                            <input
-                                                type="text"
-                                                value={tag}
-                                                onChange={(e) => {
-                                                    const newTags = { ...formData.hiddenTags, [game]: e.target.value };
-                                                    setFormData({ ...formData, hiddenTags: newTags });
-                                                }}
-                                                className="flex-1 bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-primary/50 text-left dir-ltr font-mono"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="pt-4">
-                            <button
-                                onClick={handleSave}
-                                className="w-full bg-primary text-black font-bold py-3 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Save size={18} />
-                                <span>שמור שינויים</span>
-                            </button>
-                        </div>
+                    {/* Active Tab Content */}
+                    <div>
+                        {activeTab === "edit" && (
+                            <ProfileEditTab
+                                formData={formData}
+                                avatarSeed={avatarSeed}
+                                isSaving={isSaving}
+                                hasUnsavedChanges={hasUnsavedChanges}
+                                onUpdateFormData={updateFormData}
+                                onSetAvatarSeed={setAvatarSeed}
+                                onSave={handleSave}
+                            />
+                        )}
+                        {activeTab === "gamertags" && (
+                            <GamertagsTab
+                                formData={formData}
+                                onUpdateFormData={updateFormData}
+                                onAddGamertag={addGamertag}
+                                onRemoveGamertag={removeGamertag}
+                            />
+                        )}
+                        {activeTab === "stats" && (
+                            <StatsTab stats={stats} />
+                        )}
+                        {activeTab === "account" && (
+                            <AccountTab userEmail={userEmail} />
+                        )}
                     </div>
 
                     {/* Live Preview */}

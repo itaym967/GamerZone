@@ -166,6 +166,29 @@ export default function GamerCard({ username, tag, games, bio, online, hiddenTag
             }
 
             if (approved) {
+                // Auto-create friendship when swap is approved
+                const { error: friendError } = await supabase
+                    .from('friendships')
+                    .upsert(
+                        { sender_id: id, receiver_id: currentUserId, status: 'accepted', updated_at: new Date().toISOString() },
+                        { onConflict: 'sender_id,receiver_id', ignoreDuplicates: true }
+                    );
+                if (friendError) {
+                    // Fallback: try insert if upsert fails (no unique constraint on pair)
+                    const { data: existing } = await supabase
+                        .from('friendships')
+                        .select('id')
+                        .or(`and(sender_id.eq.${id},receiver_id.eq.${currentUserId}),and(sender_id.eq.${currentUserId},receiver_id.eq.${id})`)
+                        .maybeSingle();
+                    if (!existing) {
+                        await supabase.from('friendships').insert({
+                            sender_id: id,
+                            receiver_id: currentUserId,
+                            status: 'accepted'
+                        });
+                    }
+                }
+
                 setXp(prev => prev + 50);
                 setShowXpGain(true);
                 setTimeout(() => setShowXpGain(false), 2000);
