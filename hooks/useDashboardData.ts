@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 const CACHE_KEY_PREFIX = "gamerzone_dashboard_cache";
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes

@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
+import { createClient } from "@/lib/supabase/client";
 import {
   calculateAge,
   getAccountType,
@@ -21,9 +21,18 @@ import {
   requiresCOPPAConsent,
   validateDateOfBirth,
 } from "@/utils/kid-safety";
-import { clearAuthCookies } from "@/utils/supabase/auth-helpers";
-import { createClient } from "@/utils/supabase/client";
 import Logo from "../components/Logo";
+
+function hasRefreshTokenIssue(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("refresh_token") ||
+    message.includes("invalid refresh token")
+  );
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -55,17 +64,12 @@ export default function SignupPage() {
         } = await supabase.auth.getSession();
 
         // If there's a refresh token error, clear cookies
-        if (
-          error &&
-          (error.message?.includes("refresh_token") ||
-            error.message?.includes("Invalid Refresh Token"))
-        ) {
-          clearAuthCookies();
+        if (error && hasRefreshTokenIssue(error)) {
           await supabase.auth.signOut();
         }
       } catch (_err) {
         // Silently handle errors on signup page
-        clearAuthCookies();
+        await supabase.auth.signOut();
       }
     };
 
@@ -172,7 +176,6 @@ export default function SignupPage() {
         } else {
           toast.success("ברוך הבא ל-GamerZone! 🎮");
         }
-        clearAllCachesOnAuthChange();
         router.push("/onboarding");
       } else {
         toast.success("הרשמה בוצעה בהצלחה! בדוק את המייל לאימות.");

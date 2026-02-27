@@ -14,20 +14,6 @@ export const AGE_THRESHOLDS = {
 // Account types
 export type AccountType = "standard" | "minor" | "supervised";
 
-// Restriction levels based on age
-export interface SafetyRestrictions {
-  canJoinParties: boolean;
-  canPostLFG: boolean;
-  canSharePersonalInfo: boolean;
-  canViewExplore: boolean;
-  chatEnabled: boolean;
-  chatRequiresFriendship: boolean;
-  contentFilterLevel: "strict" | "moderate" | "standard";
-  maxDailyChatMinutes: number;
-  profilePublic: boolean;
-  requiresParentalConsent: boolean;
-}
-
 /**
  * Calculate age from date of birth
  */
@@ -42,13 +28,6 @@ export function calculateAge(dateOfBirth: string | Date): number {
   }
 
   return age;
-}
-
-/**
- * Determine if user is a minor based on date of birth
- */
-export function isMinor(dateOfBirth: string | Date): boolean {
-  return calculateAge(dateOfBirth) < AGE_THRESHOLDS.ADULT_MIN;
 }
 
 /**
@@ -70,55 +49,6 @@ export function getAccountType(dateOfBirth: string | Date): AccountType {
     return "minor";
   }
   return "standard";
-}
-
-/**
- * Get safety restrictions based on account type
- */
-export function getSafetyRestrictions(
-  accountType: AccountType
-): SafetyRestrictions {
-  switch (accountType) {
-    case "supervised": // Under 13
-      return {
-        chatEnabled: true,
-        chatRequiresFriendship: true,
-        profilePublic: false,
-        canSharePersonalInfo: false,
-        canJoinParties: false,
-        canPostLFG: false,
-        canViewExplore: true,
-        maxDailyChatMinutes: 60,
-        contentFilterLevel: "strict",
-        requiresParentalConsent: true,
-      };
-    case "minor": // 13-17
-      return {
-        chatEnabled: true,
-        chatRequiresFriendship: false,
-        profilePublic: true,
-        canSharePersonalInfo: false,
-        canJoinParties: true,
-        canPostLFG: true,
-        canViewExplore: true,
-        maxDailyChatMinutes: 180,
-        contentFilterLevel: "moderate",
-        requiresParentalConsent: false,
-      };
-    default:
-      return {
-        chatEnabled: true,
-        chatRequiresFriendship: false,
-        profilePublic: true,
-        canSharePersonalInfo: true,
-        canJoinParties: true,
-        canPostLFG: true,
-        canViewExplore: true,
-        maxDailyChatMinutes: 0, // unlimited
-        contentFilterLevel: "standard",
-        requiresParentalConsent: false,
-      };
-  }
 }
 
 /**
@@ -148,19 +78,6 @@ export function validateDateOfBirth(dateOfBirth: string): string | null {
   }
 
   return null;
-}
-
-/**
- * Generate a random consent token for parental verification
- */
-export function generateConsentToken(): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let token = "";
-  for (let i = 0; i < 32; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return token;
 }
 
 // Extended profanity patterns for Hebrew + English

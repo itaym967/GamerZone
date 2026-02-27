@@ -10,8 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 interface Profile {
   account_type?: string;
@@ -253,7 +252,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (event === "SIGNED_IN" && session?.user) {
-        clearAllCachesOnAuthChange();
         setUser(session.user);
         await fetchProfile(session.user.id, false);
         if (mounted) {
@@ -263,7 +261,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
         setIsAdmin(false);
-        clearAllCachesOnAuthChange();
         if (mounted) {
           setIsLoading(false);
         }
@@ -304,8 +301,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setProfile(null);
       setIsAdmin(false);
-      // Clear ALL caches (sessionStorage + SW)
-      clearAllCachesOnAuthChange();
 
       // Clean up realtime subscription
       if (profileChannelRef.current) {
@@ -325,7 +320,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setProfile(null);
       setIsAdmin(false);
-      clearAllCachesOnAuthChange();
       router.push("/login");
     }
   }, [supabase, router]);

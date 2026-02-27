@@ -12,8 +12,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import OptimizedAvatar from "@/app/components/OptimizedAvatar";
-import { createClient } from "@/utils/supabase/client";
-import type { Database } from "@/utils/supabase/types";
+import type { Database } from "@/lib/database.types";
+import { createClient } from "@/lib/supabase/client";
 
 type PostWithProfile = Database["public"]["Tables"]["lfg_posts"]["Row"] & {
   profiles: Database["public"]["Tables"]["profiles"]["Row"] | null;

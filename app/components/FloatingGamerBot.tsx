@@ -21,6 +21,28 @@ interface Message {
   timestamp: string;
 }
 
+function getLocalBotReply(message: string): string {
+  const normalizedMessage = message.trim().toLowerCase();
+  if (!normalizedMessage) {
+    return "כתוב לי מה בא לך לשחק ואנסה לעזור.";
+  }
+  if (
+    normalizedMessage.includes("fps") ||
+    normalizedMessage.includes("shoot") ||
+    normalizedMessage.includes("יריות")
+  ) {
+    return "למשחקי FPS תנסה לחמם aim ל-10 דקות, להוריד רגישות קצת, ולעבוד על crosshair placement.";
+  }
+  if (
+    normalizedMessage.includes("rank") ||
+    normalizedMessage.includes("competitive") ||
+    normalizedMessage.includes("ראנק")
+  ) {
+    return "כדי לעלות ראנק: שחק עקבי, התמקד ב-2-3 דמויות/נשקים, ונתח משחק אחד ביום במקום רק לגריינד.";
+  }
+  return "כרגע אני במצב בסיסי בלי AI חיצוני. תכתוב משחק/ז'אנר ואני אתן טיפים ממוקדים.";
+}
+
 export default function FloatingGamerBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -68,43 +90,19 @@ export default function FloatingGamerBot() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300);
+    });
 
-    try {
-      const response = await fetch("/api/deepseek/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage.content }),
-      });
+    const botMessage: Message = {
+      id: `bot-${Date.now()}`,
+      sender: "bot",
+      content: getLocalBotReply(userMessage.content),
+      timestamp: new Date().toISOString(),
+    };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "שגיאה בתקשורת עם הבוט");
-      }
-
-      const botMessage: Message = {
-        id: `bot-${Date.now()}`,
-        sender: "bot",
-        content: data.response,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error: any) {
-      console.error("GamerBot error:", error);
-      toast.error(error.message || "שגיאה בתקשורת עם הבוט");
-
-      const errorMessage: Message = {
-        id: `bot-error-${Date.now()}`,
-        sender: "bot",
-        content: "סליחה, נתקלתי בבעיה טכנית. נסה שוב בעוד רגע 🔧",
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
+    setMessages((prev) => [...prev, botMessage]);
+    setIsTyping(false);
   };
 
   return (

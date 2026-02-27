@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/Logo";
 
 export default function ForgotPasswordPage() {

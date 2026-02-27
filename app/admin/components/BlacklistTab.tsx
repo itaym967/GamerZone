@@ -27,11 +27,10 @@ export default function BlacklistTab({
   const [loading, setLoading] = useState(true);
   const [newWord, setNewWord] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(
-    null
-  );
-  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isAnalyzing, _setIsAnalyzing] = useState(false);
+  const [analysisResult, _setAnalysisResult] =
+    useState<AIAnalysisResult | null>(null);
+  const [showAnalysis, _setShowAnalysis] = useState(false);
 
   const fetchWords = useCallback(async () => {
     setLoading(true);
@@ -110,38 +109,7 @@ export default function BlacklistTab({
   };
 
   const analyzeWithAI = async () => {
-    if (blockedWords.length === 0) {
-      toast.error("אין מילים לניתוח. הוסף מילים לרשימה השחורה תחילה.");
-      return;
-    }
-    setIsAnalyzing(true);
-    setShowAnalysis(true);
-    try {
-      const response = await fetch("/api/deepseek/analyze-toxicity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blockedWords: blockedWords.map((w) => w.word) }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "שגיאה בניתוח הרעלנות");
-      }
-      setAnalysisResult(data);
-      toast.success("הניתוח הושלם בהצלחה!");
-      await supabase.from("admin_logs").insert({
-        action: "AI_TOXICITY_ANALYSIS",
-        details: {
-          wordCount: blockedWords.length,
-          suggestionsCount: data.suggestions.length,
-        },
-        admin_id: currentUser,
-      });
-    } catch (error: any) {
-      console.error("AI analysis error:", error);
-      toast.error(error.message || "שגיאה בניתוח AI");
-    } finally {
-      setIsAnalyzing(false);
-    }
+    toast.info("ניתוח רעלנות עם AI הוסר מהמערכת.");
   };
 
   const addSuggestedWord = async (word: string) => {

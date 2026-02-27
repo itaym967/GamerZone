@@ -18,8 +18,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 import { haptic } from "@/utils/haptics";
-import { createClient } from "@/utils/supabase/client";
 import OptimizedAvatar from "./OptimizedAvatar";
 
 interface GamerCardProps {
@@ -93,7 +93,7 @@ export default function GamerCard({
     [key: string]: string;
   } | null>(null);
   // Bio enhancer state
-  const [isEnhancingBio, setIsEnhancingBio] = useState(false);
+  const [isEnhancingBio, _setIsEnhancingBio] = useState(false);
   const [showBioEnhancer, setShowBioEnhancer] = useState(false);
 
   // OPTIMIZATION: Update local status when parent provides new status
@@ -283,52 +283,7 @@ export default function GamerCard({
   };
 
   const handleEnhanceBio = async () => {
-    if (!currentUserId || currentUserId !== id) {
-      toast.error("אתה יכול לשפר רק את הביו שלך");
-      return;
-    }
-
-    if (!bio || bio.trim().length < 10) {
-      toast.error("הביו קצר מדי לשיפור. הוסף לפחות 10 תווים.");
-      return;
-    }
-
-    setIsEnhancingBio(true);
-    try {
-      const response = await fetch("/api/deepseek/enhance-bio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bio, userId: currentUserId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "שגיאה בשיפור הביו");
-      }
-
-      // Update bio in database
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ bio: data.enhancedBio })
-        .eq("id", currentUserId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      toast.success("הביו שופר בהצלחה! ✨", {
-        description: "הדף יתרענן כדי להציג את השינויים",
-      });
-
-      // Refresh page to show updated bio
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error: any) {
-      console.error("Bio enhancement error:", error);
-      toast.error(error.message || "שגיאה בשיפור הביו");
-    } finally {
-      setIsEnhancingBio(false);
-    }
+    toast.info("שיפור ביו עם AI הוסר מהמערכת.");
   };
 
   // Determine which tags to show: revealed ones (if fetched) or hidden (from props, likely masked)

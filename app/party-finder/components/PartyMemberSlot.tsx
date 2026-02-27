@@ -2,7 +2,7 @@
 import { Add01Icon, CrownIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import OptimizedAvatar from "@/app/components/OptimizedAvatar";
-import type { Database } from "@/utils/supabase/types";
+import type { Database } from "@/lib/database.types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 

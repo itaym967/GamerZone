@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import type { Database } from "@/utils/supabase/types";
+import type { Database } from "@/lib/database.types";
+import { createClient } from "@/lib/supabase/client";
 
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 

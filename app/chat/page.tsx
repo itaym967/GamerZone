@@ -21,12 +21,34 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { type Contact, type Message, useChat } from "@/hooks/useChat";
+import { createClient } from "@/lib/supabase/client";
 import { haptic } from "@/utils/haptics";
 import { filterContent } from "@/utils/kid-safety";
-import { createClient } from "@/utils/supabase/client";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 import ReportMessageModal from "../components/ReportMessageModal";
+
+function getLocalBotReply(message: string): string {
+  const normalizedMessage = message.trim().toLowerCase();
+  if (!normalizedMessage) {
+    return "כתוב לי מה בא לך לשחק ואנסה לעזור.";
+  }
+  if (
+    normalizedMessage.includes("fps") ||
+    normalizedMessage.includes("shoot") ||
+    normalizedMessage.includes("יריות")
+  ) {
+    return "טיפ ל-FPS: תתאמן 10 דקות על aim לפני ranked ותשמור על crosshair בגובה הראש.";
+  }
+  if (
+    normalizedMessage.includes("party") ||
+    normalizedMessage.includes("team") ||
+    normalizedMessage.includes("קבוצה")
+  ) {
+    return "לחיפוש קבוצה טובה: תגדיר role ברור, שעות משחק קבועות, וסגנון תקשורת מראש.";
+  }
+  return "כרגע הבוט עובד במצב בסיסי מקומי ללא DeepSeek. כתוב משחק ספציפי ואחזיר לך טיפים ממוקדים.";
+}
 
 function ChatContent() {
   const searchParams = useSearchParams();
@@ -202,46 +224,20 @@ function ChatContent() {
       // Show bot typing
       setIsBotTyping(true);
 
-      try {
-        const response = await fetch("/api/deepseek/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMessage }),
-        });
+      await new Promise((resolve) => {
+        setTimeout(resolve, 300);
+      });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "שגיאה בתקשורת עם הבוט");
-        }
-
-        // Add bot response
-        const botMsg: Message = {
-          id: `bot-${Date.now()}`,
-          sender_id: GAMERBOT_ID,
-          receiver_id: user?.id || "guest",
-          content: data.response,
-          created_at: new Date().toISOString(),
-          is_read: true,
-        };
-        setBotMessages((prev) => [...prev, botMsg]);
-      } catch (error: any) {
-        console.error("GamerBot error:", error);
-        toast.error(error.message || "שגיאה בתקשורת עם הבוט");
-
-        // Add error message
-        const errorMsg: Message = {
-          id: `bot-error-${Date.now()}`,
-          sender_id: GAMERBOT_ID,
-          receiver_id: user?.id || "guest",
-          content: "סליחה, נתקלתי בבעיה טכנית. נסה שוב בעוד רגע 🔧",
-          created_at: new Date().toISOString(),
-          is_read: true,
-        };
-        setBotMessages((prev) => [...prev, errorMsg]);
-      } finally {
-        setIsBotTyping(false);
-      }
+      const botMsg: Message = {
+        id: `bot-${Date.now()}`,
+        sender_id: GAMERBOT_ID,
+        receiver_id: user?.id || "guest",
+        content: getLocalBotReply(userMessage),
+        created_at: new Date().toISOString(),
+        is_read: true,
+      };
+      setBotMessages((prev) => [...prev, botMsg]);
+      setIsBotTyping(false);
       return;
     }
 

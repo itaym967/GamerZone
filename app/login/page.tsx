@@ -11,13 +11,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { clearAllCachesOnAuthChange } from "@/utils/cache-utils";
-import {
-  isRefreshTokenError,
-  safeSignOut,
-} from "@/utils/supabase/auth-helpers";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/Logo";
+
+function isRefreshTokenError(error: any): boolean {
+  const message = error?.message || error?.error_description || "";
+  return (
+    message.includes("refresh_token_not_found") ||
+    message.includes("Invalid Refresh Token") ||
+    message.includes("refresh token") ||
+    error?.code === "refresh_token_not_found"
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,7 +42,7 @@ export default function LoginPage() {
           error,
         } = await supabase.auth.getSession();
         if (error && isRefreshTokenError(error)) {
-          await safeSignOut();
+          await supabase.auth.signOut();
           return;
         }
         if (session?.user) {
@@ -71,7 +76,7 @@ export default function LoginPage() {
 
       if (error) {
         if (isRefreshTokenError(error)) {
-          await safeSignOut();
+          await supabase.auth.signOut();
           throw new Error("פג תוקף ההתחברות. נסה שוב.");
         }
         throw error;
@@ -79,7 +84,6 @@ export default function LoginPage() {
 
       if (session?.user) {
         toast.success("ברוך הבא ל-GamerZone! 🎮");
-        clearAllCachesOnAuthChange();
         router.replace("/");
       }
     } catch (error: any) {

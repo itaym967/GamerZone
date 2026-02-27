@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { createClient } from "@/utils/supabase/client";
-import type { Database } from "@/utils/supabase/types";
+import type { Database } from "@/lib/database.types";
+import { createClient } from "@/lib/supabase/client";
 import Navigation from "../components/Navigation";
 import LFGCard from "./components/LFGCard";
 

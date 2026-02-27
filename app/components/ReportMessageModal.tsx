@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 interface ReportMessageModalProps {
   isOpen: boolean;

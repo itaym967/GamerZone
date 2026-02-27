@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import type { Database } from "@/utils/supabase/types";
+import type { Database } from "@/lib/database.types";
+import { createClient } from "@/lib/supabase/client";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Friendship = Database["public"]["Tables"]["friendships"]["Row"];

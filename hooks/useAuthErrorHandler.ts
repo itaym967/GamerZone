@@ -5,11 +5,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import {
-  isRefreshTokenError,
-  recoverFromInvalidSession,
-} from "@/utils/supabase/auth-helpers";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export function useAuthErrorHandler() {
   const router = useRouter();
@@ -48,8 +44,23 @@ export async function withAuthErrorHandling<T>(
   } catch (error: any) {
     console.error("Auth operation error:", error);
 
-    if (isRefreshTokenError(error)) {
-      await recoverFromInvalidSession();
+    const message = error?.message || error?.error_description || "";
+    const isRefreshError =
+      message.includes("refresh_token_not_found") ||
+      message.includes("Invalid Refresh Token") ||
+      message.includes("refresh token") ||
+      error?.code === "refresh_token_not_found";
+    if (isRefreshError) {
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+      } catch {}
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/login")
+      ) {
+        window.location.href = "/login";
+      }
     }
 
     if (onError) {

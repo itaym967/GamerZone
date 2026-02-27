@@ -11,7 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Database } from "@/utils/supabase/types";
+import type { Database } from "@/lib/database.types";
 import PartyMemberSlot from "./PartyMemberSlot";
 
 type Party = Database["public"]["Tables"]["parties"]["Row"];
