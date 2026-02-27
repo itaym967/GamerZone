@@ -103,7 +103,9 @@ export default function CreateLFGPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("Not authenticated");
+        toast.error("יש להתחבר כדי לפרסם מודעה");
+        setLoading(false);
+        return;
       }
 
       const { error } = await supabase.from("lfg_posts").insert({
@@ -116,7 +118,9 @@ export default function CreateLFGPage() {
       });
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בפרסום המודעה");
+        setLoading(false);
+        return;
       }
 
       router.push("/lfg");
@@ -124,9 +128,8 @@ export default function CreateLFGPage() {
     } catch (error) {
       console.error(error);
       toast.error("שגיאה בפרסום המודעה");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
@@ -138,6 +141,7 @@ export default function CreateLFGPage() {
           <Link
             className="-ml-2 rounded-full p-2 transition-colors hover:bg-white/10"
             href="/lfg"
+            prefetch={false}
           >
             <HugeiconsIcon className="text-white" icon={ArrowLeft01Icon} />
           </Link>

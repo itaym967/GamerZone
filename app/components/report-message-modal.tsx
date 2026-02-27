@@ -46,6 +46,7 @@ export default function ReportMessageModal({
       return;
     }
 
+    const reportDescription = description.trim() === "" ? null : description;
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from("content_reports").insert({
@@ -53,11 +54,13 @@ export default function ReportMessageModal({
         reported_user_id: reportedUserId,
         reported_message_id: messageId,
         report_type: reportType,
-        description: description || null,
+        description: reportDescription,
       });
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בשליחת הדיווח");
+        setIsSubmitting(false);
+        return;
       }
 
       toast.success("הדיווח נשלח בהצלחה", {
@@ -69,9 +72,8 @@ export default function ReportMessageModal({
     } catch (error: unknown) {
       console.error("Error submitting report:", error);
       toast.error("שגיאה בשליחת הדיווח");
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   };
 
   return (

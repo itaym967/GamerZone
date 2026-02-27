@@ -25,6 +25,9 @@ const throwIfError = (error: unknown) => {
   }
 };
 
+const DEFAULT_AVATAR_URL =
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Samurai";
+
 const buildHiddenTagsMap = (tags: HiddenTagRow[]) => {
   const hiddenTagsMap: { [key: string]: string } = {};
   for (const tag of tags) {
@@ -56,8 +59,8 @@ export function useProfileData() {
   const [originalData, setOriginalData] = useState<ProfileFormData | null>(
     null
   );
-  const [avatarSeed, setAvatarSeed] = useState("/avatars/samurai.png");
-  const [originalAvatar, setOriginalAvatar] = useState("/avatars/samurai.png");
+  const [avatarSeed, setAvatarSeed] = useState(DEFAULT_AVATAR_URL);
+  const [originalAvatar, setOriginalAvatar] = useState(DEFAULT_AVATAR_URL);
 
   const [stats, setStats] = useState<ProfileStats>({
     swapsSent: 0,
@@ -163,9 +166,8 @@ export function useProfileData() {
       } catch (error) {
         console.error("Error loading profile:", error);
         toast.error("שגיאה בטעינת הפרופיל");
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     fetchAll();
@@ -230,9 +232,8 @@ export function useProfileData() {
       await refreshProfile();
     } catch (error: unknown) {
       toast.error("שגיאה בשמירה", { description: getErrorMessage(error) });
-    } finally {
-      setIsSaving(false);
     }
+    setIsSaving(false);
   }, [userId, formData, avatarSeed, supabase, refreshProfile]);
 
   const addGamertag = useCallback(

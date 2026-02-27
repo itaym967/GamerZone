@@ -66,28 +66,44 @@ export default function LogsTab({ supabase }: LogsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState<ActionFilter>("all");
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("admin_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (error) {
-        throw error;
+  const fetchLogs = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
       }
-      setLogs(data || []);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-      toast.error("שגיאה בטעינת לוגים");
-    } finally {
+      try {
+        const { data, error } = await supabase
+          .from("admin_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (error) {
+          console.error("Error fetching logs:", error);
+          toast.error("שגיאה בטעינת לוגים");
+          setLoading(false);
+          return;
+        }
+        if (data) {
+          setLogs(data);
+        } else {
+          setLogs([]);
+        }
+      } catch (error) {
+        console.error("Error fetching logs:", error);
+        toast.error("שגיאה בטעינת לוגים");
+      }
       setLoading(false);
-    }
-  }, [supabase]);
+    },
+    [supabase]
+  );
 
   useEffect(() => {
-    fetchLogs();
+    const timer = setTimeout(() => {
+      fetchLogs(false).catch((error: unknown) => {
+        console.error("Failed to fetch logs:", error);
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchLogs]);
 
   const filtered = logs.filter((log) => {
@@ -167,7 +183,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
           )}
           <button
             className="rounded-lg bg-white/5 p-2 text-gray-400 transition-all hover:bg-white/10 hover:text-white"
-            onClick={fetchLogs}
+            onClick={() => fetchLogs(true)}
             title="רענן"
             type="button"
           >

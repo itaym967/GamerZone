@@ -66,40 +66,69 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
   const [dbMetrics, setDbMetrics] = useState<DBMetrics>(DEFAULT_METRICS);
   const [loading, setLoading] = useState(true);
 
-  const fetchMetrics = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data: rtData, error: rtErr } = await supabase
-        .rpc("get_realtime_subscription_count")
-        .single<RealtimeSubscriptionCountResult>();
-      const { data: sqData, error: sqErr } = await supabase
-        .rpc("get_slow_query_metrics")
-        .single<SlowQueryMetricsResult>();
-
-      if (rtErr || sqErr) {
-        throw new Error("RPC call failed");
+  const fetchMetrics = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
       }
+      try {
+        const { data: rtData, error: rtErr } = await supabase
+          .rpc("get_realtime_subscription_count")
+          .single<RealtimeSubscriptionCountResult>();
+        const { data: sqData, error: sqErr } = await supabase
+          .rpc("get_slow_query_metrics")
+          .single<SlowQueryMetricsResult>();
 
-      setDbMetrics({
-        realtimeSubscriptions: rtData?.count || 0,
-        slowQueryCount: sqData?.slow_count || 0,
-        avgQueryTime: sqData?.avg_time || 0,
-        optimizationStatus: {
-          lfgPage: true,
-          chatHook: true,
-          gamerCard: true,
-          adminPage: true,
-        },
-      });
-    } catch {
-      setDbMetrics(DEFAULT_METRICS);
-    } finally {
+        if (rtErr) {
+          setDbMetrics(DEFAULT_METRICS);
+          setLoading(false);
+          return;
+        }
+        if (sqErr) {
+          setDbMetrics(DEFAULT_METRICS);
+          setLoading(false);
+          return;
+        }
+
+        let realtimeSubscriptions = 0;
+        if (rtData && typeof rtData.count === "number") {
+          realtimeSubscriptions = rtData.count;
+        }
+        let slowQueryCount = 0;
+        if (sqData && typeof sqData.slow_count === "number") {
+          slowQueryCount = sqData.slow_count;
+        }
+        let avgQueryTime = 0;
+        if (sqData && typeof sqData.avg_time === "number") {
+          avgQueryTime = sqData.avg_time;
+        }
+
+        setDbMetrics({
+          realtimeSubscriptions,
+          slowQueryCount,
+          avgQueryTime,
+          optimizationStatus: {
+            lfgPage: true,
+            chatHook: true,
+            gamerCard: true,
+            adminPage: true,
+          },
+        });
+      } catch {
+        setDbMetrics(DEFAULT_METRICS);
+      }
       setLoading(false);
-    }
-  }, [supabase]);
+    },
+    [supabase]
+  );
 
   useEffect(() => {
-    fetchMetrics();
+    const timer = setTimeout(() => {
+      fetchMetrics(false).catch(() => {
+        setDbMetrics(DEFAULT_METRICS);
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchMetrics]);
 
   const completedPhases = Object.values(dbMetrics.optimizationStatus).filter(
@@ -259,7 +288,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition-all hover:bg-blue-500"
-            onClick={fetchMetrics}
+            onClick={() => fetchMetrics(true)}
             type="button"
           >
             <HugeiconsIcon icon={Activity01Icon} size={18} />

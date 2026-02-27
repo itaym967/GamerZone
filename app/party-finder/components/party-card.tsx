@@ -67,9 +67,8 @@ export default function PartyCard({
       }
     } catch (error) {
       console.error("Error joining party:", error);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const leaderMember = members.find((m) => m.role === "leader");

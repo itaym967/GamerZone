@@ -187,6 +187,7 @@ function NotificationItem({
       <Link
         href={notification.action_url}
         onClick={() => !notification.is_read && onMarkRead(notification.id)}
+        prefetch={false}
       >
         {content}
       </Link>

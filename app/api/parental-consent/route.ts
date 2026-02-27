@@ -4,6 +4,29 @@ import { type NextRequest, NextResponse } from "next/server";
 let _adminClient: SupabaseClient | null = null;
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$/;
 
+// Token-based consent links are user-specific and must never be cached.
+export const dynamic = "force-dynamic";
+const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
+
+function getNoStoreHeaders(): HeadersInit {
+  return {
+    "Cache-Control": NO_STORE_CACHE_CONTROL,
+  };
+}
+
+function noStoreJson(data: unknown, status: number): NextResponse {
+  return NextResponse.json(data, {
+    headers: getNoStoreHeaders(),
+    status,
+  });
+}
+
+function noStoreRedirect(path: string, requestUrl: string): NextResponse {
+  return NextResponse.redirect(new URL(path, requestUrl), {
+    headers: getNoStoreHeaders(),
+  });
+}
+
 function getRequiredEnv(
   name: "NEXT_PUBLIC_SUPABASE_URL" | "SUPABASE_SERVICE_ROLE_KEY"
 ) {
@@ -32,7 +55,7 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
 
   if (!token) {
-    return NextResponse.json({ error: "טוקן חסר" }, { status: 400 });
+    return noStoreJson({ error: "טוקן חסר" }, 400);
   }
 
   try {
@@ -44,16 +67,14 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (fetchError || !control) {
-      return NextResponse.json(
-        { error: "טוקן לא תקין או שפג תוקפו" },
-        { status: 404 }
-      );
+      return noStoreJson({ error: "טוקן לא תקין או שפג תוקפו" }, 404);
     }
 
     if (control.consent_granted) {
       // Already granted - redirect to success page
-      return NextResponse.redirect(
-        new URL("/parental-consent/success?already=true", request.url)
+      return noStoreRedirect(
+        "/parental-consent/success?already=true",
+        request.url
       );
     }
 
@@ -70,10 +91,7 @@ export async function GET(request: NextRequest) {
 
     if (updateError) {
       console.error("Error granting consent:", updateError);
-      return NextResponse.json(
-        { error: "שגיאה באישור ההסכמה" },
-        { status: 500 }
-      );
+      return noStoreJson({ error: "שגיאה באישור ההסכמה" }, 500);
     }
 
     // Update the child's profile
@@ -99,12 +117,10 @@ export async function GET(request: NextRequest) {
       });
 
     // Redirect to success page
-    return NextResponse.redirect(
-      new URL("/parental-consent/success", request.url)
-    );
+    return noStoreRedirect("/parental-consent/success", request.url);
   } catch (error) {
     console.error("Parental consent error:", error);
-    return NextResponse.json({ error: "שגיאה פנימית" }, { status: 500 });
+    return noStoreJson({ error: "שגיאה פנימית" }, 500);
   }
 }
 

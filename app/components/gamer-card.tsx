@@ -25,6 +25,14 @@ import OptimizedAvatar from "./optimized-avatar";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const getDeterministicXp = (seed: string) => {
+  let hash = 0;
+  for (const char of seed) {
+    hash = (hash * 31 + char.charCodeAt(0)) % 401;
+  }
+  return 100 + hash;
+};
+
 type SwapStatus =
   | "initial"
   | "pending_sent"
@@ -358,7 +366,7 @@ export default function GamerCard({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
-  const [xp, setXp] = useState(Math.floor(Math.random() * 500) + 100);
+  const [xp, setXp] = useState(getDeterministicXp(`${id}:${username}`));
   const [showXpGain, setShowXpGain] = useState(false);
   // State for revealed tags
   const [revealedTags, setRevealedTags] = useState<{
@@ -366,13 +374,6 @@ export default function GamerCard({
   } | null>(null);
   // Bio enhancer state
   const [isEnhancingBio, _setIsEnhancingBio] = useState(false);
-
-  // OPTIMIZATION: Update local status when parent provides new status
-  useEffect(() => {
-    if (initialSwapStatus) {
-      setStatus(initialSwapStatus);
-    }
-  }, [initialSwapStatus]);
 
   const level = Math.floor(xp / 100);
   const progress = xp % 100;
@@ -424,12 +425,18 @@ export default function GamerCard({
       });
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בשליחת הבקשה", {
+          description: getErrorMessage(error),
+        });
+        setIsLoading(false);
+        return;
       }
 
       setStatus("pending_sent");
       haptic("success");
-      onSwapStatusChange?.(id, "pending_sent");
+      if (onSwapStatusChange) {
+        onSwapStatusChange(id, "pending_sent");
+      }
       toast.success("בקשה נשלחה!", {
         description: "תקבל התראה כשהמשתמש יאשר.",
       });
@@ -438,9 +445,8 @@ export default function GamerCard({
       toast.error("שגיאה בשליחת הבקשה", {
         description: getErrorMessage(error),
       });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const handleApproveResponse = async (approved: boolean) => {
@@ -449,9 +455,8 @@ export default function GamerCard({
       return;
     }
     setIsLoading(true);
+    const newStatus: SwapStatus = approved ? "approved" : "rejected";
     try {
-      const newStatus: SwapStatus = approved ? "approved" : "rejected";
-
       // Find requests where *I* am the receiver and *THEY* are the sender
       const { error } = await supabase
         .from("swap_requests")
@@ -460,11 +465,15 @@ export default function GamerCard({
         .eq("receiver_id", currentUserId);
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בעדכון", { description: getErrorMessage(error) });
+        setIsLoading(false);
+        return;
       }
 
       setStatus(newStatus);
-      onSwapStatusChange?.(id, newStatus);
+      if (onSwapStatusChange) {
+        onSwapStatusChange(id, newStatus);
+      }
 
       haptic(approved ? "success" : "medium");
 
@@ -487,9 +496,8 @@ export default function GamerCard({
       }
     } catch (error: unknown) {
       toast.error("שגיאה בעדכון", { description: getErrorMessage(error) });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const copyToClipboard = (text: string) => {
@@ -689,6 +697,7 @@ export default function GamerCard({
         <Link
           className={`rounded-xl p-2 transition-colors ${status === "approved" ? "bg-primary text-black hover:bg-primary/90" : "bg-white/5 text-white hover:bg-white/10"}`}
           href={`/chat?target=${id}`}
+          prefetch={false}
         >
           <HugeiconsIcon icon={Message01Icon} size={18} />
         </Link>

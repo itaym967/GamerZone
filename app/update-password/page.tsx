@@ -11,6 +11,8 @@ import Logo from "../components/logo";
 
 const NEW_PASSWORD_ID = "update-password-new";
 const CONFIRM_PASSWORD_ID = "update-password-confirm";
+const getErrorText = (error: unknown) =>
+  error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -40,21 +42,22 @@ export default function UpdatePasswordPage() {
       });
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בעדכון הסיסמה", {
+          description: getErrorText(error),
+        });
+        setIsLoading(false);
+        return;
       }
 
       toast.success("הסיסמה עודכנה בהצלחה!");
       router.push("/");
       router.refresh();
     } catch (error: unknown) {
-      const description =
-        error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
       toast.error("שגיאה בעדכון הסיסמה", {
-        description,
+        description: getErrorText(error),
       });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   return (

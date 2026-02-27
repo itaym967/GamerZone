@@ -83,46 +83,66 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   const [adminNotes, setAdminNotes] = useState("");
   const [minorSearch, setMinorSearch] = useState("");
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [reportsRes, minorsRes] = await Promise.all([
-        supabase
-          .from("content_reports")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(50),
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("is_minor", true)
-          .order("username", { ascending: true }),
-      ]);
-      setReports(reportsRes.data || []);
-      setMinorUsers(minorsRes.data || []);
-    } catch (error) {
-      console.error("Error fetching safety data:", error);
-      toast.error("שגיאה בטעינת נתוני בטיחות");
-    } finally {
+  const fetchData = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
+      }
+      try {
+        const [reportsRes, minorsRes] = await Promise.all([
+          supabase
+            .from("content_reports")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(50),
+          supabase
+            .from("profiles")
+            .select("*")
+            .eq("is_minor", true)
+            .order("username", { ascending: true }),
+        ]);
+        if (reportsRes.data) {
+          setReports(reportsRes.data);
+        } else {
+          setReports([]);
+        }
+        if (minorsRes.data) {
+          setMinorUsers(minorsRes.data);
+        } else {
+          setMinorUsers([]);
+        }
+      } catch (error) {
+        console.error("Error fetching safety data:", error);
+        toast.error("שגיאה בטעינת נתוני בטיחות");
+      }
       setLoading(false);
-    }
-  }, [supabase]);
+    },
+    [supabase]
+  );
 
   useEffect(() => {
-    fetchData();
+    const timer = setTimeout(() => {
+      fetchData(false).catch((error: unknown) => {
+        console.error("Failed to fetch safety data:", error);
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchData]);
 
   const updateReportStatus = async (
     reportId: string,
     status: "reviewing" | "resolved" | "dismissed"
   ) => {
+    const notes = adminNotes.trim() === "" ? null : adminNotes;
     try {
       const now = new Date().toISOString();
       const update: ReportUpdateInput = {
         status,
-        admin_notes: adminNotes || null,
+        admin_notes: notes,
       };
-      if (status === "resolved" || status === "dismissed") {
+      const isResolved = status === "resolved";
+      const isDismissed = status === "dismissed";
+      if (isResolved || isDismissed) {
         update.resolved_by = currentUser;
         update.resolved_at = now;
       }
@@ -132,7 +152,9 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
         .update(update)
         .eq("id", reportId);
       if (error) {
-        throw error;
+        console.error("Error updating report:", error);
+        toast.error("שגיאה בעדכון הדיווח");
+        return;
       }
 
       const statusLabel = getReportStatusLabel(status);

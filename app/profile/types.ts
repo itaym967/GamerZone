@@ -41,10 +41,19 @@ export const PLATFORMS = [
 ];
 
 export const AVATARS = [
-  { id: "/avatars/samurai.png", name: "Samurai" },
-  { id: "/avatars/hacker.png", name: "Hacker" },
-  { id: "/avatars/girl_pink.png", name: "Pink" },
-  { id: "/avatars/girl_blue.png", name: "Blue" },
-  { id: "/avatars/ninja.png", name: "Ninja" },
-  { id: "/avatars/gamer.png", name: "Gamer" },
+  {
+    id: "https://api.dicebear.com/7.x/bottts/svg?seed=Samurai",
+    name: "Samurai",
+  },
+  { id: "https://api.dicebear.com/7.x/bottts/svg?seed=Hacker", name: "Hacker" },
+  { id: "https://api.dicebear.com/7.x/lorelei/svg?seed=Pink", name: "Pink" },
+  { id: "https://api.dicebear.com/7.x/lorelei/svg?seed=Blue", name: "Blue" },
+  {
+    id: "https://api.dicebear.com/7.x/adventurer/svg?seed=Ninja",
+    name: "Ninja",
+  },
+  {
+    id: "https://api.dicebear.com/7.x/adventurer/svg?seed=Gamer",
+    name: "Gamer",
+  },
 ];

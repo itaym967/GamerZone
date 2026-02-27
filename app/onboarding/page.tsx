@@ -104,6 +104,53 @@ export default function OnboardingPage() {
     setGamertags(gamertags.filter((g) => g.platform !== platform));
   };
 
+  const persistOnboarding = async (finalUserId: string): Promise<boolean> => {
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: finalUserId,
+      bio,
+      avatar_url: avatarUrl,
+      onboarding_completed: true,
+      updated_at: new Date().toISOString(),
+    });
+
+    if (profileError) {
+      console.error("Onboarding: Profile update error", profileError);
+      const description =
+        profileError instanceof Error
+          ? profileError.message
+          : "אירעה שגיאה בלתי צפויה";
+      toast.error("שגיאה בשמירת הפרופיל", { description });
+      return false;
+    }
+
+    if (gamertags.length === 0) {
+      return true;
+    }
+
+    const tagsToInsert = gamertags.map((g) => ({
+      user_id: finalUserId,
+      platform: g.platform,
+      tag: g.tag,
+      is_hidden: false,
+    }));
+
+    const { error: tagsError } = await supabase
+      .from("gamertags")
+      .insert(tagsToInsert);
+
+    if (tagsError) {
+      console.error("Onboarding: Tags insert error", tagsError);
+      const description =
+        tagsError instanceof Error
+          ? tagsError.message
+          : "אירעה שגיאה בלתי צפויה";
+      toast.error("שגיאה בשמירת הפרופיל", { description });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleComplete = async () => {
     let finalUserId = userId;
 
@@ -126,36 +173,10 @@ export default function OnboardingPage() {
     setIsLoading(true);
 
     try {
-      // 1. Update Profile
-      const { error: profileError } = await supabase.from("profiles").upsert({
-        id: finalUserId,
-        bio,
-        avatar_url: avatarUrl,
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (profileError) {
-        console.error("Onboarding: Profile update error", profileError);
-        throw profileError;
-      }
-
-      // 2. Insert Gamertags
-      if (gamertags.length > 0) {
-        const tagsToInsert = gamertags.map((g) => ({
-          user_id: finalUserId,
-          platform: g.platform,
-          tag: g.tag,
-          is_hidden: false, // Default to public for now
-        }));
-
-        const { error: tagsError } = await supabase
-          .from("gamertags")
-          .insert(tagsToInsert);
-        if (tagsError) {
-          console.error("Onboarding: Tags insert error", tagsError);
-          throw tagsError;
-        }
+      const persisted = await persistOnboarding(finalUserId);
+      if (!persisted) {
+        setIsLoading(false);
+        return;
       }
 
       toast.success("ברוכים הבאים ");
@@ -166,9 +187,8 @@ export default function OnboardingPage() {
         error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
       console.error("Onboarding: Catch error", error);
       toast.error("שגיאה בשמירת הפרופיל", { description });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const nextStep = () => setStep((s) => s + 1);

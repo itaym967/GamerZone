@@ -97,8 +97,59 @@ export default function CreatePartyPage() {
     language: "עברית",
   });
 
+  const createPartyWithLeader = async (
+    userId: string,
+    skillLevelRequired: string | null
+  ) => {
+    const { data: party, error: partyError } = await supabase
+      .from("parties")
+      .insert({
+        leader_id: userId,
+        game: formData.game,
+        mode: formData.mode,
+        title: formData.title,
+        max_members: formData.max_members,
+        skill_level_required: skillLevelRequired,
+        mic_required: formData.mic_required,
+        region: formData.region,
+        language: formData.language,
+      })
+      .select()
+      .single();
+
+    if (partyError) {
+      const message =
+        partyError instanceof Error
+          ? partyError.message
+          : "שגיאה ביצירת הקבוצה";
+      toast.error(message);
+      return null;
+    }
+
+    const { error: memberError } = await supabase.from("party_members").insert({
+      party_id: party.id,
+      user_id: userId,
+      role: "leader",
+    });
+
+    if (memberError) {
+      const message =
+        memberError instanceof Error
+          ? memberError.message
+          : "שגיאה בצירוף היוצר לקבוצה";
+      toast.error(message);
+      return null;
+    }
+
+    return party.id;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const skillLevelRequired =
+      formData.skill_level_required === ""
+        ? null
+        : formData.skill_level_required;
     setLoading(true);
 
     try {
@@ -106,7 +157,9 @@ export default function CreatePartyPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("Not authenticated");
+        toast.error("יש להתחבר כדי ליצור קבוצה");
+        setLoading(false);
+        return;
       }
 
       const { data: existingParty } = await supabase
@@ -119,51 +172,28 @@ export default function CreatePartyPage() {
       if (existingParty) {
         toast.error("כבר יש לך קבוצה פעילה");
         router.push(`/party-finder/${existingParty.id}`);
+        setLoading(false);
         return;
       }
 
-      const { data: party, error: partyError } = await supabase
-        .from("parties")
-        .insert({
-          leader_id: user.id,
-          game: formData.game,
-          mode: formData.mode,
-          title: formData.title,
-          max_members: formData.max_members,
-          skill_level_required: formData.skill_level_required || null,
-          mic_required: formData.mic_required,
-          region: formData.region,
-          language: formData.language,
-        })
-        .select()
-        .single();
-
-      if (partyError) {
-        throw partyError;
-      }
-
-      const { error: memberError } = await supabase
-        .from("party_members")
-        .insert({
-          party_id: party.id,
-          user_id: user.id,
-          role: "leader",
-        });
-
-      if (memberError) {
-        throw memberError;
+      const createdPartyId = await createPartyWithLeader(
+        user.id,
+        skillLevelRequired
+      );
+      if (!createdPartyId) {
+        setLoading(false);
+        return;
       }
 
       toast.success("הקבוצה נוצרה בהצלחה!");
-      router.push(`/party-finder/${party.id}`);
+      router.push(`/party-finder/${createdPartyId}`);
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "שגיאה ביצירת הקבוצה";
       console.error(error);
       toast.error(message);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
@@ -175,6 +205,7 @@ export default function CreatePartyPage() {
           <Link
             className="-mr-2 rounded-full p-2 transition-colors hover:bg-white/10"
             href="/party-finder"
+            prefetch={false}
           >
             <HugeiconsIcon className="text-white" icon={ArrowLeft01Icon} />
           </Link>

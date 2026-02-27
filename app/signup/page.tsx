@@ -110,7 +110,9 @@ export default function SignupPage() {
         const { error } = await supabase.auth.getSession();
 
         // If there's a refresh token error, clear cookies
-        if (error && hasRefreshTokenIssue(error)) {
+        if (!error) {
+          // no-op
+        } else if (hasRefreshTokenIssue(error)) {
           await supabase.auth.signOut();
         }
       } catch (_err) {
@@ -247,15 +249,25 @@ export default function SignupPage() {
       });
 
       if (error) {
-        throw error;
+        handleSignupError(error);
+        setIsLoading(false);
+        return;
       }
 
-      if (data?.user) {
-        await updateKidSafetyProfile(data.user.id, accountType, isMinorUser);
-        await requestParentalConsentIfNeeded(data.user.id);
+      let createdUser: (typeof data)["user"] | null = null;
+      if (data) {
+        createdUser = data.user;
+      }
+      if (createdUser) {
+        await updateKidSafetyProfile(createdUser.id, accountType, isMinorUser);
+        await requestParentalConsentIfNeeded(createdUser.id);
       }
 
-      if (data?.session) {
+      let createdSession: (typeof data)["session"] | null = null;
+      if (data) {
+        createdSession = data.session;
+      }
+      if (createdSession) {
         if (isMinorUser) {
           toast.success("ברוך הבא ל-GamerZone! 🛡️", {
             description: getSafetyMessage(accountType),
@@ -272,9 +284,8 @@ export default function SignupPage() {
     } catch (error: unknown) {
       console.error(error);
       handleSignupError(error);
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -497,6 +508,7 @@ export default function SignupPage() {
           <Link
             className="font-bold text-primary hover:underline"
             href="/login"
+            prefetch={false}
           >
             התחבר
           </Link>

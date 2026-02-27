@@ -153,6 +153,7 @@ export default function Dashboard() {
               <Link
                 className="relative z-100 block cursor-pointer whitespace-nowrap rounded-xl bg-white px-6 py-3 font-bold text-black shadow-lg shadow-white/10 transition-colors hover:bg-gray-200"
                 href="/signup"
+                prefetch={false}
               >
                 צור כרטיס שחקן עכשיו
               </Link>

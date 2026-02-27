@@ -47,7 +47,9 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
         .eq("user_id", currentUserId);
 
       if (fetchError) {
-        throw fetchError;
+        console.error("Error connecting:", fetchError);
+        setLoading(false);
+        return;
       }
 
       // This is a naive check. A robust check would intersect the user's chats
@@ -63,9 +65,8 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
       router.push(`/chat?target=${post.user_id}`);
     } catch (error) {
       console.error("Error connecting:", error);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const isOwner = currentUserId === post.user_id;

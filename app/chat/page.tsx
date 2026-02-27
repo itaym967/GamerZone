@@ -212,6 +212,8 @@ function ChatContent() {
 
   // Hook
   // Hook
+  const contactsRef = useRef<Contact[]>([]);
+
   const {
     messages,
     contacts,
@@ -225,11 +227,14 @@ function ChatContent() {
     isRemoteTyping: isTyping,
   } = useChat(user?.id, activeChat?.id, (msg) => {
     if (!activeChat || msg.sender_id !== activeChat.id) {
-      const sender = contacts.find((c) => c.id === msg.sender_id);
+      const sender = contactsRef.current.find((c) => c.id === msg.sender_id);
       const senderName = sender ? sender.username : "משתמש";
       toast.info(`הודעה חדשה מ-${senderName}`);
     }
   });
+  useEffect(() => {
+    contactsRef.current = contacts;
+  }, [contacts]);
 
   // Initial Scroll
   useEffect(() => {

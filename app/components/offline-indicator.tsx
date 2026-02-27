@@ -4,8 +4,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 
 export default function OfflineIndicator() {
-  const [isOffline, setIsOffline] = useState(false);
-  const [showBanner, setShowBanner] = useState(false);
+  const initialOffline =
+    typeof navigator !== "undefined" ? !navigator.onLine : false;
+  const [isOffline, setIsOffline] = useState(initialOffline);
+  const [showBanner, setShowBanner] = useState(initialOffline);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -19,7 +21,6 @@ export default function OfflineIndicator() {
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-    setIsOffline(!navigator.onLine);
 
     return () => {
       window.removeEventListener("online", handleOnline);

@@ -16,7 +16,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useNotifications } from "@/hooks/use-notifications";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -38,28 +38,17 @@ const authenticatedNavItems = [
   { icon: UserIcon, label: "פרופיל", href: "/profile" },
 ];
 
+const DEFAULT_AVATAR_URL =
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Gamer";
+
 export default function Navigation() {
   const pathname = usePathname();
   const { user, profile, isAdmin, signOut, isLoading } = useAuth();
   const { subscribeToPush, subscription } = usePushNotifications();
   const { unreadCount } = useNotifications(user?.id);
-  const [showSkeleton, setShowSkeleton] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Set mounted state to prevent hydration mismatch
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Only show skeleton after a delay to prevent flashing
-  useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => setShowSkeleton(true), 300);
-      return () => clearTimeout(timer);
-    }
-    setShowSkeleton(false);
-  }, [isLoading]);
+  const isMounted = true;
+  const showSkeleton = isLoading;
 
   const handleSignOut = useCallback(async () => {
     setIsSigningOut(true);
@@ -131,6 +120,7 @@ export default function Navigation() {
         <Link
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
           href="/login"
+          prefetch={false}
         >
           <HugeiconsIcon icon={Login01Icon} size={20} />
           <span>התחברות</span>
@@ -143,7 +133,7 @@ export default function Navigation() {
         <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
           <OptimizedAvatar
             className="rounded-full border border-primary/20 bg-black"
-            seed={profile?.avatar_url || "/avatars/gamer.png"}
+            seed={profile?.avatar_url || DEFAULT_AVATAR_URL}
             size={32}
           />
           <div className="min-w-0 flex-1">
@@ -195,6 +185,7 @@ export default function Navigation() {
                 }`}
                 href={item.href}
                 key={item.href}
+                prefetch={false}
               >
                 <div className="relative">
                   <HugeiconsIcon

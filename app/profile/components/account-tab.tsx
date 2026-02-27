@@ -66,6 +66,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
           <Link
             className="font-medium text-fluid-xs text-primary transition-colors hover:text-primary/80"
             href="/update-password"
+            prefetch={false}
           >
             שנה סיסמה
           </Link>

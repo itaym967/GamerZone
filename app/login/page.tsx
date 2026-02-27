@@ -43,6 +43,13 @@ function isRefreshTokenError(error: unknown): boolean {
   );
 }
 
+function getLoginErrorDescription(message: string): string {
+  if (message === "Invalid login credentials") {
+    return "פרטי ההתחברות שגויים";
+  }
+  return message;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -60,11 +67,16 @@ export default function LoginPage() {
           data: { session },
           error,
         } = await supabase.auth.getSession();
-        if (error && isRefreshTokenError(error)) {
+        if (!error) {
+          // no-op
+        } else if (isRefreshTokenError(error)) {
           await supabase.auth.signOut();
           return;
         }
-        if (session?.user) {
+        if (!session) {
+          return;
+        }
+        if (session.user) {
           router.replace("/");
         }
       } catch {
@@ -101,9 +113,19 @@ export default function LoginPage() {
       if (error) {
         if (isRefreshTokenError(error)) {
           await supabase.auth.signOut();
-          throw new Error("פג תוקף ההתחברות. נסה שוב.");
+          toast.error("שגיאה בהתחברות", {
+            description: "פג תוקף ההתחברות. נסה שוב.",
+          });
+          setIsLoading(false);
+          return;
         }
-        throw error;
+        const message = getErrorMessage(error);
+        const description = getLoginErrorDescription(message);
+        toast.error("שגיאה בהתחברות", {
+          description,
+        });
+        setIsLoading(false);
+        return;
       }
 
       if (session?.user) {
@@ -118,9 +140,8 @@ export default function LoginPage() {
             ? "פרטי ההתחברות שגויים"
             : message,
       });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const handleSocialLogin = async (provider: "discord") => {
@@ -133,7 +154,10 @@ export default function LoginPage() {
       });
 
       if (error) {
-        throw error;
+        toast.error(`שגיאה בהתחברות עם ${provider}`, {
+          description: getErrorMessage(error),
+        });
+        return;
       }
     } catch (error: unknown) {
       toast.error(`שגיאה בהתחברות עם ${provider}`, {
@@ -244,6 +268,7 @@ export default function LoginPage() {
             <Link
               className="transition-colors hover:text-primary"
               href="/forgot-password"
+              prefetch={false}
             >
               שכחת סיסמה?
             </Link>
@@ -284,6 +309,7 @@ export default function LoginPage() {
           <Link
             className="font-bold text-primary hover:underline"
             href="/signup"
+            prefetch={false}
           >
             הירשם עכשיו
           </Link>

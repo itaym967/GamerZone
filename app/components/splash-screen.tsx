@@ -8,25 +8,27 @@ import { useEffect, useState } from "react";
  * Fades out after content is ready.
  */
 export default function SplashScreen() {
-  const [visible, setVisible] = useState(true);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isStandalone] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    const nav = window.navigator as Navigator & { standalone?: boolean };
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      nav.standalone === true
+    );
+  });
+  const [visible, setVisible] = useState(isStandalone);
 
   useEffect(() => {
-    const nav = window.navigator as Navigator & { standalone?: boolean };
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      nav.standalone === true;
-    setIsStandalone(standalone);
-
-    if (!standalone) {
-      setVisible(false);
+    if (!isStandalone) {
       return;
     }
 
     // Hide splash after app content is ready
     const timer = setTimeout(() => setVisible(false), 1800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isStandalone]);
 
   if (!(isStandalone && visible)) {
     return null;

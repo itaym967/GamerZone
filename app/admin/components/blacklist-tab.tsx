@@ -32,27 +32,43 @@ export default function BlacklistTab({
     useState<AIAnalysisResult | null>(null);
   const [showAnalysis, _setShowAnalysis] = useState(false);
 
-  const fetchWords = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("blocked_words")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) {
-        throw error;
+  const fetchWords = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
       }
-      setBlockedWords(data || []);
-    } catch (error) {
-      console.error("Error fetching blocked words:", error);
-      toast.error("שגיאה בטעינת מילים חסומות");
-    } finally {
+      try {
+        const { data, error } = await supabase
+          .from("blocked_words")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) {
+          console.error("Error fetching blocked words:", error);
+          toast.error("שגיאה בטעינת מילים חסומות");
+          setLoading(false);
+          return;
+        }
+        if (data) {
+          setBlockedWords(data);
+        } else {
+          setBlockedWords([]);
+        }
+      } catch (error) {
+        console.error("Error fetching blocked words:", error);
+        toast.error("שגיאה בטעינת מילים חסומות");
+      }
       setLoading(false);
-    }
-  }, [supabase]);
+    },
+    [supabase]
+  );
 
   useEffect(() => {
-    fetchWords();
+    const timer = setTimeout(() => {
+      fetchWords(false).catch((error: unknown) => {
+        console.error("Failed to fetch words:", error);
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchWords]);
 
   const addWord = async (e: React.FormEvent) => {
@@ -70,7 +86,8 @@ export default function BlacklistTab({
     try {
       const { error } = await supabase.from("blocked_words").insert([{ word }]);
       if (error) {
-        throw error;
+        toast.error("שגיאה בהוספת מילה");
+        return;
       }
       toast.success(`המילה "${word}" נוספה לרשימה`);
       setNewWord("");
@@ -93,7 +110,8 @@ export default function BlacklistTab({
         .delete()
         .eq("word", word);
       if (error) {
-        throw error;
+        toast.error("שגיאה במחיקת מילה");
+        return;
       }
       toast.success("המילה הוסרה בהצלחה");
       fetchWords();
@@ -120,7 +138,8 @@ export default function BlacklistTab({
     try {
       const { error } = await supabase.from("blocked_words").insert([{ word }]);
       if (error) {
-        throw error;
+        toast.error("שגיאה בהוספת מילה");
+        return;
       }
       toast.success(`המילה "${word}" נוספה לרשימה`);
       fetchWords();

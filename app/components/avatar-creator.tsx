@@ -4,7 +4,7 @@ import { Refresh01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface AvatarCreatorProps {
   initialSeed?: string;
@@ -27,14 +27,15 @@ export default function AvatarCreator({
   initialSeed = "",
 }: AvatarCreatorProps) {
   const [selectedStyle, setSelectedStyle] = useState("avataaars");
-  const [seed, setSeed] = useState(initialSeed || `gamer-${Date.now()}`);
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [seed, setSeed] = useState(initialSeed || "gamer");
+  const avatarUrl = useMemo(
+    () => `https://api.dicebear.com/7.x/${selectedStyle}/svg?seed=${seed}`,
+    [selectedStyle, seed]
+  );
 
   useEffect(() => {
-    const url = `https://api.dicebear.com/7.x/${selectedStyle}/svg?seed=${seed}`;
-    setAvatarUrl(url);
-    onSelect(url);
-  }, [selectedStyle, seed, onSelect]);
+    onSelect(avatarUrl);
+  }, [avatarUrl, onSelect]);
 
   const randomize = () => {
     setSeed(`gamer-${Date.now()}-${Math.random().toString(36).substring(7)}`);

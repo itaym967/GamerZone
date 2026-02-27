@@ -52,6 +52,9 @@ const drawerNavItems = [
   { icon: UserIcon, label: "פרופיל", href: "/profile", authOnly: true },
 ];
 
+const DEFAULT_AVATAR_URL =
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Gamer";
+
 export default function MobileNav({
   user,
   profile,
@@ -64,11 +67,6 @@ export default function MobileNav({
 }: MobileNavProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // Close drawer on route change
-  useEffect(() => {
-    setDrawerOpen(false);
-  }, []);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -112,7 +110,7 @@ export default function MobileNav({
         <div className="flex items-center gap-3">
           <OptimizedAvatar
             className="rounded-full border-2 border-primary/30 bg-black"
-            seed={profile?.avatar_url || "/avatars/gamer.png"}
+            seed={profile?.avatar_url || DEFAULT_AVATAR_URL}
             size={48}
           />
           <div className="min-w-0 flex-1">
@@ -133,6 +131,7 @@ export default function MobileNav({
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
         href="/login"
         onClick={() => setDrawerOpen(false)}
+        prefetch={false}
       >
         <HugeiconsIcon icon={Login01Icon} size={20} />
         <span>התחברות</span>
@@ -152,6 +151,7 @@ export default function MobileNav({
                 className={`flex min-w-14 flex-col items-center gap-0.5 py-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"}`}
                 href={item.href}
                 key={item.href}
+                prefetch={false}
               >
                 <div
                   className={`relative rounded-xl p-2 transition-all ${isActive ? "bg-primary/15" : ""}`}
@@ -226,6 +226,7 @@ export default function MobileNav({
                 href={item.href}
                 key={item.href}
                 onClick={() => setDrawerOpen(false)}
+                prefetch={false}
               >
                 <div className="relative">
                   <HugeiconsIcon icon={item.icon} size={20} />
@@ -249,6 +250,7 @@ export default function MobileNav({
               className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${pathname === "/admin" ? "bg-primary/15 text-primary" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
               href="/admin"
               onClick={() => setDrawerOpen(false)}
+              prefetch={false}
             >
               <HugeiconsIcon icon={Shield01Icon} size={20} />
               <span className="font-medium text-fluid-sm">ניהול</span>

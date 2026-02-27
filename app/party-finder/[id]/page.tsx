@@ -62,7 +62,6 @@ function PartyDetailsPageContent() {
   const isMember = members.some((m) => m.user_id === user?.id);
 
   const fetchPartyDetails = useCallback(async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from("parties")
       .select(`
@@ -84,6 +83,7 @@ function PartyDetailsPageContent() {
     if (error) {
       console.error("Error fetching party:", error);
       toast.error("שגיאה בטעינת הקבוצה");
+      setLoading(false);
       router.push("/party-finder");
       return;
     }
@@ -95,7 +95,11 @@ function PartyDetailsPageContent() {
   }, [partyId, router, supabase]);
 
   useEffect(() => {
-    fetchPartyDetails();
+    const timer = setTimeout(() => {
+      fetchPartyDetails().catch((error: unknown) => {
+        console.error("Failed to fetch party details:", error);
+      });
+    }, 0);
 
     const channel = supabase
       .channel(`party_${partyId}`)
@@ -125,12 +129,15 @@ function PartyDetailsPageContent() {
           filter: `party_id=eq.${partyId}`,
         },
         () => {
-          fetchPartyDetails();
+          fetchPartyDetails().catch((error: unknown) => {
+            console.error("Failed to refetch party details:", error);
+          });
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [partyId, fetchPartyDetails, router, supabase]);
@@ -151,7 +158,16 @@ function PartyDetailsPageContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to leave party");
+        let errorMessage = "שגיאה ביציאה מהקבוצה";
+        if (data) {
+          const maybeError = data.error;
+          if (typeof maybeError === "string") {
+            errorMessage = maybeError;
+          }
+        }
+        toast.error(errorMessage);
+        setActionLoading(false);
+        return;
       }
 
       toast.success("עזבת את הקבוצה");
@@ -159,9 +175,8 @@ function PartyDetailsPageContent() {
     } catch (error: unknown) {
       console.error("Error leaving party:", error);
       toast.error(getErrorMessage(error, "שגיאה ביציאה מהקבוצה"));
-    } finally {
-      setActionLoading(false);
     }
+    setActionLoading(false);
   };
 
   const handleKickMember = async (userId: string) => {
@@ -180,16 +195,17 @@ function PartyDetailsPageContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to kick member");
+        toast.error(data.error || "שגיאה בהוצאת חבר מהקבוצה");
+        setActionLoading(false);
+        return;
       }
 
       toast.success("החבר הוצא מהקבוצה");
     } catch (error: unknown) {
       console.error("Error kicking member:", error);
       toast.error(getErrorMessage(error, "שגיאה בהוצאת החבר"));
-    } finally {
-      setActionLoading(false);
     }
+    setActionLoading(false);
   };
 
   const closeParty = useCallback(async () => {
@@ -208,7 +224,9 @@ function PartyDetailsPageContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to close party");
+        toast.error(data.error || "שגיאה בסגירת הקבוצה");
+        setActionLoading(false);
+        return;
       }
 
       toast.success("הקבוצה נסגרה");
@@ -216,9 +234,8 @@ function PartyDetailsPageContent() {
     } catch (error: unknown) {
       console.error("Error closing party:", error);
       toast.error(getErrorMessage(error, "שגיאה בסגירת הקבוצה"));
-    } finally {
-      setActionLoading(false);
     }
+    setActionLoading(false);
   }, [isLeader, partyId, router]);
 
   const handleCloseParty = () => {
@@ -253,16 +270,17 @@ function PartyDetailsPageContent() {
         .eq("id", partyId);
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בהתחלת המשחק");
+        setActionLoading(false);
+        return;
       }
 
       toast.success("המשחק התחיל!");
     } catch (error: unknown) {
       console.error("Error starting game:", error);
       toast.error("שגיאה בהתחלת המשחק");
-    } finally {
-      setActionLoading(false);
     }
+    setActionLoading(false);
   };
 
   if (loading) {
@@ -292,6 +310,7 @@ function PartyDetailsPageContent() {
           <Link
             className="-mr-2 rounded-full p-2 transition-colors hover:bg-white/10"
             href="/party-finder"
+            prefetch={false}
           >
             <HugeiconsIcon className="text-white" icon={ArrowLeft01Icon} />
           </Link>

@@ -47,9 +47,8 @@ export function useAdminAuth() {
       } catch (error) {
         console.error("Admin auth check failed:", error);
         router.push("/");
-      } finally {
-        setIsVerifying(false);
       }
+      setIsVerifying(false);
     };
 
     checkAccess();

@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/logo";
 
+const getErrorText = (error: unknown) =>
+  error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
+
 const RESET_EMAIL_INPUT_ID = "forgot-password-email";
 
 export default function ForgotPasswordPage() {
@@ -31,20 +34,21 @@ export default function ForgotPasswordPage() {
       });
 
       if (error) {
-        throw error;
+        toast.error("שגיאה בשליחת המייל", {
+          description: getErrorText(error),
+        });
+        setIsLoading(false);
+        return;
       }
 
       setIsSent(true);
       toast.success("המייל נשלח בהצלחה!");
     } catch (error: unknown) {
-      const description =
-        error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
       toast.error("שגיאה בשליחת המייל", {
-        description,
+        description: getErrorText(error),
       });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -138,6 +142,7 @@ export default function ForgotPasswordPage() {
           <Link
             className="flex items-center justify-center gap-2 text-fluid-sm text-gray-400 transition-colors hover:text-white"
             href="/login"
+            prefetch={false}
           >
             <HugeiconsIcon
               className="rotate-180"

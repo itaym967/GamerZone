@@ -186,6 +186,7 @@ export default function LFGPage() {
             <Link
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-fluid-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95"
               href="/lfg/create"
+              prefetch={false}
             >
               <HugeiconsIcon icon={Add01Icon} size={18} />
               <span className="hidden sm:inline">פרסם מודעה</span>

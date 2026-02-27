@@ -101,6 +101,16 @@ function clearCachedProfile() {
   }
 }
 
+function hasSessionRefreshTokenError(error: { message?: string } | null) {
+  if (!error?.message) {
+    return false;
+  }
+  return (
+    error.message.includes("refresh_token_not_found") ||
+    error.message.includes("Invalid Refresh Token")
+  );
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -123,11 +133,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Try cache first for faster initial load
         if (useCache) {
           const cached = getCachedProfile();
-          if (cached && cached.profile.id === userId) {
+          if (!cached) {
+            // continue to network fetch
+          } else if (cached.profile.id === userId) {
             setProfile(cached.profile);
             setIsAdmin(cached.profile.role === "admin");
-            // Still fetch fresh data in background
-            fetchProfile(userId, false);
             return;
           }
         }
@@ -227,16 +237,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(timeoutId);
 
         // Handle refresh token errors
-        if (
-          error &&
-          (error.message?.includes("refresh_token_not_found") ||
-            error.message?.includes("Invalid Refresh Token"))
-        ) {
-          // Clear invalid session
+        if (hasSessionRefreshTokenError(error)) {
           await supabase.auth.signOut();
-          setUser(null);
-          setProfile(null);
-          clearCachedProfile();
+          clearAuthState();
           if (mounted) {
             setIsLoading(false);
           }
@@ -255,11 +258,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("AuthContext: Error checking session", error);
         // Clear session on any error to prevent loops
         clearAuthState();
-      } finally {
-        clearTimeout(timeoutId);
-        if (mounted) {
-          setIsLoading(false);
-        }
+      }
+      clearTimeout(timeoutId);
+      if (mounted) {
+        setIsLoading(false);
       }
     };
 
@@ -347,10 +349,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, router]);
 
   const refreshProfile = useCallback(async () => {
-    if (user?.id) {
+    if (user) {
       await fetchProfile(user.id, false);
     }
-  }, [user?.id, fetchProfile]);
+  }, [user, fetchProfile]);
 
   const value = useMemo(
     () => ({

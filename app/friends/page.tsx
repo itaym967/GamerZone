@@ -46,6 +46,9 @@ const EMPTY_STATE_BY_TAB: Record<Tab, EmptyStateContent> = {
   },
 };
 
+const DEFAULT_AVATAR_URL =
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Gamer";
+
 function getCurrentList(
   activeTab: Tab,
   friends: FriendWithProfile[],
@@ -100,7 +103,7 @@ function FriendCard({
       <div className="relative shrink-0">
         <OptimizedAvatar
           className="rounded-full border border-white/10 bg-black"
-          seed={friend?.avatar_url || "/avatars/gamer.png"}
+          seed={friend?.avatar_url || DEFAULT_AVATAR_URL}
           size={48}
         />
         {friend?.is_online && (
@@ -125,6 +128,7 @@ function FriendCard({
             <Link
               className="rounded-xl p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-blue-400"
               href={`/chat?target=${friend?.id}`}
+              prefetch={false}
               title="שלח הודעה"
             >
               <HugeiconsIcon icon={MessageCircle} size={18} />
@@ -290,6 +294,7 @@ export default function FriendsPage() {
           <Link
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-black text-fluid-sm transition-all hover:bg-primary/90"
             href="/explore"
+            prefetch={false}
           >
             <HugeiconsIcon icon={Search01Icon} size={16} />
             גלה שחקנים

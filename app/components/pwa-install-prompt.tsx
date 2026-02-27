@@ -26,9 +26,10 @@ interface BeforeInstallPromptEvent extends Event {
  */
 export default function PWAInstallPrompt() {
   const [showBanner, setShowBanner] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const isIOS =
+    typeof navigator !== "undefined" && IOS_REGEX.test(navigator.userAgent);
 
   useEffect(() => {
     const nav = window.navigator as Navigator & { standalone?: boolean };
@@ -71,7 +72,6 @@ export default function PWAInstallPrompt() {
     }
 
     const ios = isIOSDevice();
-    setIsIOS(ios);
 
     // Android / Chrome: listen for beforeinstallprompt
     const handler = (event: Event) => {

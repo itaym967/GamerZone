@@ -52,28 +52,44 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
     user: Profile;
   } | null>(null);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("username", { ascending: true })
-        .limit(100);
-      if (error) {
-        throw error;
+  const fetchUsers = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
       }
-      setUsers(data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("שגיאה בטעינת משתמשים");
-    } finally {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .order("username", { ascending: true })
+          .limit(100);
+        if (error) {
+          console.error("Error fetching users:", error);
+          toast.error("שגיאה בטעינת משתמשים");
+          setLoading(false);
+          return;
+        }
+        if (data) {
+          setUsers(data);
+        } else {
+          setUsers([]);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("שגיאה בטעינת משתמשים");
+      }
       setLoading(false);
-    }
-  }, [supabase]);
+    },
+    [supabase]
+  );
 
   useEffect(() => {
-    fetchUsers();
+    const timer = setTimeout(() => {
+      fetchUsers(false).catch((error: unknown) => {
+        console.error("Failed to fetch users:", error);
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchUsers]);
 
   // Realtime subscription for user changes
@@ -128,18 +144,23 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
     isBanning: boolean,
     reason: string
   ) => {
+    const banReason = reason.trim() === "" ? null : reason;
+    const handleFailedFreezeUpdate = async () => {
+      toast.error("שגיאה בביצוע הפעולה", {
+        description: "Update failed to apply",
+      });
+      await fetchUsers();
+    };
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .update({ is_banned: isBanning, ban_reason: reason || null })
+        .update({ is_banned: isBanning, ban_reason: banReason })
         .eq("id", user.id)
         .select()
         .single();
-      if (error) {
-        throw error;
-      }
-      if (data.is_banned !== isBanning) {
-        throw new Error("Update failed to apply");
+      if (error || !data || data.is_banned !== isBanning) {
+        await handleFailedFreezeUpdate();
+        return;
       }
 
       setUsers((prev) =>
@@ -198,7 +219,8 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         target_user_id: user.id,
       });
       if (error) {
-        throw error;
+        toast.error("שגיאה במחיקת משתמש");
+        return;
       }
       toast.success(`המשתמש ${user.username} נמחק בהצלחה`);
       await supabase.from("admin_logs").insert({
@@ -220,7 +242,8 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         .update({ role: newRole })
         .eq("id", user.id);
       if (error) {
-        throw error;
+        toast.error("שגיאה בשינוי תפקיד");
+        return;
       }
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))

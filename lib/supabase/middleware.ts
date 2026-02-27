@@ -81,11 +81,13 @@ async function applyProfileGuards(
     return null;
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, onboarding_completed")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("role, onboarding_completed")
+      .eq("id", user.id)
+      .single(),
+  ]);
 
   if (path.startsWith("/admin") && (!profile || profile.role !== "admin")) {
     return NextResponse.redirect(new URL("/", request.url));
