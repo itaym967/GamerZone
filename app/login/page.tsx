@@ -118,7 +118,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050510] p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Animated Background */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
       <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-primary/20 blur-[120px]" />
@@ -156,7 +156,7 @@ export default function LoginPage() {
               <span className="w-full border-white/10 border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0e0e1b] px-2 text-gray-500">
+              <span className="bg-card px-2 text-gray-500">
                 או התחבר עם אימייל
               </span>
             </div>
@@ -168,7 +168,7 @@ export default function LoginPage() {
                 אימייל
               </label>
               <input
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white outline-none transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="gamer@example.com"
                 type="email"
@@ -179,7 +179,7 @@ export default function LoginPage() {
               <label className="font-medium text-gray-400 text-sm">סיסמה</label>
               <div className="relative">
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-none transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
@@ -212,7 +212,7 @@ export default function LoginPage() {
                 זכור אותי
               </label>
               <input
-                className="rounded border-white/20 bg-white/10 text-primary focus:ring-primary"
+                className="rounded-xs border-white/20 bg-white/10 text-primary focus:ring-primary"
                 id="remember"
                 type="checkbox"
               />

@@ -128,7 +128,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
             size={16}
           />
           <input
-            className="w-full rounded-xl border border-white/5 bg-[#0e0e1b] py-2.5 pr-10 pl-4 text-right text-sm text-white outline-none focus:border-red-500/30"
+            className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-sm text-white outline-hidden focus:border-red-500/30"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חפש בלוגים..."
             type="text"
@@ -179,7 +179,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
       </div>
 
       {/* Logs Table */}
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
         <table className="w-full text-right text-sm">
           <thead className="bg-white/5 text-gray-400">
             <tr>
@@ -198,7 +198,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
                   </td>
                   <td className="p-4">
                     <span
-                      className={`rounded px-2 py-1 font-bold text-xs ${display.color}`}
+                      className={`rounded-xs px-2 py-1 font-bold text-xs ${display.color}`}
                     >
                       {display.label}
                     </span>

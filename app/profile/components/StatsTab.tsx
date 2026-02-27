@@ -123,7 +123,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
+              className="h-full rounded-full bg-linear-to-r from-primary to-secondary transition-all duration-500"
               style={{
                 width: `${Math.round((stats.swapsApproved / (stats.swapsSent + stats.swapsReceived)) * 100)}%`,
               }}

@@ -270,7 +270,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
             size={16}
           />
           <input
-            className="w-full rounded-xl border border-white/5 bg-[#0e0e1b] py-2.5 pr-10 pl-4 text-right text-sm text-white outline-none focus:border-red-500/30"
+            className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-sm text-white outline-hidden focus:border-red-500/30"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חפש לפי שם משתמש, שם מלא או אימייל..."
             type="text"
@@ -314,7 +314,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
         <table className="w-full text-right text-sm">
           <thead className="bg-white/5 text-gray-400">
             <tr>
@@ -357,10 +357,10 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                     onChange={(e) => handleRoleChange(user, e.target.value)}
                     value={user.role || "user"}
                   >
-                    <option className="bg-[#0e0e1b]" value="user">
+                    <option className="bg-card" value="user">
                       user
                     </option>
-                    <option className="bg-[#0e0e1b]" value="admin">
+                    <option className="bg-card" value="admin">
                       admin
                     </option>
                   </select>

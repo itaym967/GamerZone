@@ -87,7 +87,7 @@ export default function ExplorePage() {
   }, [gamers, searchTerm, activeGame, onlineOnly, friendsOnly, isFriend]);
 
   return (
-    <div className="min-h-screen bg-[#050510] pb-24 transition-all md:pr-64 md:pb-0">
+    <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">
       <Navigation />
 
       <main className="mx-auto max-w-7xl p-6">
@@ -104,10 +104,10 @@ export default function ExplorePage() {
         </header>
 
         {/* Search & Filter Bar */}
-        <div className="sticky top-4 z-30 mb-8 flex flex-col gap-4 rounded-2xl border border-white/5 bg-[#0e0e1b] bg-opacity-90 p-4 shadow-xl backdrop-blur-md xl:flex-row">
+        <div className="sticky top-4 z-30 mb-8 flex flex-col gap-4 rounded-2xl border border-white/5 bg-card/90 p-4 shadow-xl backdrop-blur-md xl:flex-row">
           <div className="relative flex-1">
             <input
-              className="h-12 w-full rounded-xl border border-white/10 bg-black/20 px-10 py-3 text-right text-white outline-none transition-all focus:border-primary/50 focus:bg-white/5"
+              className="h-12 w-full rounded-xl border border-white/10 bg-black/20 px-10 py-3 text-right text-white outline-hidden transition-all focus:border-primary/50 focus:bg-white/5"
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="חפש לפי שם או תיוג..."
               type="text"
@@ -154,13 +154,13 @@ export default function ExplorePage() {
             {/* Game Select */}
             <div className="relative min-w-[160px]">
               <select
-                className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-none transition-colors hover:bg-white/5 focus:border-primary/50"
+                className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-hidden transition-colors hover:bg-white/5 focus:border-primary/50"
                 onChange={(e) => setActiveGame(e.target.value)}
                 value={activeGame}
               >
                 {FILTERS.games.map((game) => (
                   <option
-                    className="bg-[#0e0e1b] text-white"
+                    className="bg-card text-white"
                     key={game}
                     value={game}
                   >

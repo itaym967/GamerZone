@@ -97,7 +97,7 @@ export default function MobileNav({
   return (
     <>
       {/* Bottom Nav Bar - 4 items max */}
-      <nav className="safe-area-pb mobile-bottom-nav fixed right-0 bottom-0 left-0 z-50 border-white/10 border-t bg-[#050510]/95 backdrop-blur-xl transition-transform duration-200 md:hidden">
+      <nav className="safe-area-pb mobile-bottom-nav fixed right-0 bottom-0 left-0 z-50 border-white/10 border-t bg-primary-foreground/95 backdrop-blur-xl transition-transform duration-200 md:hidden">
         <div className="flex items-center justify-around px-2 py-2">
           {bottomNavItems.map((item) => {
             const isActive = pathname === item.href;
@@ -150,14 +150,14 @@ export default function MobileNav({
       {/* Overlay */}
       {drawerOpen && (
         <div
-          className="fixed inset-0 z-[45] bg-black/60 backdrop-blur-sm transition-opacity md:hidden"
+          className="fixed inset-0 z-45 bg-black/60 backdrop-blur-xs transition-opacity md:hidden"
           onClick={() => setDrawerOpen(false)}
         />
       )}
 
       {/* Side Drawer - slides from right (RTL) */}
       <div
-        className={`fixed top-0 right-0 z-[46] flex w-72 transform flex-col border-white/10 border-l bg-[#0a0a1e] transition-transform duration-300 ease-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 right-0 z-46 flex w-72 transform flex-col border-white/10 border-l bg-[#0a0a1e] transition-transform duration-300 ease-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
         style={{ height: "calc(100dvh - 72px)" }}
       >
         {/* Drawer Header */}
@@ -166,8 +166,8 @@ export default function MobileNav({
             <div className="flex animate-pulse items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-white/10" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-24 rounded bg-white/10" />
-                <div className="h-3 w-16 rounded bg-white/10" />
+                <div className="h-4 w-24 rounded-xs bg-white/10" />
+                <div className="h-3 w-16 rounded-xs bg-white/10" />
               </div>
             </div>
           ) : user ? (

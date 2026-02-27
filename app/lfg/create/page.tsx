@@ -186,7 +186,7 @@ export default function CreateLFGPage() {
               </div>
             )}
             <input
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!formData.game}
               maxLength={30}
               onChange={(e) =>
@@ -215,7 +215,7 @@ export default function CreateLFGPage() {
             </label>
             <input
               checked={formData.mic_required}
-              className="h-5 w-5 rounded accent-blue-600"
+              className="h-5 w-5 rounded-xs accent-blue-600"
               onChange={(e) =>
                 setFormData({ ...formData, mic_required: e.target.checked })
               }
@@ -227,7 +227,7 @@ export default function CreateLFGPage() {
           <div className="space-y-2">
             <label className="font-medium text-sm text-white/80">תיאור</label>
             <textarea
-              className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-none"
+              className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden"
               maxLength={140}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -244,7 +244,7 @@ export default function CreateLFGPage() {
 
           {/* Submit */}
           <button
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 py-4 font-bold text-lg text-white shadow-blue-600/20 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+            className="w-full rounded-xl bg-linear-to-r from-blue-600 to-cyan-500 py-4 font-bold text-lg text-white shadow-blue-600/20 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
             disabled={loading || !formData.game || !formData.mode}
             type="submit"
           >

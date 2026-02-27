@@ -103,7 +103,7 @@ export default function GamertagsTab({
               <HugeiconsIcon icon={Add01Icon} size={18} />
             </button>
             <input
-              className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-sm text-white outline-none focus:border-primary/50"
+              className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-sm text-white outline-hidden focus:border-primary/50"
               dir="ltr"
               onChange={(e) => setNewTag(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
@@ -112,12 +112,12 @@ export default function GamertagsTab({
               value={newTag}
             />
             <select
-              className="min-w-[120px] appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-sm text-white outline-none focus:border-primary/50"
+              className="min-w-[120px] appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-sm text-white outline-hidden focus:border-primary/50"
               onChange={(e) => setNewPlatform(e.target.value)}
               value={newPlatform}
             >
               {availablePlatforms.map((p) => (
-                <option className="bg-[#0e0e1b]" key={p} value={p}>
+                <option className="bg-card" key={p} value={p}>
                   {p}
                 </option>
               ))}
@@ -156,7 +156,7 @@ export default function GamertagsTab({
                 <div className="flex flex-1 gap-2">
                   <input
                     autoFocus
-                    className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-sm text-white outline-none"
+                    className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-sm text-white outline-hidden"
                     dir="ltr"
                     onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={(e) => {

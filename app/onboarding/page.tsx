@@ -172,7 +172,7 @@ export default function OnboardingPage() {
   const prevStep = () => setStep((s) => s - 1);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050510] p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Background Effects */}
       <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-primary/20 blur-[120px]" />
       <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-secondary/20 blur-[120px]" />
@@ -207,7 +207,7 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <div className="min-h-[500px] rounded-3xl border border-white/10 bg-[#0e0e1b] p-8 shadow-2xl backdrop-blur-xl">
+        <div className="min-h-[500px] rounded-3xl border border-white/10 bg-card p-8 shadow-2xl backdrop-blur-xl">
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
                 key="step0"
               >
                 <div className="py-6">
-                  <div className="mx-auto mb-6 flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-4xl">
+                  <div className="mx-auto mb-6 flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary text-4xl">
                     🎮
                   </div>
                   <h2 className="mb-4 font-bold text-3xl text-white">
@@ -231,7 +231,7 @@ export default function OnboardingPage() {
 
                   {/* Features Grid */}
                   <div className="mx-auto mb-8 grid max-w-lg grid-cols-2 gap-4">
-                    <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4">
+                    <div className="rounded-xl border border-primary/20 bg-linear-to-br from-primary/10 to-primary/5 p-4">
                       <HugeiconsIcon
                         className="mx-auto mb-2 text-primary"
                         icon={BotIcon}
@@ -244,7 +244,7 @@ export default function OnboardingPage() {
                         בוט חכם שעונה על שאלות על משחקים
                       </p>
                     </div>
-                    <div className="rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/10 to-secondary/5 p-4">
+                    <div className="rounded-xl border border-secondary/20 bg-linear-to-br from-secondary/10 to-secondary/5 p-4">
                       <HugeiconsIcon
                         className="mx-auto mb-2 text-secondary"
                         icon={Message01Icon}
@@ -257,7 +257,7 @@ export default function OnboardingPage() {
                         שלח הודעות לשחקנים אחרים מיידית
                       </p>
                     </div>
-                    <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4">
+                    <div className="rounded-xl border border-primary/20 bg-linear-to-br from-primary/10 to-primary/5 p-4">
                       <HugeiconsIcon
                         className="mx-auto mb-2 text-primary"
                         icon={ZapIcon}
@@ -270,7 +270,7 @@ export default function OnboardingPage() {
                         מצא שחקנים שמחפשים קבוצה עכשיו
                       </p>
                     </div>
-                    <div className="rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/10 to-secondary/5 p-4">
+                    <div className="rounded-xl border border-secondary/20 bg-linear-to-br from-secondary/10 to-secondary/5 p-4">
                       <HugeiconsIcon
                         className="mx-auto mb-2 text-secondary"
                         icon={UserGroupIcon}
@@ -352,7 +352,7 @@ export default function OnboardingPage() {
                     הביו שלך
                   </label>
                   <textarea
-                    className="h-32 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-4 text-right text-white outline-none focus:border-primary/50"
+                    className="h-32 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-4 text-right text-white outline-hidden focus:border-primary/50"
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="ספר קצת על סגנון המשחק שלך, באילו שעות אתה משחק, ומה אתה מחפש..."
                     value={bio}
@@ -401,7 +401,7 @@ export default function OnboardingPage() {
                       <HugeiconsIcon icon={Add01Icon} size={20} />
                     </button>
                     <input
-                      className="flex-1 rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-none focus:border-primary/50"
+                      className="flex-1 rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-hidden focus:border-primary/50"
                       onChange={(e) => setNewTag(e.target.value)}
                       placeholder="הכינוי שלך..."
                       type="text"
@@ -409,12 +409,12 @@ export default function OnboardingPage() {
                     />
                     <div className="relative min-w-[120px]">
                       <select
-                        className="h-full w-full appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-white outline-none focus:border-primary/50"
+                        className="h-full w-full appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-white outline-hidden focus:border-primary/50"
                         onChange={(e) => setNewPlatform(e.target.value)}
                         value={newPlatform}
                       >
                         {PLATFORMS.map((p) => (
-                          <option className="bg-[#0e0e1b]" key={p} value={p}>
+                          <option className="bg-card" key={p} value={p}>
                             {p}
                           </option>
                         ))}

@@ -54,7 +54,7 @@ export default function ProfileEditTab({
             כינוי (Username)
           </label>
           <input
-            className={`w-full rounded-xl border bg-black/20 px-4 py-2 text-right text-white outline-none transition-colors ${
+            className={`w-full rounded-xl border bg-black/20 px-4 py-2 text-right text-white outline-hidden transition-colors ${
               usernameError
                 ? "border-red-500/50 focus:border-red-500"
                 : "border-white/10 focus:border-primary/50"
@@ -82,7 +82,7 @@ export default function ProfileEditTab({
             תיוג (@Tag)
           </label>
           <input
-            className="dir-ltr w-full cursor-not-allowed rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-gray-400 outline-none"
+            className="dir-ltr w-full cursor-not-allowed rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-gray-400 outline-hidden"
             dir="ltr"
             readOnly
             type="text"
@@ -125,7 +125,7 @@ export default function ProfileEditTab({
             </span>
           </div>
           <textarea
-            className={`w-full resize-none rounded-xl border bg-black/20 px-4 py-2 text-right text-white outline-none transition-colors ${
+            className={`w-full resize-none rounded-xl border bg-black/20 px-4 py-2 text-right text-white outline-hidden transition-colors ${
               bioOverLimit
                 ? "border-red-500/50 focus:border-red-500"
                 : "border-white/10 focus:border-primary/50"

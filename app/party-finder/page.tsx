@@ -243,7 +243,7 @@ export default function PartyFinderPage() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600">
                 <HugeiconsIcon
                   className="text-white"
                   icon={UserGroupIcon}

@@ -111,8 +111,8 @@ function NotificationItem({
       animate={{ opacity: 1, y: 0 }}
       className={`group relative flex items-start gap-4 rounded-2xl border p-4 transition-all ${
         notification.is_read
-          ? "border-white/5 bg-white/[0.02] opacity-60"
-          : "border-white/10 bg-white/[0.05] shadow-lg"
+          ? "border-white/5 bg-white/2 opacity-60"
+          : "border-white/10 bg-white/5 shadow-lg"
       }`}
       exit={{ opacity: 0, x: -100 }}
       initial={{ opacity: 0, y: 10 }}
@@ -222,7 +222,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050510] pb-24 md:pr-64 md:pb-0">
+    <div className="min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
       <main className="mx-auto max-w-2xl p-6">
@@ -230,7 +230,7 @@ export default function NotificationsPage() {
         <header className="mb-8">
           <div className="mb-2 flex items-center justify-between">
             <h1 className="flex items-center gap-3 font-bold text-3xl text-white">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600">
                 <HugeiconsIcon
                   className="text-white"
                   icon={Notification01Icon}

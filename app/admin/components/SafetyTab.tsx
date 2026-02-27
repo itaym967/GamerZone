@@ -157,7 +157,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-2xl border border-green-500/20 bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-6">
+      <div className="rounded-2xl border border-green-500/20 bg-linear-to-r from-green-500/10 to-emerald-500/10 p-6">
         <div className="mb-2 flex items-center gap-3">
           <HugeiconsIcon
             className="text-green-400"
@@ -223,7 +223,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       </div>
 
       {/* Content Reports */}
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
         <div className="flex items-center justify-between border-white/5 border-b p-4">
           <h3 className="flex items-center gap-2 font-bold text-lg text-white">
             <HugeiconsIcon
@@ -270,14 +270,14 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
           <div className="divide-y divide-white/5">
             {filteredReports.map((report) => (
               <div
-                className="p-4 transition-colors hover:bg-white/[0.02]"
+                className="p-4 transition-colors hover:bg-white/2"
                 key={report.id}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 text-right">
                     <div className="mb-1 flex items-center justify-end gap-2">
                       <span
-                        className={`rounded px-2 py-0.5 font-bold text-[11px] ${REPORT_TYPE_COLORS[report.report_type] || "bg-gray-500/20 text-gray-400"}`}
+                        className={`rounded-xs px-2 py-0.5 font-bold text-[11px] ${REPORT_TYPE_COLORS[report.report_type] || "bg-gray-500/20 text-gray-400"}`}
                       >
                         {REPORT_TYPE_LABELS[report.report_type] ||
                           report.report_type}
@@ -301,11 +301,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   {/* Actions */}
                   {report.status === "pending" ||
                   report.status === "reviewing" ? (
-                    <div className="flex flex-shrink-0 flex-col gap-1.5">
+                    <div className="flex shrink-0 flex-col gap-1.5">
                       {activeReportId === report.id ? (
                         <div className="w-64 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
                           <textarea
-                            className="h-16 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-right text-white text-xs outline-none"
+                            className="h-16 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-right text-white text-xs outline-hidden"
                             onChange={(e) => setAdminNotes(e.target.value)}
                             placeholder="הערות מנהל (אופציונלי)..."
                             value={adminNotes}
@@ -379,7 +379,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       </div>
 
       {/* Minor Users List */}
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
         <div className="flex items-center justify-between border-white/5 border-b p-4">
           <h3 className="flex items-center gap-2 font-bold text-lg text-white">
             <HugeiconsIcon
@@ -396,7 +396,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
               size={14}
             />
             <input
-              className="w-full rounded-lg border border-white/5 bg-black/20 py-1.5 pr-8 pl-3 text-right text-white text-xs outline-none"
+              className="w-full rounded-lg border border-white/5 bg-black/20 py-1.5 pr-8 pl-3 text-right text-white text-xs outline-hidden"
               onChange={(e) => setMinorSearch(e.target.value)}
               placeholder="חפש קטין..."
               type="text"
@@ -426,7 +426,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   </td>
                   <td className="p-3">
                     <span
-                      className={`rounded px-2 py-1 font-bold text-xs ${minor.account_type === "supervised" ? "bg-amber-500/20 text-amber-400" : "bg-blue-500/20 text-blue-400"}`}
+                      className={`rounded-xs px-2 py-1 font-bold text-xs ${minor.account_type === "supervised" ? "bg-amber-500/20 text-amber-400" : "bg-blue-500/20 text-blue-400"}`}
                     >
                       {minor.account_type === "supervised"
                         ? "מפוקח (מתחת ל-13)"
@@ -449,17 +449,17 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1">
                       {minor.chat_restricted && (
-                        <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">
+                        <span className="rounded-xs bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">
                           צ׳אט מוגבל
                         </span>
                       )}
                       {minor.profile_restricted && (
-                        <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[10px] text-orange-400">
+                        <span className="rounded-xs bg-orange-500/20 px-1.5 py-0.5 text-[10px] text-orange-400">
                           פרופיל מוגבל
                         </span>
                       )}
                       {minor.safe_mode && (
-                        <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">
+                        <span className="rounded-xs bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">
                           מצב בטוח
                         </span>
                       )}
@@ -499,7 +499,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border bg-[#0e0e1b] p-5 ${highlight ? "border-amber-500/20" : "border-white/5"}`}
+      className={`rounded-2xl border bg-card p-5 ${highlight ? "border-amber-500/20" : "border-white/5"}`}
     >
       <div className="mb-2 flex items-center gap-2">
         {icon}
@@ -529,7 +529,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   return (
     <span
-      className={`rounded px-2 py-0.5 font-bold text-[11px] ${styles[status] || "bg-gray-500/20 text-gray-400"}`}
+      className={`rounded-xs px-2 py-0.5 font-bold text-[11px] ${styles[status] || "bg-gray-500/20 text-gray-400"}`}
     >
       {labels[status] || status}
     </span>

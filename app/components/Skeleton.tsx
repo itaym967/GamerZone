@@ -12,10 +12,10 @@ export function Skeleton({
   variant = "rectangular",
 }: SkeletonProps) {
   const baseClasses =
-    "animate-pulse bg-gradient-to-r from-white/5 via-white/10 to-white/5 bg-[length:200%_100%]";
+    "animate-pulse bg-linear-to-r from-white/5 via-white/10 to-white/5 bg-size-[200%_100%]";
 
   const variantClasses = {
-    text: "h-4 rounded",
+    text: "h-4 rounded-xs",
     circular: "rounded-full",
     rectangular: "rounded-lg",
   };

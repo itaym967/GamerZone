@@ -42,7 +42,7 @@ function FriendCard({
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-4 transition-all hover:bg-white/[0.06]"
+      className="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/3 p-4 transition-all hover:bg-white/6"
       exit={{ opacity: 0, x: -100 }}
       initial={{ opacity: 0, y: 10 }}
       layout
@@ -55,7 +55,7 @@ function FriendCard({
           size={48}
         />
         {friend?.is_online && (
-          <span className="absolute right-0 bottom-0 h-3.5 w-3.5 rounded-full border-2 border-[#050510] bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+          <span className="absolute right-0 bottom-0 h-3.5 w-3.5 rounded-full border-2 border-primary-foreground bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
         )}
       </div>
 
@@ -216,7 +216,7 @@ export default function FriendsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050510] pb-24 md:pr-64 md:pb-0">
+    <div className="min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
       <main className="mx-auto max-w-2xl p-6">
@@ -224,7 +224,7 @@ export default function FriendsPage() {
         <header className="mb-8">
           <div className="mb-2 flex items-center justify-between">
             <h1 className="flex items-center gap-3 font-bold text-3xl text-white">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-emerald-600">
                 <HugeiconsIcon
                   className="text-white"
                   icon={UserGroupIcon}
@@ -278,7 +278,7 @@ export default function FriendsPage() {
         {activeTab === "friends" && friends.length > 3 && (
           <div className="relative mb-4">
             <input
-              className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-10 py-3 text-right text-white outline-none transition-all focus:border-primary/50 focus:bg-white/[0.08]"
+              className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-10 py-3 text-right text-white outline-hidden transition-all focus:border-primary/50 focus:bg-white/8"
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="חפש חבר..."
               type="text"

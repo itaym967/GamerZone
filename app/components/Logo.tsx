@@ -23,14 +23,14 @@ export default function Logo({ className = "", size = "md" }: LogoProps) {
     >
       <span className="relative text-white">
         Gamer
-        <span className="absolute inset-0 text-white/50 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100">
+        <span className="absolute inset-0 text-white/50 opacity-0 blur-xs transition-opacity duration-300 group-hover:opacity-100">
           Gamer
         </span>
       </span>
 
       <div className="relative flex items-center text-primary">
         {/* The 'Z' represented by a lightning bolt */}
-        <div className="relative mx-[1px] flex translate-y-[2px] transform items-center justify-center">
+        <div className="relative mx-px flex translate-y-[2px] transform items-center justify-center">
           <HugeiconsIcon
             className="transform fill-current transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(0,255,157,0.8)]"
             icon={ZapIcon}
@@ -43,7 +43,7 @@ export default function Logo({ className = "", size = "md" }: LogoProps) {
         {/* The rest of 'Zone' */}
         <span className="relative">
           one
-          <span className="absolute inset-0 text-primary/50 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100">
+          <span className="absolute inset-0 text-primary/50 opacity-0 blur-xs transition-opacity duration-300 group-hover:opacity-100">
             one
           </span>
         </span>

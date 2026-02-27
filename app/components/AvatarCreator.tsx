@@ -49,7 +49,7 @@ export default function AvatarCreator({
           initial={{ scale: 0.8, opacity: 0 }}
           key={avatarUrl}
         >
-          <div className="h-40 w-40 rounded-full bg-gradient-to-br from-primary to-secondary p-1">
+          <div className="h-40 w-40 rounded-full bg-linear-to-br from-primary to-secondary p-1">
             <div className="h-full w-full overflow-hidden rounded-full bg-black">
               <img
                 alt="Avatar Preview"

@@ -86,7 +86,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="glass-panel fixed top-0 right-0 z-50 hidden h-screen w-64 flex-col border-white/5 border-l bg-[#050510] p-6 md:flex">
+      <aside className="glass-panel fixed top-0 right-0 z-50 hidden h-screen w-64 flex-col border-white/5 border-l bg-primary-foreground p-6 md:flex">
         <div className="mb-10 flex items-center gap-2 px-2">
           <div className="rounded-lg bg-primary p-2 text-black">
             <HugeiconsIcon icon={GameController02Icon} size={24} />
@@ -143,8 +143,8 @@ export default function Navigation() {
               <div className="flex animate-pulse items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
                 <div className="h-8 w-8 rounded-full bg-white/10" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-20 rounded bg-white/10" />
-                  <div className="h-2 w-12 rounded bg-white/10" />
+                  <div className="h-3 w-20 rounded-xs bg-white/10" />
+                  <div className="h-2 w-12 rounded-xs bg-white/10" />
                 </div>
               </div>
             ) : user && !subscription ? (

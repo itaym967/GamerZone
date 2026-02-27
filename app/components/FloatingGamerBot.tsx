@@ -112,7 +112,7 @@ export default function FloatingGamerBot() {
         {!isOpen && (
           <motion.button
             animate={{ scale: 1, opacity: 1, x: position.x, y: position.y }}
-            className="group fixed bottom-24 left-6 z-[9999] flex h-16 w-16 cursor-move items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary shadow-2xl shadow-primary/50 transition-shadow hover:shadow-primary/70 md:bottom-6"
+            className="group fixed bottom-24 left-6 z-9999 flex h-16 w-16 cursor-move items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary shadow-2xl shadow-primary/50 transition-shadow hover:shadow-primary/70 md:bottom-6"
             drag
             dragElastic={0}
             dragMomentum={false}
@@ -130,7 +130,7 @@ export default function FloatingGamerBot() {
               icon={BotIcon}
               size={28}
             />
-            <span className="absolute -top-1 -right-1 h-4 w-4 animate-pulse rounded-full border-2 border-[#050510] bg-green-500" />
+            <span className="absolute -top-1 -right-1 h-4 w-4 animate-pulse rounded-full border-2 border-primary-foreground bg-green-500" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -145,14 +145,14 @@ export default function FloatingGamerBot() {
               y: 0,
               height: isMinimized ? "auto" : "600px",
             }}
-            className="fixed bottom-24 left-6 z-[9999] flex w-96 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0e0e1b] shadow-2xl md:bottom-6"
+            className="fixed bottom-24 left-6 z-9999 flex w-96 flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl md:bottom-6"
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-primary/30 border-b bg-gradient-to-r from-primary/20 to-secondary/20 p-4">
+            <div className="flex items-center justify-between border-primary/30 border-b bg-linear-to-r from-primary/20 to-secondary/20 p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary p-px">
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-black">
                     <HugeiconsIcon
                       className="text-primary"
@@ -200,7 +200,7 @@ export default function FloatingGamerBot() {
             {!isMinimized && (
               <>
                 <div
-                  className="flex-1 space-y-3 overflow-y-auto bg-[#050510] p-4"
+                  className="flex-1 space-y-3 overflow-y-auto bg-primary-foreground p-4"
                   ref={scrollRef}
                 >
                   <AnimatePresence initial={false}>
@@ -247,7 +247,7 @@ export default function FloatingGamerBot() {
                         className="flex justify-start"
                         initial={{ opacity: 0 }}
                       >
-                        <div className="flex items-center gap-1 rounded-2xl rounded-tr-sm border border-primary/30 bg-gradient-to-r from-primary/20 to-secondary/20 px-4 py-3">
+                        <div className="flex items-center gap-1 rounded-2xl rounded-tr-sm border border-primary/30 bg-linear-to-r from-primary/20 to-secondary/20 px-4 py-3">
                           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
                           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
                           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
@@ -258,13 +258,13 @@ export default function FloatingGamerBot() {
                 </div>
 
                 {/* Input Area */}
-                <div className="border-white/5 border-t bg-[#0e0e1b]/80 p-4 backdrop-blur-lg">
+                <div className="border-white/5 border-t bg-card/80 p-4 backdrop-blur-lg">
                   <form
                     className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-1.5 transition-colors focus-within:border-primary/50"
                     onSubmit={handleSend}
                   >
                     <input
-                      className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-none placeholder:text-gray-600"
+                      className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-hidden placeholder:text-gray-600"
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="כתוב הודעה..."
                       type="text"

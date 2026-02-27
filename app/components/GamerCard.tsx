@@ -305,7 +305,7 @@ export default function GamerCard({
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary p-[2px]">
+            <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-[2px]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
                 <OptimizedAvatar
                   className="h-full w-full object-cover"
@@ -341,7 +341,7 @@ export default function GamerCard({
             <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-white/10">
               <motion.div
                 animate={{ width: `${progress}%` }}
-                className="h-full bg-gradient-to-r from-primary to-secondary"
+                className="h-full bg-linear-to-r from-primary to-secondary"
                 initial={{ width: 0 }}
               />
             </div>
@@ -354,7 +354,7 @@ export default function GamerCard({
         onMouseEnter={() => currentUserId === id && setShowBioEnhancer(true)}
         onMouseLeave={() => setShowBioEnhancer(false)}
       >
-        <p className="line-clamp-2 min-h-[40px] flex-grow text-gray-300 text-sm">
+        <p className="line-clamp-2 min-h-[40px] grow text-gray-300 text-sm">
           {bio}
         </p>
         {/* Bio Enhancer Button - Only show for own card */}
@@ -363,7 +363,7 @@ export default function GamerCard({
             {showBioEnhancer && (
               <motion.button
                 animate={{ opacity: 1, scale: 1 }}
-                className="absolute top-0 left-0 rounded-lg bg-gradient-to-r from-primary to-secondary p-1.5 transition-all hover:shadow-lg hover:shadow-primary/50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="absolute top-0 left-0 rounded-lg bg-linear-to-r from-primary to-secondary p-1.5 transition-all hover:shadow-lg hover:shadow-primary/50 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isEnhancingBio}
                 exit={{ opacity: 0, scale: 0.8 }}
                 initial={{ opacity: 0, scale: 0.8 }}

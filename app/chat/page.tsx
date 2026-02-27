@@ -296,7 +296,7 @@ function ChatContent() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050510]">
+      <div className="flex min-h-screen items-center justify-center bg-primary-foreground">
         <div className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-white">טוען...</p>
@@ -306,18 +306,18 @@ function ChatContent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#050510] pb-24 md:pr-64 md:pb-0">
+    <div className="flex min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
       <main className="relative mx-auto flex h-screen w-full max-w-7xl flex-1 overflow-hidden">
         {/* Contacts Sidebar */}
         <aside
-          className={`${mobileView === "list" ? "flex" : "hidden"} w-full flex-col border-white/5 border-l bg-[#0e0e1b] lg:flex lg:w-80`}
+          className={`${mobileView === "list" ? "flex" : "hidden"} w-full flex-col border-white/5 border-l bg-card lg:flex lg:w-80`}
         >
           <div className="border-white/5 border-b p-4">
             <div className="relative">
               <input
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 pr-10 text-right text-sm text-white outline-none focus:border-primary/50"
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 pr-10 text-right text-sm text-white outline-hidden focus:border-primary/50"
                 placeholder="חפש שיחות..."
                 type="text"
               />
@@ -332,11 +332,11 @@ function ChatContent() {
           <div className="flex-1 space-y-1 overflow-y-auto p-2">
             {/* GamerBot - Always first */}
             <button
-              className={`flex w-full items-center gap-3 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5 p-3 transition-all hover:from-primary/10 hover:to-secondary/10 ${activeChat?.id === GAMERBOT_ID ? "ring-2 ring-primary" : ""}`}
+              className={`flex w-full items-center gap-3 rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 to-secondary/5 p-3 transition-all hover:from-primary/10 hover:to-secondary/10 ${activeChat?.id === GAMERBOT_ID ? "ring-2 ring-primary" : ""}`}
               onClick={() => handleSelectContact(gamerbotContact)}
             >
               <div className="relative">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary p-px">
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-black">
                     <HugeiconsIcon
                       className="text-primary"
@@ -345,7 +345,7 @@ function ChatContent() {
                     />
                   </div>
                 </div>
-                <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-[#0e0e1b] bg-green-500" />
+                <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-green-500" />
               </div>
               <div className="min-w-0 flex-1 text-right">
                 <div className="mb-0.5 flex items-center justify-between">
@@ -372,7 +372,7 @@ function ChatContent() {
                 onClick={() => handleSelectContact(contact)}
               >
                 <div className="relative">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
+                  <div className="h-10 w-10 rounded-full bg-linear-to-br from-primary to-secondary p-px">
                     <OptimizedAvatar
                       className="rounded-full bg-black"
                       seed={contact.avatar_url || contact.username}
@@ -381,7 +381,7 @@ function ChatContent() {
                     />
                   </div>
                   {contact.online && (
-                    <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-[#0e0e1b] bg-green-500" />
+                    <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-green-500" />
                   )}
                   {/* Unread badge */}
                   {contact.unread_count && contact.unread_count > 0 && (
@@ -410,11 +410,11 @@ function ChatContent() {
 
         {/* Chat Area */}
         <section
-          className={`${mobileView === "chat" ? "flex" : "hidden"} relative flex-1 flex-col bg-[#050510] lg:flex`}
+          className={`${mobileView === "chat" ? "flex" : "hidden"} relative flex-1 flex-col bg-primary-foreground lg:flex`}
         >
           {/* Header */}
           {activeChat ? (
-            <header className="flex h-16 items-center justify-between border-white/5 border-b bg-[#0e0e1b]/50 px-4 backdrop-blur-md">
+            <header className="flex h-16 items-center justify-between border-white/5 border-b bg-card/50 px-4 backdrop-blur-md">
               <div className="flex items-center gap-3">
                 <button
                   className="-mr-2 p-2 text-gray-400 hover:text-white lg:hidden"
@@ -422,7 +422,7 @@ function ChatContent() {
                 >
                   <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
                 </button>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
+                <div className="h-10 w-10 rounded-full bg-linear-to-br from-primary to-secondary p-px">
                   <OptimizedAvatar
                     className="rounded-full bg-black"
                     seed={activeChat.avatar_url || activeChat.username}
@@ -556,7 +556,7 @@ function ChatContent() {
                   <div
                     className={`flex items-center gap-1 rounded-2xl rounded-tr-sm px-4 py-3 ${
                       isBotTyping
-                        ? "border border-primary/30 bg-gradient-to-r from-primary/20 to-secondary/20"
+                        ? "border border-primary/30 bg-linear-to-r from-primary/20 to-secondary/20"
                         : "border border-white/5 bg-[#1a1a2e]"
                     }`}
                   >
@@ -590,7 +590,7 @@ function ChatContent() {
           )}
 
           {/* Input Area */}
-          <div className="chat-input-area border-white/5 border-t bg-[#0e0e1b]/80 p-4 backdrop-blur-lg">
+          <div className="chat-input-area border-white/5 border-t bg-card/80 p-4 backdrop-blur-lg">
             <form
               className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-1.5 transition-colors focus-within:border-primary/50"
               onSubmit={handleSend}
@@ -606,7 +606,7 @@ function ChatContent() {
                 />
               </button>
               <input
-                className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-none placeholder:text-gray-600 disabled:cursor-not-allowed"
+                className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-hidden placeholder:text-gray-600 disabled:cursor-not-allowed"
                 disabled={!activeChat}
                 onChange={(e) => {
                   setInput(e.target.value);
@@ -662,7 +662,7 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#050510] text-white">
+        <div className="flex min-h-screen items-center justify-center bg-primary-foreground text-white">
           טוען...
         </div>
       }

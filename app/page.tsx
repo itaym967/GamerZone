@@ -57,7 +57,7 @@ export default function Dashboard() {
         {/* Header Section */}
         <header className="mt-8 flex flex-col justify-between gap-4 md:mt-0 md:flex-row md:items-center">
           <div>
-            <h1 className="mb-2 bg-gradient-to-l from-primary to-white bg-clip-text font-bold text-3xl text-transparent md:text-4xl">
+            <h1 className="mb-2 bg-linear-to-l from-primary to-white bg-clip-text font-bold text-3xl text-transparent md:text-4xl">
               שלום, {currentUsername || "אורח"} 👋
             </h1>
             <p className="text-gray-400">מוכן למצוא את הסקוואד הבא שלך?</p>
@@ -124,7 +124,7 @@ export default function Dashboard() {
         {/* Call to Action Banner - Only for guests */}
         {!(isLoggedIn || loading) && (
           <section className="group relative mt-8 overflow-hidden rounded-2xl border border-white/10 p-8">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl transition-opacity group-hover:opacity-80" />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl transition-opacity group-hover:opacity-80" />
             <div className="relative z-20 flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-right">
               <div>
                 <h3 className="mb-2 font-bold text-2xl text-white">
@@ -135,7 +135,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Link
-                className="relative z-[100] block cursor-pointer whitespace-nowrap rounded-xl bg-white px-6 py-3 font-bold text-black shadow-lg shadow-white/10 transition-colors hover:bg-gray-200"
+                className="relative z-100 block cursor-pointer whitespace-nowrap rounded-xl bg-white px-6 py-3 font-bold text-black shadow-lg shadow-white/10 transition-colors hover:bg-gray-200"
                 href="/signup"
               >
                 צור כרטיס שחקן עכשיו

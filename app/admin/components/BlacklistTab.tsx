@@ -150,7 +150,7 @@ export default function BlacklistTab({
   return (
     <div className="space-y-8">
       {/* AI Analysis Section */}
-      <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-500/10 to-blue-500/10 p-6">
+      <div className="rounded-2xl border border-purple-500/20 bg-linear-to-r from-purple-500/10 to-blue-500/10 p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <HugeiconsIcon
@@ -168,7 +168,7 @@ export default function BlacklistTab({
             </div>
           </div>
           <button
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-3 font-bold text-white transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 px-6 py-3 font-bold text-white transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isAnalyzing || blockedWords.length === 0}
             onClick={analyzeWithAI}
           >
@@ -228,7 +228,7 @@ export default function BlacklistTab({
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Add New Word */}
         <div className="lg:col-span-1">
-          <div className="sticky top-6 rounded-2xl border border-white/5 bg-[#0e0e1b] p-6">
+          <div className="sticky top-6 rounded-2xl border border-white/5 bg-card p-6">
             <h3 className="mb-4 flex items-center gap-2 font-bold text-lg text-white">
               <HugeiconsIcon
                 className="text-red-500"
@@ -243,7 +243,7 @@ export default function BlacklistTab({
                   המילה לחסימה
                 </label>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-white outline-none focus:border-red-500/50"
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-white outline-hidden focus:border-red-500/50"
                   onChange={(e) => setNewWord(e.target.value)}
                   placeholder="למשל: noob"
                   type="text"
@@ -274,7 +274,7 @@ export default function BlacklistTab({
               size={16}
             />
             <input
-              className="w-full rounded-xl border border-white/5 bg-[#0e0e1b] py-2.5 pr-10 pl-4 text-right text-sm text-white outline-none focus:border-red-500/30"
+              className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-sm text-white outline-hidden focus:border-red-500/30"
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="חפש מילה..."
               type="text"

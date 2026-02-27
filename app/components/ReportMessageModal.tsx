@@ -79,14 +79,14 @@ export default function ReportMessageModal({
       {isOpen && (
         <motion.div
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0e0e1b] p-6 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-6 shadow-2xl"
             exit={{ scale: 0.9, opacity: 0 }}
             initial={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
@@ -131,7 +131,7 @@ export default function ReportMessageModal({
                   פרטים נוספים (אופציונלי)
                 </label>
                 <textarea
-                  className="h-24 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-3 text-right text-sm text-white outline-none focus:border-red-500/50"
+                  className="h-24 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-3 text-right text-sm text-white outline-hidden focus:border-red-500/50"
                   maxLength={500}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="תאר את הבעיה..."

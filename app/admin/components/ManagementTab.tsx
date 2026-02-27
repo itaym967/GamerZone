@@ -109,7 +109,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-6">
+      <div className="rounded-2xl border border-blue-500/20 bg-linear-to-r from-blue-500/10 to-purple-500/10 p-6">
         <div className="mb-2 flex items-center gap-3">
           <HugeiconsIcon
             className="text-blue-400"
@@ -174,7 +174,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           footer={
             <div className="h-2 w-full rounded-full bg-white/5">
               <div
-                className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500"
+                className="h-2 rounded-full bg-linear-to-r from-blue-500 to-green-500"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -193,7 +193,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
       </div>
 
       {/* Optimization Status */}
-      <div className="rounded-2xl border border-white/5 bg-[#0e0e1b] p-6">
+      <div className="rounded-2xl border border-white/5 bg-card p-6">
         <h3 className="mb-4 flex items-center gap-2 font-bold text-lg text-white">
           <HugeiconsIcon
             className="text-blue-400"
@@ -241,7 +241,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="rounded-2xl border border-white/5 bg-[#0e0e1b] p-6">
+      <div className="rounded-2xl border border-white/5 bg-card p-6">
         <h3 className="mb-4 font-bold text-lg text-white">פעולות מהירות</h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <button
@@ -265,7 +265,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
       <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-6">
         <div className="flex items-start gap-3">
           <HugeiconsIcon
-            className="mt-1 flex-shrink-0 text-blue-400"
+            className="mt-1 shrink-0 text-blue-400"
             icon={AlertCircleIcon}
             size={20}
           />
@@ -303,7 +303,7 @@ function MetricCard({
   pulse?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-[#0e0e1b] p-6">
+    <div className="rounded-2xl border border-white/5 bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {icon}

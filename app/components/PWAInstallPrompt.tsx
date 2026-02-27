@@ -106,8 +106,8 @@ export default function PWAInstallPrompt() {
   }
 
   return (
-    <div className="slide-in-from-bottom fixed right-4 bottom-20 left-4 z-[60] animate-in duration-500 md:bottom-6">
-      <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-[#0e0e1b] p-4 shadow-2xl shadow-black/50 backdrop-blur-xl">
+    <div className="slide-in-from-bottom fixed right-4 bottom-20 left-4 z-60 animate-in duration-500 md:bottom-6">
+      <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-card p-4 shadow-2xl shadow-black/50 backdrop-blur-xl">
         <button
           className="touch-compact absolute top-3 left-3 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
           onClick={handleDismiss}

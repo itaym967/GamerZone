@@ -14,14 +14,14 @@ function SuccessContent() {
   const alreadyGranted = searchParams.get("already") === "true";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050510] p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-green-500/10 blur-[120px]" />
       <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
 
       <div className="relative z-10 w-full max-w-md text-center">
         <Logo className="mb-8 justify-center" size="lg" />
 
-        <div className="rounded-3xl border border-white/10 bg-[#0e0e1b] p-8 shadow-2xl">
+        <div className="rounded-3xl border border-white/10 bg-card p-8 shadow-2xl">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
             {alreadyGranted ? (
               <HugeiconsIcon
@@ -90,7 +90,7 @@ export default function ParentalConsentSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#050510]">
+        <div className="flex min-h-screen items-center justify-center bg-primary-foreground">
           <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       }

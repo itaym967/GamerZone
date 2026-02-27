@@ -44,7 +44,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050510]">
+      <div className="flex min-h-screen items-center justify-center bg-primary-foreground">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           <span className="text-gray-400 text-sm">טוען פרופיל...</span>
@@ -54,7 +54,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050510] pb-24 transition-all md:pr-64 md:pb-0">
+    <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">
       <Navigation />
 
       <main className="mx-auto max-w-7xl p-6">

@@ -417,7 +417,7 @@ export default function PartyDetailsPage() {
             <>
               {party.status === "open" || party.status === "full" ? (
                 <button
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 py-3 font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-green-600 to-emerald-500 py-3 font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                   disabled={actionLoading}
                   onClick={handleStartGame}
                 >
