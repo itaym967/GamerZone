@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Trash2, Lock, Unlock, Search, Shield, UserCheck, Filter } from "lucide-react";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
+import { Filter, Lock, Search, Trash2, Unlock, UserCheck } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { SupabaseClient, RealtimeChannel } from "@supabase/supabase-js";
 import type { Profile } from "../types";
 
 interface UsersTabProps {
-  supabase: SupabaseClient;
   currentUser: string | null;
+  supabase: SupabaseClient;
 }
 
 type RoleFilter = "all" | "user" | "admin" | "minor" | "banned";
@@ -27,7 +27,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         .select("*")
         .order("username", { ascending: true })
         .limit(100);
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       setUsers(data || []);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -46,18 +48,28 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
     let channel: RealtimeChannel | null = null;
 
     const setup = () => {
-      if (document.hidden) return;
+      if (document.hidden) {
+        return;
+      }
       channel = supabase
         .channel("admin-users-changes")
-        .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
-          if (payload.eventType === "UPDATE") {
-            setUsers((prev) => prev.map((u) => (u.id === payload.new.id ? { ...u, ...payload.new } : u)));
-          } else if (payload.eventType === "INSERT") {
-            setUsers((prev) => [payload.new as Profile, ...prev]);
-          } else if (payload.eventType === "DELETE") {
-            setUsers((prev) => prev.filter((u) => u.id !== payload.old.id));
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "profiles" },
+          (payload) => {
+            if (payload.eventType === "UPDATE") {
+              setUsers((prev) =>
+                prev.map((u) =>
+                  u.id === payload.new.id ? { ...u, ...payload.new } : u
+                )
+              );
+            } else if (payload.eventType === "INSERT") {
+              setUsers((prev) => [payload.new as Profile, ...prev]);
+            } else if (payload.eventType === "DELETE") {
+              setUsers((prev) => prev.filter((u) => u.id !== payload.old.id));
+            }
           }
-        })
+        )
         .subscribe();
     };
 
@@ -83,7 +95,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
     let reason: string | null = null;
     if (isBanning) {
       reason = prompt("הכנס סיבת הקפאה (אופציונלי):");
-      if (reason === null) return;
+      if (reason === null) {
+        return;
+      }
     }
 
     try {
@@ -93,11 +107,21 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         .eq("id", user.id)
         .select()
         .single();
-      if (error) throw error;
-      if (data.is_banned !== isBanning) throw new Error("Update failed to apply");
+      if (error) {
+        throw error;
+      }
+      if (data.is_banned !== isBanning) {
+        throw new Error("Update failed to apply");
+      }
 
-      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, ...data } : u)));
-      toast.success(isBanning ? `המשתמש ${user.username} הוקפא` : `המשתמש ${user.username} שוחרר`);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, ...data } : u))
+      );
+      toast.success(
+        isBanning
+          ? `המשתמש ${user.username} הוקפא`
+          : `המשתמש ${user.username} שוחרר`
+      );
 
       if (isBanning) {
         fetch("/api/admin/revoke-session", {
@@ -109,12 +133,17 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
 
       const title = isBanning ? "חשבונך הוקפא" : "חשבונך שוחרר";
       const message = isBanning
-        ? reason ? `החשבון הוקפא עקב: ${reason}` : "חשבונך הוקפא על ידי מנהל המערכת."
+        ? reason
+          ? `החשבון הוקפא עקב: ${reason}`
+          : "חשבונך הוקפא על ידי מנהל המערכת."
         : "ההקפאה הוסרה מחשבונך. ברוך שובך!";
 
       await supabase.from("notifications").insert({
-        user_id: user.id, title, message,
-        type: isBanning ? "error" : "success", action_url: "/profile",
+        user_id: user.id,
+        title,
+        message,
+        type: isBanning ? "error" : "success",
+        action_url: "/profile",
       });
 
       fetch("/api/send-push", {
@@ -130,16 +159,28 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
       });
     } catch (error: any) {
       console.error("Operation failed:", error);
-      toast.error("שגיאה בביצוע הפעולה", { description: error.message || "נא לנסות שוב" });
+      toast.error("שגיאה בביצוע הפעולה", {
+        description: error.message || "נא לנסות שוב",
+      });
       fetchUsers();
     }
   };
 
   const handleDelete = async (user: Profile) => {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${user.username}? פעולה זו אינה הפיכה.`)) return;
+    if (
+      !confirm(
+        `האם אתה בטוח שברצונך למחוק את המשתמש ${user.username}? פעולה זו אינה הפיכה.`
+      )
+    ) {
+      return;
+    }
     try {
-      const { error } = await supabase.rpc("delete_user_as_admin", { target_user_id: user.id });
-      if (error) throw error;
+      const { error } = await supabase.rpc("delete_user_as_admin", {
+        target_user_id: user.id,
+      });
+      if (error) {
+        throw error;
+      }
       toast.success(`המשתמש ${user.username} נמחק בהצלחה`);
       await supabase.from("admin_logs").insert({
         action: "DELETE_USER",
@@ -154,15 +195,28 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   };
 
   const handleRoleChange = async (user: Profile, newRole: string) => {
-    if (!confirm(`שנה תפקיד של ${user.username} ל-${newRole}?`)) return;
+    if (!confirm(`שנה תפקיד של ${user.username} ל-${newRole}?`)) {
+      return;
+    }
     try {
-      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", user.id);
-      if (error) throw error;
-      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u)));
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: newRole })
+        .eq("id", user.id);
+      if (error) {
+        throw error;
+      }
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
+      );
       toast.success(`התפקיד של ${user.username} שונה ל-${newRole}`);
       await supabase.from("admin_logs").insert({
         action: "CHANGE_ROLE",
-        details: { target_user: user.username, old_role: user.role, new_role: newRole },
+        details: {
+          target_user: user.username,
+          old_role: user.role,
+          new_role: newRole,
+        },
         admin_id: currentUser,
       });
     } catch (error) {
@@ -172,13 +226,18 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   };
 
   const filtered = users.filter((u) => {
-    const matchesSearch = !searchQuery || u.username?.toLowerCase().includes(searchQuery.toLowerCase())
-      || u.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-      || u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !searchQuery ||
+      u.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole =
       roleFilter === "all" ||
       (roleFilter === "admin" && u.role === "admin") ||
-      (roleFilter === "user" && u.role !== "admin" && !u.is_minor && !u.is_banned) ||
+      (roleFilter === "user" &&
+        u.role !== "admin" &&
+        !u.is_minor &&
+        !u.is_banned) ||
       (roleFilter === "minor" && u.is_minor) ||
       (roleFilter === "banned" && u.is_banned);
     return matchesSearch && matchesRole;
@@ -187,7 +246,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="w-10 h-10 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+        <span className="h-10 w-10 animate-spin rounded-full border-4 border-red-500/30 border-t-red-500" />
       </div>
     );
   }
@@ -195,37 +254,54 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   return (
     <div className="space-y-4">
       {/* Search & Filters */}
-      <div className="flex flex-col md:flex-row gap-3">
+      <div className="flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
-          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <Search
+            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500"
+            size={16}
+          />
           <input
-            type="text"
-            value={searchQuery}
+            className="w-full rounded-xl border border-white/5 bg-[#0e0e1b] py-2.5 pr-10 pl-4 text-right text-sm text-white outline-none focus:border-red-500/30"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חפש לפי שם משתמש, שם מלא או אימייל..."
-            className="w-full bg-[#0e0e1b] border border-white/5 rounded-xl pr-10 pl-4 py-2.5 text-white text-sm outline-none focus:border-red-500/30 text-right"
+            type="text"
+            value={searchQuery}
           />
         </div>
-        <div className="flex gap-2 items-center">
-          <Filter size={14} className="text-gray-500" />
-          {(["all", "user", "admin", "minor", "banned"] as RoleFilter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setRoleFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                roleFilter === f ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10"
-              }`}
-            >
-              {f === "all" ? "הכל" : f === "user" ? "משתמשים" : f === "admin" ? "מנהלים" : f === "minor" ? "קטינים" : "מוקפאים"}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Filter className="text-gray-500" size={14} />
+          {(["all", "user", "admin", "minor", "banned"] as RoleFilter[]).map(
+            (f) => (
+              <button
+                className={`rounded-lg px-3 py-1.5 font-bold text-xs transition-all ${
+                  roleFilter === f
+                    ? "border border-red-500/30 bg-red-500/20 text-red-400"
+                    : "border border-white/5 bg-white/5 text-gray-400 hover:bg-white/10"
+                }`}
+                key={f}
+                onClick={() => setRoleFilter(f)}
+              >
+                {f === "all"
+                  ? "הכל"
+                  : f === "user"
+                    ? "משתמשים"
+                    : f === "admin"
+                      ? "מנהלים"
+                      : f === "minor"
+                        ? "קטינים"
+                        : "מוקפאים"}
+              </button>
+            )
+          )}
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 text-right">{filtered.length} מתוך {users.length} משתמשים</div>
+      <div className="text-right text-gray-500 text-xs">
+        {filtered.length} מתוך {users.length} משתמשים
+      </div>
 
       {/* Users Table */}
-      <div className="bg-[#0e0e1b] rounded-2xl border border-white/5 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
         <table className="w-full text-right text-sm">
           <thead className="bg-white/5 text-gray-400">
             <tr>
@@ -239,52 +315,78 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           </thead>
           <tbody className="divide-y divide-white/5 text-gray-300">
             {filtered.map((user) => (
-              <tr key={user.id} className={`hover:bg-white/5 transition-colors ${user.is_banned ? "bg-red-500/5" : ""}`}>
+              <tr
+                className={`transition-colors hover:bg-white/5 ${user.is_banned ? "bg-red-500/5" : ""}`}
+                key={user.id}
+              >
                 <td className="p-4 font-bold text-white">
                   {user.username}
-                  {user.is_banned && <span className="mr-2 text-xs text-red-500 bg-red-950 px-2 py-0.5 rounded-full">מוקפא</span>}
-                  {user.is_minor && <span className="mr-2 text-xs text-amber-500 bg-amber-950 px-2 py-0.5 rounded-full">קטין</span>}
+                  {user.is_banned && (
+                    <span className="mr-2 rounded-full bg-red-950 px-2 py-0.5 text-red-500 text-xs">
+                      מוקפא
+                    </span>
+                  )}
+                  {user.is_minor && (
+                    <span className="mr-2 rounded-full bg-amber-950 px-2 py-0.5 text-amber-500 text-xs">
+                      קטין
+                    </span>
+                  )}
                 </td>
                 <td className="p-4">{user.full_name}</td>
                 <td className="p-4">
                   <select
-                    value={user.role || "user"}
-                    onChange={(e) => handleRoleChange(user, e.target.value)}
-                    disabled={user.id === currentUser}
-                    className={`px-2 py-1 rounded text-xs font-bold bg-transparent border cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
-                      user.role === "admin" ? "border-red-500/30 text-red-400" : "border-blue-500/30 text-blue-400"
+                    className={`cursor-pointer rounded border bg-transparent px-2 py-1 font-bold text-xs disabled:cursor-not-allowed disabled:opacity-50 ${
+                      user.role === "admin"
+                        ? "border-red-500/30 text-red-400"
+                        : "border-blue-500/30 text-blue-400"
                     }`}
+                    disabled={user.id === currentUser}
+                    onChange={(e) => handleRoleChange(user, e.target.value)}
+                    value={user.role || "user"}
                   >
-                    <option value="user" className="bg-[#0e0e1b]">user</option>
-                    <option value="admin" className="bg-[#0e0e1b]">admin</option>
+                    <option className="bg-[#0e0e1b]" value="user">
+                      user
+                    </option>
+                    <option className="bg-[#0e0e1b]" value="admin">
+                      admin
+                    </option>
                   </select>
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full inline-block ${user.is_online ? "bg-green-500" : "bg-gray-500"}`} />
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${user.is_online ? "bg-green-500" : "bg-gray-500"}`}
+                    />
                     {user.is_online ? "מחובר" : "מנותק"}
                   </div>
                 </td>
-                <td className="p-4 text-sm text-gray-400 max-w-[150px] truncate" title={user.ban_reason || undefined}>
+                <td
+                  className="max-w-[150px] truncate p-4 text-gray-400 text-sm"
+                  title={user.ban_reason || undefined}
+                >
                   {user.ban_reason || "-"}
                 </td>
                 <td className="p-4">
                   {user.id !== currentUser && user.role !== "admin" && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleFreeze(user)}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`rounded-lg p-2 transition-colors ${
                           user.is_banned
                             ? "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20"
                             : "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
                         }`}
+                        onClick={() => handleFreeze(user)}
                         title={user.is_banned ? "שחרר הקפאה" : "הקפא משתמש"}
                       >
-                        {user.is_banned ? <Lock size={18} /> : <Unlock size={18} />}
+                        {user.is_banned ? (
+                          <Lock size={18} />
+                        ) : (
+                          <Unlock size={18} />
+                        )}
                       </button>
                       <button
+                        className="rounded-lg bg-red-500/10 p-2 text-red-400 transition-colors hover:bg-red-500/20"
                         onClick={() => handleDelete(user)}
-                        className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                         title="מחק משתמש"
                       >
                         <Trash2 size={18} />
@@ -297,8 +399,8 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div className="p-12 text-center text-gray-500 flex flex-col items-center gap-3">
-            <UserCheck size={32} className="opacity-50" />
+          <div className="flex flex-col items-center gap-3 p-12 text-center text-gray-500">
+            <UserCheck className="opacity-50" size={32} />
             <p>{searchQuery ? "לא נמצאו משתמשים" : "אין משתמשים להצגה"}</p>
           </div>
         )}

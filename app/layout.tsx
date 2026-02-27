@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
-import PWAInstallPrompt from "./components/PWAInstallPrompt";
-import OfflineIndicator from "./components/OfflineIndicator";
+import { AuthProvider } from "@/context/AuthContext";
 import FloatingGamerBot from "./components/FloatingGamerBot";
+import KeyboardHandler from "./components/KeyboardHandler";
+import OfflineIndicator from "./components/OfflineIndicator";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import SafetyBanner from "./components/SafetyBanner";
 import SplashScreen from "./components/SplashScreen";
-import KeyboardHandler from "./components/KeyboardHandler";
-import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -17,10 +17,19 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   title: "GamerZone | Swap Gamertags",
-  description: "הפלטפורמה האולטימטיבית לגיימרים בישראל - החלף gamertags, מצא חברים חדשים לסקוואד",
+  description:
+    "הפלטפורמה האולטימטיבית לגיימרים בישראל - החלף gamertags, מצא חברים חדשים לסקוואד",
   applicationName: "GamerZone",
   authors: [{ name: "GamerZone Team" }],
-  keywords: ["gaming", "gamers", "israel", "gamertag", "swap", "chat", "gaming community"],
+  keywords: [
+    "gaming",
+    "gamers",
+    "israel",
+    "gamertag",
+    "swap",
+    "chat",
+    "gaming community",
+  ],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -57,21 +66,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" suppressHydrationWarning>
+    <html dir="rtl" lang="he" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.json" />
+        <link href="/manifest.json" rel="manifest" />
         {/* Apple Touch Icons - multiple sizes for different devices */}
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
-        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.svg" />
-        <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.svg" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="GamerZone" />
+        <link href="/icons/icon-192x192.svg" rel="apple-touch-icon" />
+        <link
+          href="/icons/icon-152x152.svg"
+          rel="apple-touch-icon"
+          sizes="152x152"
+        />
+        <link
+          href="/icons/icon-144x144.svg"
+          rel="apple-touch-icon"
+          sizes="144x144"
+        />
+        <link
+          href="/icons/icon-128x128.svg"
+          rel="apple-touch-icon"
+          sizes="128x128"
+        />
+        <meta content="yes" name="mobile-web-app-capable" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta
+          content="black-translucent"
+          name="apple-mobile-web-app-status-bar-style"
+        />
+        <meta content="GamerZone" name="apple-mobile-web-app-title" />
       </head>
       <body
-        className={`${rubik.variable} antialiased font-rubik bg-background text-foreground`}
+        className={`${rubik.variable} bg-background font-rubik text-foreground antialiased`}
         suppressHydrationWarning
       >
         <AuthProvider>

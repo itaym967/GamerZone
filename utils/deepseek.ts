@@ -1,10 +1,9 @@
 interface DeepSeekMessage {
-  role: 'system' | 'user' | 'assistant';
   content: string;
+  role: "system" | "user" | "assistant";
 }
 
 interface DeepSeekResponse {
-  id: string;
   choices: {
     message: {
       content: string;
@@ -12,6 +11,7 @@ interface DeepSeekResponse {
     };
     finish_reason: string;
   }[];
+  id: string;
   usage: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -19,23 +19,23 @@ interface DeepSeekResponse {
   };
 }
 
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
 
 export async function callDeepSeek(
   messages: DeepSeekMessage[],
   apiKey: string,
-  temperature: number = 0.7,
-  maxTokens: number = 1000
+  temperature = 0.7,
+  maxTokens = 1000
 ): Promise<string> {
   try {
     const response = await fetch(DEEPSEEK_API_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: "deepseek-chat",
         messages,
         temperature,
         max_tokens: maxTokens,
@@ -45,23 +45,28 @@ export async function callDeepSeek(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`DeepSeek API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      throw new Error(
+        `DeepSeek API error: ${response.status} - ${JSON.stringify(errorData)}`
+      );
     }
 
     const data: DeepSeekResponse = await response.json();
-    
+
     if (!data.choices || data.choices.length === 0) {
-      throw new Error('No response from DeepSeek API');
+      throw new Error("No response from DeepSeek API");
     }
 
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('DeepSeek API call failed:', error);
+    console.error("DeepSeek API call failed:", error);
     throw error;
   }
 }
 
-export async function chatWithGamerBot(userMessage: string, apiKey: string): Promise<string> {
+export async function chatWithGamerBot(
+  userMessage: string,
+  apiKey: string
+): Promise<string> {
   const systemPrompt = `אתה GamerBot, בוט חכם ומועיל שעוזר לגיימרים בפלטפורמת GamerZone.
 אתה מומחה במשחקי וידאו, אסטרטגיות, טיפים וכל מה שקשור לגיימינג.
 תמיד תענה בעברית תקינה וברורה.
@@ -70,14 +75,17 @@ export async function chatWithGamerBot(userMessage: string, apiKey: string): Pro
 השתמש באמוג'י מדי פעם כדי להפוך את התשובות לידידותיות יותר 🎮`;
 
   const messages: DeepSeekMessage[] = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: userMessage },
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userMessage },
   ];
 
   return await callDeepSeek(messages, apiKey, 0.8, 500);
 }
 
-export async function enhanceBio(currentBio: string, apiKey: string): Promise<string> {
+export async function enhanceBio(
+  currentBio: string,
+  apiKey: string
+): Promise<string> {
   const systemPrompt = `אתה עוזר מקצועי שמשפר תיאורים של שחקנים בפלטפורמת גיימינג.
 המשימה שלך היא לקחת ביו קיים ולהפוך אותו למעניין, מושך ומקצועי יותר.
 שמור על המידע המקורי אבל הוסף סגנון, אנרגיה ואישיות.
@@ -86,8 +94,8 @@ export async function enhanceBio(currentBio: string, apiKey: string): Promise<st
 השתמש בשפה של גיימרים אבל שמור על מקצועיות.`;
 
   const messages: DeepSeekMessage[] = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: `שפר את הביו הבא:\n\n${currentBio}` },
+    { role: "system", content: systemPrompt },
+    { role: "user", content: `שפר את הביו הבא:\n\n${currentBio}` },
   ];
 
   return await callDeepSeek(messages, apiKey, 0.7, 300);
@@ -108,23 +116,23 @@ export async function analyzeToxicity(
   const userMessage = `נתח את רשימת המילים החסומות הבאה ותן המלצות:
 
 מילים חסומות כרגע:
-${blockedWords.join(', ')}
+${blockedWords.join(", ")}
 
 ספק:
 1. ניתוח קצר של הרשימה הנוכחית
 2. רשימה של 5-10 מילים נוספות שכדאי לחסום (כולל וריאציות וסלנג)`;
 
   const messages: DeepSeekMessage[] = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: userMessage },
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userMessage },
   ];
 
   const response = await callDeepSeek(messages, apiKey, 0.6, 800);
 
-  const lines = response.split('\n').filter(line => line.trim());
+  const lines = response.split("\n").filter((line) => line.trim());
   const suggestions: string[] = [];
-  
-  lines.forEach(line => {
+
+  lines.forEach((line) => {
     const match = line.match(/[-•*]\s*(.+?)(?:\s*[-–]\s*.+)?$/);
     if (match) {
       const word = match[1].trim().toLowerCase();

@@ -1,132 +1,128 @@
 {
-    "name": "GamerZone - גיימר זון",
-    "short_name": "GamerZone",
-    "id": "/",
-    "description": "הפלטפורמה האולטימטיבית לגיימרים בישראל - החלף gamertags, מצא חברים חדשים לסקוואד",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#050510",
-    "theme_color": "#00ff9d",
-    "orientation": "portrait-primary",
-    "dir": "rtl",
-    "lang": "he",
-    "icons": [
-        {
-            "src": "/icons/icon-72x72.svg",
-            "sizes": "72x72",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-96x96.svg",
-            "sizes": "96x96",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-128x128.svg",
-            "sizes": "128x128",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-144x144.svg",
-            "sizes": "144x144",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-152x152.svg",
-            "sizes": "152x152",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-192x192.svg",
-            "sizes": "192x192",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-384x384.svg",
-            "sizes": "384x384",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icons/icon-512x512.svg",
-            "sizes": "512x512",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        }
-    ],
-    "screenshots": [
-        {
-            "src": "/screenshots/dashboard.png",
-            "sizes": "1080x1920",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "Dashboard - מסך הבית"
-        },
-        {
-            "src": "/screenshots/chat.png",
-            "sizes": "1080x1920",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "Chat - צ'אט"
-        }
-    ],
-    "categories": [
-        "social",
-        "games",
-        "entertainment"
-    ],
-    "shortcuts": [
-        {
-            "name": "צ'אט",
-            "short_name": "Chat",
-            "description": "פתח את הצ'אט",
-            "url": "/chat",
-            "icons": [
-                {
-                    "src": "/icons/icon-96x96.svg",
-                    "sizes": "96x96"
-                }
-            ]
-        },
-        {
-            "name": "חקור",
-            "short_name": "Explore",
-            "description": "מצא שחקנים חדשים",
-            "url": "/explore",
-            "icons": [
-                {
-                    "src": "/icons/icon-96x96.svg",
-                    "sizes": "96x96"
-                }
-            ]
-        },
-        {
-            "name": "פרופיל",
-            "short_name": "Profile",
-            "description": "הפרופיל שלי",
-            "url": "/profile",
-            "icons": [
-                {
-                    "src": "/icons/icon-96x96.svg",
-                    "sizes": "96x96"
-                }
-            ]
-        }
-    ],
-    "share_target": {
-        "action": "/share",
-        "method": "POST",
-        "enctype": "multipart/form-data",
-        "params": {
-            "title": "title",
-            "text": "text",
-            "url": "url"
-        }
+  "name": "GamerZone - גיימר זון",
+  "short_name": "GamerZone",
+  "id": "/",
+  "description": "הפלטפורמה האולטימטיבית לגיימרים בישראל - החלף gamertags, מצא חברים חדשים לסקוואד",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050510",
+  "theme_color": "#00ff9d",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.svg",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.svg",
+      "sizes": "384x384",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard - מסך הבית"
+    },
+    {
+      "src": "/screenshots/chat.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Chat - צ'אט"
+    }
+  ],
+  "categories": ["social", "games", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "צ'אט",
+      "short_name": "Chat",
+      "description": "פתח את הצ'אט",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "חקור",
+      "short_name": "Explore",
+      "description": "מצא שחקנים חדשים",
+      "url": "/explore",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "פרופיל",
+      "short_name": "Profile",
+      "description": "הפרופיל שלי",
+      "url": "/profile",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

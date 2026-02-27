@@ -1,124 +1,136 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Lock, Check } from "lucide-react";
-import Logo from "../components/Logo";
+import { Check, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import Logo from "../components/Logo";
 
 export default function UpdatePasswordPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const supabase = createClient();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const supabase = createClient();
 
-    const handleUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        if (password !== confirmPassword) {
-            toast.error("הסיסמאות אינן תואמות");
-            return;
-        }
+    if (password !== confirmPassword) {
+      toast.error("הסיסמאות אינן תואמות");
+      return;
+    }
 
-        if (password.length < 6) {
-            toast.error("הסיסמה חייבת להכיל לפחות 6 תווים");
-            return;
-        }
+    if (password.length < 6) {
+      toast.error("הסיסמה חייבת להכיל לפחות 6 תווים");
+      return;
+    }
 
-        setIsLoading(true);
+    setIsLoading(true);
 
-        try {
-            const { error } = await supabase.auth.updateUser({
-                password: password
-            });
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
 
-            if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-            toast.success("הסיסמה עודכנה בהצלחה!");
-            router.push("/");
-            router.refresh();
-        } catch (error: any) {
-            toast.error("שגיאה בעדכון הסיסמה", {
-                description: error.message
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      toast.success("הסיסמה עודכנה בהצלחה!");
+      router.push("/");
+      router.refresh();
+    } catch (error: any) {
+      toast.error("שגיאה בעדכון הסיסמה", {
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#050510]">
-            {/* Animated Background */}
-            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 pointer-events-none"></div>
-            <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-secondary/20 rounded-full blur-[120px] animate-pulse delay-75" />
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050510] p-4">
+      {/* Animated Background */}
+      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="absolute top-[-20%] right-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-primary/20 blur-[120px]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-secondary/20 blur-[120px] delay-75" />
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="glass-panel w-full max-w-md p-8 rounded-3xl border border-white/10 relative z-10"
-            >
-                <div className="text-center mb-8">
-                    <div className="flex justify-center mb-6">
-                        <Logo size="lg" className="justify-center" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">עדכון סיסמה</h1>
-                    <p className="text-gray-400">בחר סיסמה חדשה לחשבון שלך</p>
-                </div>
-
-                <form onSubmit={handleUpdate} className="space-y-6">
-                    <div className="space-y-4">
-                        <div className="space-y-1 text-right">
-                            <label className="text-sm font-medium text-gray-400">סיסמה חדשה</label>
-                            <div className="relative">
-                                <input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pl-10 text-white outline-none focus:border-primary/50 transition-colors placeholder:text-gray-600 text-right"
-                                    required
-                                />
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1 text-right">
-                            <label className="text-sm font-medium text-gray-400">אימות סיסמה</label>
-                            <div className="relative">
-                                <input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pl-10 text-white outline-none focus:border-primary/50 transition-colors placeholder:text-gray-600 text-right"
-                                    required
-                                />
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        {isLoading ? (
-                            <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                        ) : (
-                            <>
-                                <span>עדכן סיסמה</span>
-                                <Check size={18} />
-                            </>
-                        )}
-                    </button>
-                </form>
-            </motion.div>
+      <motion.div
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-panel relative z-10 w-full max-w-md rounded-3xl border border-white/10 p-8"
+        initial={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="mb-8 text-center">
+          <div className="mb-6 flex justify-center">
+            <Logo className="justify-center" size="lg" />
+          </div>
+          <h1 className="mb-2 font-bold text-2xl text-white">עדכון סיסמה</h1>
+          <p className="text-gray-400">בחר סיסמה חדשה לחשבון שלך</p>
         </div>
-    );
+
+        <form className="space-y-6" onSubmit={handleUpdate}>
+          <div className="space-y-4">
+            <div className="space-y-1 text-right">
+              <label className="font-medium text-gray-400 text-sm">
+                סיסמה חדשה
+              </label>
+              <div className="relative">
+                <input
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-none transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  type="password"
+                  value={password}
+                />
+                <Lock
+                  className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
+                  size={18}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1 text-right">
+              <label className="font-medium text-gray-400 text-sm">
+                אימות סיסמה
+              </label>
+              <div className="relative">
+                <input
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-none transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  type="password"
+                  value={confirmPassword}
+                />
+                <Lock
+                  className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
+                  size={18}
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 font-bold text-black transition-all hover:bg-gray-200"
+            disabled={isLoading}
+            type="submit"
+          >
+            {isLoading ? (
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+            ) : (
+              <>
+                <span>עדכן סיסמה</span>
+                <Check size={18} />
+              </>
+            )}
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  );
 }

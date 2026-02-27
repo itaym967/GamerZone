@@ -7,6 +7,6 @@ import { useKeyboardVisibility } from "@/hooks/useKeyboardVisibility";
  * Adds/removes 'keyboard-open' class on body for CSS targeting.
  */
 export default function KeyboardHandler() {
-    useKeyboardVisibility();
-    return null;
+  useKeyboardVisibility();
+  return null;
 }

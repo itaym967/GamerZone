@@ -11,7 +11,9 @@ body {
 }
 
 /* Improve touch responsiveness on mobile */
-button, a, [role="button"] {
+button,
+a,
+[role="button"] {
   touch-action: manipulation;
 }
 
@@ -63,10 +65,12 @@ html {
 
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }
 
@@ -80,7 +84,8 @@ html {
   }
 
   /* Prevent text selection on nav elements (app-like feel) */
-  nav, header {
+  nav,
+  header {
     -webkit-user-select: none;
     user-select: none;
   }
@@ -90,14 +95,16 @@ html {
 
 /* Fix iOS bounce scroll - only in standalone PWA mode */
 @media (display-mode: standalone) {
-  html, body {
+  html,
+  body {
     position: fixed;
     width: 100%;
     height: 100%;
     overflow: hidden;
   }
 
-  #__next, [data-nextjs-scroll-focus-boundary] {
+  #__next,
+  [data-nextjs-scroll-focus-boundary] {
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
@@ -107,7 +114,9 @@ html {
 
 /* Fix iOS input zoom (font-size < 16px causes zoom) */
 @media screen and (max-width: 768px) {
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
 }
@@ -116,24 +125,30 @@ html {
 
 /* Larger touch targets for mobile */
 @media (pointer: coarse) {
-  button, a, [role="button"] {
-    min-height: 44px;
+  button,
+  a,
+  [role="button"] {
     min-width: 44px;
+    min-height: 44px;
   }
 
   /* Compact exceptions for inline/icon buttons */
   .touch-compact {
-    min-height: 36px;
     min-width: 36px;
+    min-height: 36px;
   }
 }
 
 /* Active state feedback for touch devices */
 @media (hover: none) {
-  button:active, a:active, [role="button"]:active {
+  button:active,
+  a:active,
+  [role="button"]:active {
     opacity: 0.7;
     transform: scale(0.97);
-    transition: transform 0.1s ease, opacity 0.1s ease;
+    transition:
+      transform 0.1s ease,
+      opacity 0.1s ease;
   }
 }
 
@@ -156,8 +171,8 @@ html {
   position: fixed;
   top: 0;
   left: 50%;
-  transform: translateX(-50%) translateY(-100%);
   z-index: 200;
+  transform: translateX(-50%) translateY(-100%);
   transition: transform 0.3s ease;
 }
 
@@ -174,31 +189,31 @@ html {
 .bottom-sheet-overlay {
   position: fixed;
   inset: 0;
+  z-index: 90;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  z-index: 90;
 }
 
 .bottom-sheet {
   position: fixed;
+  right: 0;
   bottom: 0;
   left: 0;
-  right: 0;
+  z-index: 91;
+  max-height: 85vh;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  overflow-y: auto;
   background: #0e0e1b;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  z-index: 91;
-  max-height: 85vh;
-  overflow-y: auto;
-  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 .bottom-sheet-handle {
   width: 36px;
   height: 4px;
+  margin: 12px auto;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
-  margin: 12px auto;
 }
 
 /* ===== Splash Screen ===== */
@@ -207,23 +222,32 @@ html {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: linear-gradient(135deg, #050510 0%, #0a0a1e 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  background: linear-gradient(135deg, #050510 0%, #0a0a1e 100%);
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s ease;
 }
 
 .splash-screen.hidden {
-  opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  opacity: 0;
 }
 
 @keyframes splash-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
 
 .splash-icon {

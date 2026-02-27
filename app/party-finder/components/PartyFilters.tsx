@@ -1,88 +1,88 @@
-'use client'
+"use client";
 
-import { Filter } from 'lucide-react'
+import { Filter } from "lucide-react";
 
 interface PartyFiltersProps {
-    selectedGame: string | null
-    selectedSkillLevel: string | null
-    selectedStatus: string | null
-    onGameChange: (game: string | null) => void
-    onSkillLevelChange: (level: string | null) => void
-    onStatusChange: (status: string | null) => void
-    games: string[]
+  games: string[];
+  onGameChange: (game: string | null) => void;
+  onSkillLevelChange: (level: string | null) => void;
+  onStatusChange: (status: string | null) => void;
+  selectedGame: string | null;
+  selectedSkillLevel: string | null;
+  selectedStatus: string | null;
 }
 
-const SKILL_LEVELS = ['מתחיל', 'ממוצע', 'מתקדם', 'מומחה']
+const SKILL_LEVELS = ["מתחיל", "ממוצע", "מתקדם", "מומחה"];
 const STATUS_OPTIONS = [
-    { value: 'open', label: 'פתוחות' },
-    { value: 'full', label: 'מלאות' }
-]
+  { value: "open", label: "פתוחות" },
+  { value: "full", label: "מלאות" },
+];
 
 export default function PartyFilters({
-    selectedGame,
-    selectedSkillLevel,
-    selectedStatus,
-    onGameChange,
-    onSkillLevelChange,
-    onStatusChange,
-    games
+  selectedGame,
+  selectedSkillLevel,
+  selectedStatus,
+  onGameChange,
+  onSkillLevelChange,
+  onStatusChange,
+  games,
 }: PartyFiltersProps) {
-    return (
-        <div className="space-y-3">
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-                <button
-                    onClick={() => onGameChange(null)}
-                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
-                        !selectedGame
-                            ? 'bg-white text-black border-white'
-                            : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'
-                    }`}
-                >
-                    כל המשחקים
-                </button>
-                {games.map(game => (
-                    <button
-                        key={game}
-                        onClick={() => onGameChange(game)}
-                        className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
-                            selectedGame === game
-                                ? 'bg-white text-black border-white'
-                                : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'
-                        }`}
-                    >
-                        {game}
-                    </button>
-                ))}
-            </div>
+  return (
+    <div className="space-y-3">
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+        <button
+          className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-sm transition-all ${
+            selectedGame
+              ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+              : "border-white bg-white text-black"
+          }`}
+          onClick={() => onGameChange(null)}
+        >
+          כל המשחקים
+        </button>
+        {games.map((game) => (
+          <button
+            className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-sm transition-all ${
+              selectedGame === game
+                ? "border-white bg-white text-black"
+                : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+            }`}
+            key={game}
+            onClick={() => onGameChange(game)}
+          >
+            {game}
+          </button>
+        ))}
+      </div>
 
-            <div className="flex gap-2 items-center">
-                <Filter size={16} className="text-white/40" />
-                <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1">
-                    <button
-                        onClick={() => onSkillLevelChange(null)}
-                        className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-all border ${
-                            !selectedSkillLevel
-                                ? 'bg-purple-500/20 text-purple-400 border-purple-500/20'
-                                : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
-                        }`}
-                    >
-                        כל הרמות
-                    </button>
-                    {SKILL_LEVELS.map(level => (
-                        <button
-                            key={level}
-                            onClick={() => onSkillLevelChange(level)}
-                            className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-all border ${
-                                selectedSkillLevel === level
-                                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/20'
-                                    : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
-                            }`}
-                        >
-                            {level}
-                        </button>
-                    ))}
-                </div>
-            </div>
+      <div className="flex items-center gap-2">
+        <Filter className="text-white/40" size={16} />
+        <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
+          <button
+            className={`whitespace-nowrap rounded-full border px-3 py-1 font-medium text-xs transition-all ${
+              selectedSkillLevel
+                ? "border-white/10 bg-white/5 text-white/40 hover:bg-white/10"
+                : "border-purple-500/20 bg-purple-500/20 text-purple-400"
+            }`}
+            onClick={() => onSkillLevelChange(null)}
+          >
+            כל הרמות
+          </button>
+          {SKILL_LEVELS.map((level) => (
+            <button
+              className={`whitespace-nowrap rounded-full border px-3 py-1 font-medium text-xs transition-all ${
+                selectedSkillLevel === level
+                  ? "border-purple-500/20 bg-purple-500/20 text-purple-400"
+                  : "border-white/10 bg-white/5 text-white/40 hover:bg-white/10"
+              }`}
+              key={level}
+              onClick={() => onSkillLevelChange(level)}
+            >
+              {level}
+            </button>
+          ))}
         </div>
-    )
+      </div>
+    </div>
+  );
 }

@@ -1,34 +1,43 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/utils/supabase/types'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Plus, Search, Filter } from 'lucide-react'
-import LFGCard from './components/LFGCard'
-import { useAuth } from '@/context/AuthContext'
-import Navigation from '../components/Navigation'
+import { Plus, Search } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/utils/supabase/client";
+import type { Database } from "@/utils/supabase/types";
+import Navigation from "../components/Navigation";
+import LFGCard from "./components/LFGCard";
 
-type PostWithProfile = Database['public']['Tables']['lfg_posts']['Row'] & {
-    profiles: Database['public']['Tables']['profiles']['Row'] | null
-}
+type PostWithProfile = Database["public"]["Tables"]["lfg_posts"]["Row"] & {
+  profiles: Database["public"]["Tables"]["profiles"]["Row"] | null;
+};
 
-const GAMES = ['Fortnite', 'Call of Duty', 'FIFA', 'Valorant', 'Minecraft', 'Roblox', 'Apex Legends', 'Overwatch 2']
+const GAMES = [
+  "Fortnite",
+  "Call of Duty",
+  "FIFA",
+  "Valorant",
+  "Minecraft",
+  "Roblox",
+  "Apex Legends",
+  "Overwatch 2",
+];
 
 export default function LFGPage() {
-    const [posts, setPosts] = useState<PostWithProfile[]>([])
-    const [loading, setLoading] = useState(true)
-    const [selectedGame, setSelectedGame] = useState<string | null>(null)
-    const { user } = useAuth()
-    const supabase = createClient()
-    const router = useRouter()
+  const [posts, setPosts] = useState<PostWithProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
+  const { user } = useAuth();
+  const supabase = createClient();
+  const router = useRouter();
 
-    const fetchPosts = async () => {
-        setLoading(true)
-        let query = supabase
-            .from('lfg_posts')
-            .select(`
+  const fetchPosts = async () => {
+    setLoading(true);
+    let query = supabase
+      .from("lfg_posts")
+      .select(`
         *,
         profiles (
           id,
@@ -37,47 +46,47 @@ export default function LFGPage() {
           is_banned
         )
       `)
-            .gt('expires_at', new Date().toISOString())
-            .order('created_at', { ascending: false })
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
 
-        if (selectedGame) {
-            query = query.eq('game', selectedGame)
-        }
-
-        const { data, error } = await query
-
-        if (error) {
-            console.error('Error fetching posts:', error)
-        } else {
-            setPosts(data as PostWithProfile[])
-        }
-        setLoading(false)
+    if (selectedGame) {
+      query = query.eq("game", selectedGame);
     }
 
-    useEffect(() => {
-        fetchPosts()
+    const { data, error } = await query;
 
-        // Only subscribe if page is visible
-        if (!document.hidden) {
-            // Real-time Subscription with game filter
-            const channel = supabase
-                .channel('lfg_realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'lfg_posts',
-                        // Filter by selected game to reduce realtime load
-                        filter: selectedGame ? `game=eq.${selectedGame}` : undefined
-                    },
-                    async (payload) => {
-                        // Double-check game filter (defense in depth)
-                        if (!selectedGame || (payload.new as any).game === selectedGame) {
-                            // Fetch the full post with profile to prepend
-                            const { data, error } = await supabase
-                                .from('lfg_posts')
-                                .select(`
+    if (error) {
+      console.error("Error fetching posts:", error);
+    } else {
+      setPosts(data as PostWithProfile[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPosts();
+
+    // Only subscribe if page is visible
+    if (!document.hidden) {
+      // Real-time Subscription with game filter
+      const channel = supabase
+        .channel("lfg_realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "lfg_posts",
+            // Filter by selected game to reduce realtime load
+            filter: selectedGame ? `game=eq.${selectedGame}` : undefined,
+          },
+          async (payload) => {
+            // Double-check game filter (defense in depth)
+            if (!selectedGame || (payload.new as any).game === selectedGame) {
+              // Fetch the full post with profile to prepend
+              const { data, error } = await supabase
+                .from("lfg_posts")
+                .select(`
                             *,
                             profiles (
                             id,
@@ -86,106 +95,112 @@ export default function LFGPage() {
                             is_banned
                             )
                         `)
-                                .eq('id', (payload.new as any).id)
-                                .single()
+                .eq("id", (payload.new as any).id)
+                .single();
 
-                            if (data && !error) {
-                                setPosts((prev) => [data as PostWithProfile, ...prev])
-                            }
-                        }
-                    }
-                )
-                .subscribe()
-
-            return () => {
-                supabase.removeChannel(channel)
+              if (data && !error) {
+                setPosts((prev) => [data as PostWithProfile, ...prev]);
+              }
             }
-        }
-    }, [selectedGame])
+          }
+        )
+        .subscribe();
 
-    // Pause subscription when tab is hidden to reduce database load
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                // Remove all channels when tab is hidden
-                supabase.removeAllChannels()
-            } else {
-                // Re-fetch when tab becomes visible
-                fetchPosts()
-            }
-        }
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [selectedGame]);
 
-        document.addEventListener('visibilitychange', handleVisibilityChange)
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange)
-        }
-    }, [selectedGame])
+  // Pause subscription when tab is hidden to reduce database load
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Remove all channels when tab is hidden
+        supabase.removeAllChannels();
+      } else {
+        // Re-fetch when tab becomes visible
+        fetchPosts();
+      }
+    };
 
-    return (
-        <div className="min-h-screen pb-24 md:pb-0 md:pr-64">
-            <Navigation />
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [selectedGame]);
 
-            {/* Header */}
-            <div className="sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 pt-4 pb-4 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-2xl font-bold text-white">לוח חיפוש שחקנים</h1>
-                        <Link href="/lfg/create">
-                            <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg shadow-blue-600/20 active:scale-95">
-                                <Plus size={18} />
-                                <span className="hidden sm:inline">פרסם מודעה</span>
-                                <span className="sm:hidden">פרסם</span>
-                            </button>
-                        </Link>
-                    </div>
+  return (
+    <div className="min-h-screen pb-24 md:pr-64 md:pb-0">
+      <Navigation />
 
-                    {/* Game Filter */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-                        <button
-                            onClick={() => setSelectedGame(null)}
-                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${!selectedGame ? 'bg-white text-black border-white' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'}`}
-                        >
-                            כל המשחקים
-                        </button>
-                        {GAMES.map(game => (
-                            <button
-                                key={game}
-                                onClick={() => setSelectedGame(game)}
-                                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${selectedGame === game ? 'bg-white text-black border-white' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'}`}
-                            >
-                                {game}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
+      {/* Header */}
+      <div className="sticky top-0 z-20 border-white/5 border-b bg-[#0a0a0a]/80 px-4 pt-4 pb-4 backdrop-blur-xl">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="font-bold text-2xl text-white">לוח חיפוש שחקנים</h1>
+            <Link href="/lfg/create">
+              <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95">
+                <Plus size={18} />
+                <span className="hidden sm:inline">פרסם מודעה</span>
+                <span className="sm:hidden">פרסם</span>
+              </button>
+            </Link>
+          </div>
 
-            {/* Feed */}
-            <div className="max-w-4xl mx-auto px-4 pt-6">
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="h-40 bg-white/5 rounded-2xl"></div>
-                        ))}
-                    </div>
-                ) : posts.length === 0 ? (
-                    <div className="text-center py-20">
-                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="text-white/40" size={32} />
-                        </div>
-                        <h3 className="text-white font-semibold text-lg">אין מודעות פעילות</h3>
-                        <p className="text-white/40 text-sm mt-1 max-w-xs mx-auto">
-                            היה הראשון לחפש קבוצה בקטגוריה זו!
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {posts.map(post => (
-                            <LFGCard key={post.id} post={post} currentUserId={user?.id || null} />
-                        ))}
-                    </div>
-                )}
-            </div>
+          {/* Game Filter */}
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+            <button
+              className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-sm transition-all ${selectedGame ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10" : "border-white bg-white text-black"}`}
+              onClick={() => setSelectedGame(null)}
+            >
+              כל המשחקים
+            </button>
+            {GAMES.map((game) => (
+              <button
+                className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-sm transition-all ${selectedGame === game ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
+                key={game}
+                onClick={() => setSelectedGame(game)}
+              >
+                {game}
+              </button>
+            ))}
+          </div>
         </div>
-    )
+      </div>
+
+      {/* Feed */}
+      <div className="mx-auto max-w-4xl px-4 pt-6">
+        {loading ? (
+          <div className="grid animate-pulse grid-cols-1 gap-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div className="h-40 rounded-2xl bg-white/5" key={i} />
+            ))}
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+              <Search className="text-white/40" size={32} />
+            </div>
+            <h3 className="font-semibold text-lg text-white">
+              אין מודעות פעילות
+            </h3>
+            <p className="mx-auto mt-1 max-w-xs text-sm text-white/40">
+              היה הראשון לחפש קבוצה בקטגוריה זו!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {posts.map((post) => (
+              <LFGCard
+                currentUserId={user?.id || null}
+                key={post.id}
+                post={post}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

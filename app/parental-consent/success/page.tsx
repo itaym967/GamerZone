@@ -1,84 +1,85 @@
 "use client";
 
+import { CheckCircle, ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { CheckCircle, ShieldCheck } from "lucide-react";
 import Logo from "../../components/Logo";
 
 function SuccessContent() {
-    const searchParams = useSearchParams();
-    const alreadyGranted = searchParams.get("already") === "true";
+  const searchParams = useSearchParams();
+  const alreadyGranted = searchParams.get("already") === "true";
 
-    return (
-        <div className="min-h-screen bg-[#050510] flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px]" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050510] p-4">
+      <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-green-500/10 blur-[120px]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
 
-            <div className="w-full max-w-md text-center relative z-10">
-                <Logo size="lg" className="justify-center mb-8" />
+      <div className="relative z-10 w-full max-w-md text-center">
+        <Logo className="mb-8 justify-center" size="lg" />
 
-                <div className="bg-[#0e0e1b] border border-white/10 rounded-3xl p-8 shadow-2xl">
-                    <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        {alreadyGranted ? (
-                            <ShieldCheck size={40} className="text-green-500" />
-                        ) : (
-                            <CheckCircle size={40} className="text-green-500" />
-                        )}
-                    </div>
+        <div className="rounded-3xl border border-white/10 bg-[#0e0e1b] p-8 shadow-2xl">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
+            {alreadyGranted ? (
+              <ShieldCheck className="text-green-500" size={40} />
+            ) : (
+              <CheckCircle className="text-green-500" size={40} />
+            )}
+          </div>
 
-                    <h1 className="text-2xl font-bold text-white mb-3">
-                        {alreadyGranted ? "ההסכמה כבר אושרה" : "ההסכמה אושרה בהצלחה!"}
-                    </h1>
+          <h1 className="mb-3 font-bold text-2xl text-white">
+            {alreadyGranted ? "ההסכמה כבר אושרה" : "ההסכמה אושרה בהצלחה!"}
+          </h1>
 
-                    <p className="text-gray-400 mb-6">
-                        {alreadyGranted
-                            ? "כבר אישרת את החשבון של ילדך. החשבון פעיל עם הגנות בטיחות."
-                            : "תודה שאישרת את החשבון של ילדך ב-GamerZone. החשבון כעת פעיל עם הגנות בטיחות מוגברות."
-                        }
-                    </p>
+          <p className="mb-6 text-gray-400">
+            {alreadyGranted
+              ? "כבר אישרת את החשבון של ילדך. החשבון פעיל עם הגנות בטיחות."
+              : "תודה שאישרת את החשבון של ילדך ב-GamerZone. החשבון כעת פעיל עם הגנות בטיחות מוגברות."}
+          </p>
 
-                    <div className="bg-white/5 rounded-xl p-4 text-right space-y-3 mb-6">
-                        <h3 className="text-white font-bold text-sm flex items-center gap-2 justify-end">
-                            <span>הגנות פעילות</span>
-                            <ShieldCheck size={16} className="text-green-500" />
-                        </h3>
-                        <ul className="text-sm text-gray-400 space-y-2">
-                            <li className="flex items-center gap-2 justify-end">
-                                <span>סינון תוכן מוגבר</span>
-                                <span className="w-2 h-2 bg-green-500 rounded-full" />
-                            </li>
-                            <li className="flex items-center gap-2 justify-end">
-                                <span>הגבלת שיתוף מידע אישי</span>
-                                <span className="w-2 h-2 bg-green-500 rounded-full" />
-                            </li>
-                            <li className="flex items-center gap-2 justify-end">
-                                <span>יומן פעילות</span>
-                                <span className="w-2 h-2 bg-green-500 rounded-full" />
-                            </li>
-                            <li className="flex items-center gap-2 justify-end">
-                                <span>הגבלת זמן צ&apos;אט יומי</span>
-                                <span className="w-2 h-2 bg-green-500 rounded-full" />
-                            </li>
-                        </ul>
-                    </div>
+          <div className="mb-6 space-y-3 rounded-xl bg-white/5 p-4 text-right">
+            <h3 className="flex items-center justify-end gap-2 font-bold text-sm text-white">
+              <span>הגנות פעילות</span>
+              <ShieldCheck className="text-green-500" size={16} />
+            </h3>
+            <ul className="space-y-2 text-gray-400 text-sm">
+              <li className="flex items-center justify-end gap-2">
+                <span>סינון תוכן מוגבר</span>
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+              </li>
+              <li className="flex items-center justify-end gap-2">
+                <span>הגבלת שיתוף מידע אישי</span>
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+              </li>
+              <li className="flex items-center justify-end gap-2">
+                <span>יומן פעילות</span>
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+              </li>
+              <li className="flex items-center justify-end gap-2">
+                <span>הגבלת זמן צ&apos;אט יומי</span>
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+              </li>
+            </ul>
+          </div>
 
-                    <p className="text-xs text-gray-500">
-                        ניתן לפנות אלינו בכל שאלה בנוגע לבטיחות ילדים בפלטפורמה.
-                    </p>
-                </div>
-            </div>
+          <p className="text-gray-500 text-xs">
+            ניתן לפנות אלינו בכל שאלה בנוגע לבטיחות ילדים בפלטפורמה.
+          </p>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default function ParentalConsentSuccessPage() {
-    return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-[#050510] flex items-center justify-center">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-        }>
-            <SuccessContent />
-        </Suspense>
-    );
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#050510]">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
+  );
 }

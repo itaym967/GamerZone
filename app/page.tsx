@@ -1,57 +1,63 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import GamerCard from "./components/GamerCard";
-import { GamerCardSkeleton } from "./components/Skeleton";
-import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
-import Navigation from "./components/Navigation";
 import Link from "next/link";
-
+import { useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { useSwapStatus } from "@/hooks/useSwapStatus";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useFriendship } from "@/hooks/useFriendship";
-import { toast } from "sonner";
+import { useSwapStatus } from "@/hooks/useSwapStatus";
+import GamerCard from "./components/GamerCard";
+import Navigation from "./components/Navigation";
+import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
+import { GamerCardSkeleton } from "./components/Skeleton";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
-  
+
   const currentUserId = useMemo(() => user?.id || null, [user?.id]);
   const isLoggedIn = useMemo(() => !!user, [user]);
 
   // Use cached dashboard data
-  const { gamers, loading, currentUsername } = useDashboardData(currentUserId, authLoading);
+  const { gamers, loading, currentUsername } = useDashboardData(
+    currentUserId,
+    authLoading
+  );
 
   // Use centralized swap status management
-  const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } = useSwapStatus(currentUserId);
+  const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } =
+    useSwapStatus(currentUserId);
 
   // Friend system
   const { getFriendshipStatus, sendRequest } = useFriendship(currentUserId);
 
   const handleSendFriendRequest = async (targetId: string) => {
     const { error } = await sendRequest(targetId);
-    if (error) toast.error(error);
-    else toast.success('בקשת חברות נשלחה!');
+    if (error) {
+      toast.error(error);
+    } else {
+      toast.success("בקשת חברות נשלחה!");
+    }
   };
 
   // Fetch swap statuses when gamers are loaded
   useEffect(() => {
     if (gamers.length > 0 && currentUserId) {
-      const userIds = gamers.map(g => g.id);
+      const userIds = gamers.map((g) => g.id);
       fetchSwapStatuses(userIds);
     }
   }, [gamers, currentUserId, fetchSwapStatuses]);
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0 md:pr-64 transition-all">
+    <div className="min-h-screen pb-24 transition-all md:pr-64 md:pb-0">
       <ServiceWorkerRegistration />
       <Navigation />
 
-      <main className="p-6 max-w-7xl mx-auto space-y-8">
+      <main className="mx-auto max-w-7xl space-y-8 p-6">
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
+        <header className="mt-8 flex flex-col justify-between gap-4 md:mt-0 md:flex-row md:items-center">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-primary to-white mb-2">
+            <h1 className="mb-2 bg-gradient-to-l from-primary to-white bg-clip-text font-bold text-3xl text-transparent md:text-4xl">
               שלום, {currentUsername || "אורח"} 👋
             </h1>
             <p className="text-gray-400">מוכן למצוא את הסקוואד הבא שלך?</p>
@@ -61,46 +67,53 @@ export default function Dashboard() {
         </header>
 
         {/* Categories / Filters */}
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {["הכל", "פופולרי עכשיו", "תחרותי", "קז'ואל", "חדשים"].map((filter, i) => (
-            <button key={i} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all ${i === 0 ? "bg-primary text-black font-bold" : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"}`}>
-              {filter}
-            </button>
-          ))}
+        <div className="scrollbar-none flex gap-3 overflow-x-auto pb-2">
+          {["הכל", "פופולרי עכשיו", "תחרותי", "קז'ואל", "חדשים"].map(
+            (filter, i) => (
+              <button
+                className={`whitespace-nowrap rounded-full px-4 py-2 font-medium text-sm transition-all ${i === 0 ? "bg-primary font-bold text-black" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}
+                key={i}
+              >
+                {filter}
+              </button>
+            )
+          )}
         </div>
 
         {/* Grid of Cards */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="w-1 h-6 bg-secondary rounded-full block"></span>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-bold text-white text-xl">
+              <span className="block h-6 w-1 rounded-full bg-secondary" />
               שחקנים מומלצים עבורך
             </h2>
-            <button className="text-primary text-sm hover:underline font-medium">הצג הכל</button>
+            <button className="font-medium text-primary text-sm hover:underline">
+              הצג הכל
+            </button>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+            <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(8)].map((_, i) => (
                 <GamerCardSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+            <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {gamers.length > 0 ? (
                 gamers.map((gamer) => (
                   <GamerCard
                     key={gamer.id}
                     {...gamer}
                     currentUserId={currentUserId}
-                    initialSwapStatus={getSwapStatus(gamer.id)}
-                    onSwapStatusChange={updateSwapStatus}
                     friendshipStatus={getFriendshipStatus(gamer.id).status}
+                    initialSwapStatus={getSwapStatus(gamer.id)}
                     onSendFriendRequest={handleSendFriendRequest}
+                    onSwapStatusChange={updateSwapStatus}
                   />
                 ))
               ) : (
-                <div className="col-span-full text-center py-10 text-gray-400">
+                <div className="col-span-full py-10 text-center text-gray-400">
                   עדיין אין שחקנים רשומים. הייה הראשון להירשם!
                 </div>
               )}
@@ -109,17 +122,21 @@ export default function Dashboard() {
         </section>
 
         {/* Call to Action Banner - Only for guests */}
-        {!isLoggedIn && !loading && (
-          <section className="relative overflow-hidden rounded-2xl p-8 border border-white/10 mt-8 group">
-            <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl group-hover:opacity-80 transition-opacity pointer-events-none" />
-            <div className="relative z-20 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
+        {!(isLoggedIn || loading) && (
+          <section className="group relative mt-8 overflow-hidden rounded-2xl border border-white/10 p-8">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl transition-opacity group-hover:opacity-80" />
+            <div className="relative z-20 flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-right">
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2">רוצה שכולם יראו אותך?</h3>
-                <p className="text-gray-300">צור את כרטיס השחקן שלך והתחל לקבל בקשות החלפה!</p>
+                <h3 className="mb-2 font-bold text-2xl text-white">
+                  רוצה שכולם יראו אותך?
+                </h3>
+                <p className="text-gray-300">
+                  צור את כרטיס השחקן שלך והתחל לקבל בקשות החלפה!
+                </p>
               </div>
               <Link
+                className="relative z-[100] block cursor-pointer whitespace-nowrap rounded-xl bg-white px-6 py-3 font-bold text-black shadow-lg shadow-white/10 transition-colors hover:bg-gray-200"
                 href="/signup"
-                className="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10 whitespace-nowrap block cursor-pointer relative z-[100]"
               >
                 צור כרטיס שחקן עכשיו
               </Link>

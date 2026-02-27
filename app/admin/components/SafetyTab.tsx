@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, Users, Flag, Eye, CheckCircle2, AlertCircle, X, MessageSquare, Search } from "lucide-react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  Flag,
+  MessageSquare,
+  Search,
+  ShieldCheck,
+  Users,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { SupabaseClient } from "@supabase/supabase-js";
-import type { Profile, ContentReport } from "../types";
+import type { ContentReport, Profile } from "../types";
 
 interface SafetyTabProps {
-  supabase: SupabaseClient;
   currentUser: string | null;
+  supabase: SupabaseClient;
 }
 
 const REPORT_TYPE_LABELS: Record<string, string> = {
@@ -29,7 +39,12 @@ const REPORT_TYPE_COLORS: Record<string, string> = {
   other: "bg-blue-500/20 text-blue-400",
 };
 
-type ReportStatusFilter = "all" | "pending" | "reviewing" | "resolved" | "dismissed";
+type ReportStatusFilter =
+  | "all"
+  | "pending"
+  | "reviewing"
+  | "resolved"
+  | "dismissed";
 
 export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   const [reports, setReports] = useState<ContentReport[]>([]);
@@ -44,8 +59,16 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
     setLoading(true);
     try {
       const [reportsRes, minorsRes] = await Promise.all([
-        supabase.from("content_reports").select("*").order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("*").eq("is_minor", true).order("username", { ascending: true }),
+        supabase
+          .from("content_reports")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("is_minor", true)
+          .order("username", { ascending: true }),
       ]);
       setReports(reportsRes.data || []);
       setMinorUsers(minorsRes.data || []);
@@ -61,7 +84,10 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
     fetchData();
   }, [fetchData]);
 
-  const updateReportStatus = async (reportId: string, status: "reviewing" | "resolved" | "dismissed") => {
+  const updateReportStatus = async (
+    reportId: string,
+    status: "reviewing" | "resolved" | "dismissed"
+  ) => {
     try {
       const now = new Date().toISOString();
       const update: any = { status, admin_notes: adminNotes || null };
@@ -70,10 +96,20 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
         update.resolved_at = now;
       }
 
-      const { error } = await supabase.from("content_reports").update(update).eq("id", reportId);
-      if (error) throw error;
+      const { error } = await supabase
+        .from("content_reports")
+        .update(update)
+        .eq("id", reportId);
+      if (error) {
+        throw error;
+      }
 
-      const statusLabel = status === "resolved" ? "טופל" : status === "dismissed" ? "נדחה" : "בבדיקה";
+      const statusLabel =
+        status === "resolved"
+          ? "טופל"
+          : status === "dismissed"
+            ? "נדחה"
+            : "בבדיקה";
       toast.success(`הדיווח סומן כ${statusLabel}`);
 
       await supabase.from("admin_logs").insert({
@@ -95,21 +131,24 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
     reportFilter === "all" ? true : r.status === reportFilter
   );
 
-  const filteredMinors = minorUsers.filter((m) =>
-    !minorSearch || m.username?.toLowerCase().includes(minorSearch.toLowerCase())
+  const filteredMinors = minorUsers.filter(
+    (m) =>
+      !minorSearch ||
+      m.username?.toLowerCase().includes(minorSearch.toLowerCase())
   );
 
   const stats = {
     totalMinors: minorUsers.length,
     pendingReports: reports.filter((r) => r.status === "pending").length,
-    supervised: minorUsers.filter((u) => u.account_type === "supervised").length,
+    supervised: minorUsers.filter((u) => u.account_type === "supervised")
+      .length,
     withConsent: minorUsers.filter((u) => u.parental_consent).length,
   };
 
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="w-10 h-10 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+        <span className="h-10 w-10 animate-spin rounded-full border-4 border-green-500/30 border-t-green-500" />
       </div>
     );
   }
@@ -117,39 +156,78 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="rounded-2xl border border-green-500/20 bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-6">
+        <div className="mb-2 flex items-center gap-3">
           <ShieldCheck className="text-green-400" size={28} />
-          <h2 className="text-2xl font-bold text-white">בטיחות ילדים ומודרציה</h2>
+          <h2 className="font-bold text-2xl text-white">
+            בטיחות ילדים ומודרציה
+          </h2>
         </div>
-        <p className="text-gray-400 text-sm">ניהול חשבונות קטינים, דיווחי תוכן, ובקרת הורים</p>
+        <p className="text-gray-400 text-sm">
+          ניהול חשבונות קטינים, דיווחי תוכן, ובקרת הורים
+        </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard icon={<Users className="text-blue-400" size={18} />} label="חשבונות קטינים" value={stats.totalMinors} />
-        <StatCard icon={<Flag className="text-amber-400" size={18} />} label="דיווחים ממתינים" value={stats.pendingReports} highlight={stats.pendingReports > 0} />
-        <StatCard icon={<Eye className="text-purple-400" size={18} />} label="חשבונות מפוקחים" value={stats.supervised} />
-        <StatCard icon={<ShieldCheck className="text-green-400" size={18} />} label="עם אישור הורים" value={stats.withConsent} />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <StatCard
+          icon={<Users className="text-blue-400" size={18} />}
+          label="חשבונות קטינים"
+          value={stats.totalMinors}
+        />
+        <StatCard
+          highlight={stats.pendingReports > 0}
+          icon={<Flag className="text-amber-400" size={18} />}
+          label="דיווחים ממתינים"
+          value={stats.pendingReports}
+        />
+        <StatCard
+          icon={<Eye className="text-purple-400" size={18} />}
+          label="חשבונות מפוקחים"
+          value={stats.supervised}
+        />
+        <StatCard
+          icon={<ShieldCheck className="text-green-400" size={18} />}
+          label="עם אישור הורים"
+          value={stats.withConsent}
+        />
       </div>
 
       {/* Content Reports */}
-      <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
+        <div className="flex items-center justify-between border-white/5 border-b p-4">
+          <h3 className="flex items-center gap-2 font-bold text-lg text-white">
             <Flag className="text-amber-400" size={18} />
             דיווחי תוכן
           </h3>
           <div className="flex gap-2">
-            {(["all", "pending", "reviewing", "resolved", "dismissed"] as ReportStatusFilter[]).map((f) => (
+            {(
+              [
+                "all",
+                "pending",
+                "reviewing",
+                "resolved",
+                "dismissed",
+              ] as ReportStatusFilter[]
+            ).map((f) => (
               <button
+                className={`rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
+                  reportFilter === f
+                    ? "border border-amber-500/30 bg-amber-500/20 text-amber-400"
+                    : "border border-white/5 bg-white/5 text-gray-500 hover:bg-white/10"
+                }`}
                 key={f}
                 onClick={() => setReportFilter(f)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                  reportFilter === f ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10"
-                }`}
               >
-                {f === "all" ? "הכל" : f === "pending" ? "ממתין" : f === "reviewing" ? "בבדיקה" : f === "resolved" ? "טופל" : "נדחה"}
+                {f === "all"
+                  ? "הכל"
+                  : f === "pending"
+                    ? "ממתין"
+                    : f === "reviewing"
+                      ? "בבדיקה"
+                      : f === "resolved"
+                        ? "טופל"
+                        : "נדחה"}
               </button>
             ))}
           </div>
@@ -158,19 +236,29 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
         {filteredReports.length > 0 ? (
           <div className="divide-y divide-white/5">
             {filteredReports.map((report) => (
-              <div key={report.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+              <div
+                className="p-4 transition-colors hover:bg-white/[0.02]"
+                key={report.id}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 text-right">
-                    <div className="flex items-center gap-2 justify-end mb-1">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${REPORT_TYPE_COLORS[report.report_type] || "bg-gray-500/20 text-gray-400"}`}>
-                        {REPORT_TYPE_LABELS[report.report_type] || report.report_type}
+                    <div className="mb-1 flex items-center justify-end gap-2">
+                      <span
+                        className={`rounded px-2 py-0.5 font-bold text-[11px] ${REPORT_TYPE_COLORS[report.report_type] || "bg-gray-500/20 text-gray-400"}`}
+                      >
+                        {REPORT_TYPE_LABELS[report.report_type] ||
+                          report.report_type}
                       </span>
                       <StatusBadge status={report.status} />
-                      <span className="text-[11px] text-gray-600 font-mono">{new Date(report.created_at).toLocaleString("he-IL")}</span>
+                      <span className="font-mono text-[11px] text-gray-600">
+                        {new Date(report.created_at).toLocaleString("he-IL")}
+                      </span>
                     </div>
-                    <p className="text-sm text-gray-300">{report.description || "ללא תיאור"}</p>
+                    <p className="text-gray-300 text-sm">
+                      {report.description || "ללא תיאור"}
+                    </p>
                     {report.admin_notes && (
-                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1 justify-end">
+                      <p className="mt-1 flex items-center justify-end gap-1 text-gray-500 text-xs">
                         <MessageSquare size={10} />
                         <span>הערת מנהל: {report.admin_notes}</span>
                       </p>
@@ -178,37 +266,59 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   </div>
 
                   {/* Actions */}
-                  {report.status === "pending" || report.status === "reviewing" ? (
-                    <div className="flex flex-col gap-1.5 flex-shrink-0">
+                  {report.status === "pending" ||
+                  report.status === "reviewing" ? (
+                    <div className="flex flex-shrink-0 flex-col gap-1.5">
                       {activeReportId === report.id ? (
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-3 w-64 space-y-2">
+                        <div className="w-64 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
                           <textarea
-                            value={adminNotes}
+                            className="h-16 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-right text-white text-xs outline-none"
                             onChange={(e) => setAdminNotes(e.target.value)}
                             placeholder="הערות מנהל (אופציונלי)..."
-                            className="w-full h-16 bg-black/30 border border-white/10 rounded-lg p-2 text-white text-xs outline-none resize-none text-right"
+                            value={adminNotes}
                           />
                           <div className="flex gap-1.5">
                             {report.status === "pending" && (
-                              <button onClick={() => updateReportStatus(report.id, "reviewing")} className="flex-1 px-2 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-[11px] font-bold hover:bg-blue-500/30 transition-colors">
+                              <button
+                                className="flex-1 rounded-lg bg-blue-500/20 px-2 py-1.5 font-bold text-[11px] text-blue-400 transition-colors hover:bg-blue-500/30"
+                                onClick={() =>
+                                  updateReportStatus(report.id, "reviewing")
+                                }
+                              >
                                 בבדיקה
                               </button>
                             )}
-                            <button onClick={() => updateReportStatus(report.id, "resolved")} className="flex-1 px-2 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-[11px] font-bold hover:bg-green-500/30 transition-colors">
+                            <button
+                              className="flex-1 rounded-lg bg-green-500/20 px-2 py-1.5 font-bold text-[11px] text-green-400 transition-colors hover:bg-green-500/30"
+                              onClick={() =>
+                                updateReportStatus(report.id, "resolved")
+                              }
+                            >
                               טופל
                             </button>
-                            <button onClick={() => updateReportStatus(report.id, "dismissed")} className="flex-1 px-2 py-1.5 bg-gray-500/20 text-gray-400 rounded-lg text-[11px] font-bold hover:bg-gray-500/30 transition-colors">
+                            <button
+                              className="flex-1 rounded-lg bg-gray-500/20 px-2 py-1.5 font-bold text-[11px] text-gray-400 transition-colors hover:bg-gray-500/30"
+                              onClick={() =>
+                                updateReportStatus(report.id, "dismissed")
+                              }
+                            >
                               דחה
                             </button>
-                            <button onClick={() => { setActiveReportId(null); setAdminNotes(""); }} className="p-1.5 text-gray-500 hover:text-white transition-colors">
+                            <button
+                              className="p-1.5 text-gray-500 transition-colors hover:text-white"
+                              onClick={() => {
+                                setActiveReportId(null);
+                                setAdminNotes("");
+                              }}
+                            >
                               <X size={12} />
                             </button>
                           </div>
                         </div>
                       ) : (
                         <button
+                          className="rounded-lg bg-amber-500/10 px-3 py-1.5 font-bold text-amber-400 text-xs transition-colors hover:bg-amber-500/20"
                           onClick={() => setActiveReportId(report.id)}
-                          className="px-3 py-1.5 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 rounded-lg text-xs font-bold transition-colors"
                         >
                           טפל בדיווח
                         </button>
@@ -221,27 +331,34 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
           </div>
         ) : (
           <div className="p-12 text-center text-gray-500">
-            <ShieldCheck size={32} className="mx-auto mb-3 opacity-50" />
-            <p>{reportFilter !== "all" ? "אין דיווחים בסטטוס זה" : "אין דיווחים ממתינים"}</p>
+            <ShieldCheck className="mx-auto mb-3 opacity-50" size={32} />
+            <p>
+              {reportFilter !== "all"
+                ? "אין דיווחים בסטטוס זה"
+                : "אין דיווחים ממתינים"}
+            </p>
           </div>
         )}
       </div>
 
       {/* Minor Users List */}
-      <div className="bg-[#0e0e1b] border border-white/5 rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
+        <div className="flex items-center justify-between border-white/5 border-b p-4">
+          <h3 className="flex items-center gap-2 font-bold text-lg text-white">
             <Users className="text-blue-400" size={18} />
             חשבונות קטינים
           </h3>
           <div className="relative w-48">
-            <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search
+              className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-500"
+              size={14}
+            />
             <input
-              type="text"
-              value={minorSearch}
+              className="w-full rounded-lg border border-white/5 bg-black/20 py-1.5 pr-8 pl-3 text-right text-white text-xs outline-none"
               onChange={(e) => setMinorSearch(e.target.value)}
               placeholder="חפש קטין..."
-              className="w-full bg-black/20 border border-white/5 rounded-lg pr-8 pl-3 py-1.5 text-white text-xs outline-none text-right"
+              type="text"
+              value={minorSearch}
             />
           </div>
         </div>
@@ -258,26 +375,51 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
             </thead>
             <tbody className="divide-y divide-white/5 text-gray-300">
               {filteredMinors.map((minor) => (
-                <tr key={minor.id} className="hover:bg-white/5 transition-colors">
-                  <td className="p-3 font-bold text-white">{minor.username || "ללא שם"}</td>
+                <tr
+                  className="transition-colors hover:bg-white/5"
+                  key={minor.id}
+                >
+                  <td className="p-3 font-bold text-white">
+                    {minor.username || "ללא שם"}
+                  </td>
                   <td className="p-3">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${minor.account_type === "supervised" ? "bg-amber-500/20 text-amber-400" : "bg-blue-500/20 text-blue-400"}`}>
-                      {minor.account_type === "supervised" ? "מפוקח (מתחת ל-13)" : "צעיר (13-17)"}
+                    <span
+                      className={`rounded px-2 py-1 font-bold text-xs ${minor.account_type === "supervised" ? "bg-amber-500/20 text-amber-400" : "bg-blue-500/20 text-blue-400"}`}
+                    >
+                      {minor.account_type === "supervised"
+                        ? "מפוקח (מתחת ל-13)"
+                        : "צעיר (13-17)"}
                     </span>
                   </td>
                   <td className="p-3 text-xs">{minor.date_of_birth || "-"}</td>
                   <td className="p-3">
                     {minor.parental_consent ? (
-                      <span className="text-green-400 text-xs font-bold flex items-center gap-1 justify-end"><CheckCircle2 size={14} /> מאושר</span>
+                      <span className="flex items-center justify-end gap-1 font-bold text-green-400 text-xs">
+                        <CheckCircle2 size={14} /> מאושר
+                      </span>
                     ) : (
-                      <span className="text-amber-400 text-xs font-bold flex items-center gap-1 justify-end"><AlertCircle size={14} /> ממתין</span>
+                      <span className="flex items-center justify-end gap-1 font-bold text-amber-400 text-xs">
+                        <AlertCircle size={14} /> ממתין
+                      </span>
                     )}
                   </td>
                   <td className="p-3">
-                    <div className="flex gap-1 justify-end flex-wrap">
-                      {minor.chat_restricted && <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px]">צ׳אט מוגבל</span>}
-                      {minor.profile_restricted && <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[10px]">פרופיל מוגבל</span>}
-                      {minor.safe_mode && <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[10px]">מצב בטוח</span>}
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {minor.chat_restricted && (
+                        <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">
+                          צ׳אט מוגבל
+                        </span>
+                      )}
+                      {minor.profile_restricted && (
+                        <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[10px] text-orange-400">
+                          פרופיל מוגבל
+                        </span>
+                      )}
+                      {minor.safe_mode && (
+                        <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">
+                          מצב בטוח
+                        </span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -286,8 +428,10 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
           </table>
         ) : (
           <div className="p-12 text-center text-gray-500">
-            <Users size={32} className="mx-auto mb-3 opacity-50" />
-            <p>{minorSearch ? "לא נמצאו קטינים" : "אין חשבונות קטינים רשומים"}</p>
+            <Users className="mx-auto mb-3 opacity-50" size={32} />
+            <p>
+              {minorSearch ? "לא נמצאו קטינים" : "אין חשבונות קטינים רשומים"}
+            </p>
           </div>
         )}
       </div>
@@ -295,14 +439,30 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   );
 }
 
-function StatCard({ icon, label, value, highlight }: { icon: React.ReactNode; label: string; value: number; highlight?: boolean }) {
+function StatCard({
+  icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  highlight?: boolean;
+}) {
   return (
-    <div className={`bg-[#0e0e1b] border rounded-2xl p-5 ${highlight ? "border-amber-500/20" : "border-white/5"}`}>
-      <div className="flex items-center gap-2 mb-2">
+    <div
+      className={`rounded-2xl border bg-[#0e0e1b] p-5 ${highlight ? "border-amber-500/20" : "border-white/5"}`}
+    >
+      <div className="mb-2 flex items-center gap-2">
         {icon}
-        <span className="text-sm text-gray-400">{label}</span>
+        <span className="text-gray-400 text-sm">{label}</span>
       </div>
-      <div className={`text-2xl font-bold ${highlight ? "text-amber-400" : "text-white"}`}>{value}</div>
+      <div
+        className={`font-bold text-2xl ${highlight ? "text-amber-400" : "text-white"}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -321,7 +481,9 @@ function StatusBadge({ status }: { status: string }) {
     dismissed: "נדחה",
   };
   return (
-    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${styles[status] || "bg-gray-500/20 text-gray-400"}`}>
+    <span
+      className={`rounded px-2 py-0.5 font-bold text-[11px] ${styles[status] || "bg-gray-500/20 text-gray-400"}`}
+    >
       {labels[status] || status}
     </span>
   );
