@@ -3,6 +3,7 @@
 
 const CACHE_NAME = "gamerzone-v13";
 const RUNTIME_CACHE = "gamerzone-runtime-v13";
+const STATIC_ASSET_REGEX = /\.(woff2?|png|jpg|jpeg|gif|ico|svg)$/;
 
 // Precache static assets + offline fallback page
 const PRECACHE_ASSETS = [
@@ -121,7 +122,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // 4. Static media assets - Cache First
-  if (url.pathname.match(/\.(woff2?|png|jpg|jpeg|gif|ico|svg)$/)) {
+  if (url.pathname.match(STATIC_ASSET_REGEX)) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
@@ -339,7 +340,7 @@ self.addEventListener("periodicsync", (event) => {
   }
 });
 
-async function checkForNewMessages() {
+function checkForNewMessages() {
   console.log("[SW] Checking for new messages...");
   // Implementation for periodic message checks
 }

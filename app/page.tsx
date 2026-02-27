@@ -7,10 +7,10 @@ import { useAuth } from "@/context/auth-context";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useFriendship } from "@/hooks/use-friendship";
 import { useSwapStatus } from "@/hooks/use-swap-status";
-import GamerCard from "./components/GamerCard";
-import Navigation from "./components/Navigation";
-import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
-import { GamerCardSkeleton } from "./components/Skeleton";
+import GamerCard from "./components/gamer-card";
+import Navigation from "./components/navigation";
+import ServiceWorkerRegistration from "./components/service-worker-registration";
+import { GamerCardSkeleton } from "./components/skeleton";
 
 const DASHBOARD_FILTERS = ["הכל", "פופולרי עכשיו", "תחרותי", "קז'ואל", "חדשים"];
 const DASHBOARD_SKELETON_KEYS = [

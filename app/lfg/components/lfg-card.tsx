@@ -11,7 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import OptimizedAvatar from "@/app/components/OptimizedAvatar";
+import OptimizedAvatar from "@/app/components/optimized-avatar";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
 

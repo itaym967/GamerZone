@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import Logo from "../components/Logo";
+import Logo from "../components/logo";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {

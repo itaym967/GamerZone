@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
-import Navigation from "../components/Navigation";
+import Navigation from "../components/navigation";
 import LFGCard from "./components/lfg-card";
 
 type PostWithProfile = Database["public"]["Tables"]["lfg_posts"]["Row"] & {

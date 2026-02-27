@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/auth-context";
-import FloatingGamerBot from "./components/FloatingGamerBot";
-import KeyboardHandler from "./components/KeyboardHandler";
-import OfflineIndicator from "./components/OfflineIndicator";
-import PWAInstallPrompt from "./components/PWAInstallPrompt";
-import SafetyBanner from "./components/SafetyBanner";
-import SplashScreen from "./components/SplashScreen";
+import FloatingGamerBot from "./components/floating-gamer-bot";
+import KeyboardHandler from "./components/keyboard-handler";
+import OfflineIndicator from "./components/offline-indicator";
+import PWAInstallPrompt from "./components/pwa-install-prompt";
+import SafetyBanner from "./components/safety-banner";
+import SplashScreen from "./components/splash-screen";
 import "./globals.css";
 
 const rubik = Rubik({

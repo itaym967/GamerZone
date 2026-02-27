@@ -24,9 +24,9 @@ import { type Contact, type Message, useChat } from "@/hooks/use-chat";
 import { createClient } from "@/lib/supabase/client";
 import { haptic } from "@/utils/haptics";
 import { filterContent } from "@/utils/kid-safety";
-import Navigation from "../components/Navigation";
-import OptimizedAvatar from "../components/OptimizedAvatar";
-import ReportMessageModal from "../components/ReportMessageModal";
+import Navigation from "../components/navigation";
+import OptimizedAvatar from "../components/optimized-avatar";
+import ReportMessageModal from "../components/report-message-modal";
 
 function getLocalBotReply(message: string): string {
   const normalizedMessage = message.trim().toLowerCase();

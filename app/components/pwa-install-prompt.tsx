@@ -9,6 +9,16 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+const MOBILE_REGEX = /Android|iPhone|iPad|iPod/i;
+const IOS_REGEX = /iPad|iPhone|iPod/;
+const SAFARI_REGEX = /Safari/i;
+const IOS_OTHER_BROWSER_REGEX = /CriOS|FxiOS/i;
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 /**
  * PWA Install Prompt Component
  * Shows a visual install banner for Android (beforeinstallprompt)
@@ -17,14 +27,29 @@ import { toast } from "sonner";
 export default function PWAInstallPrompt() {
   const [showBanner, setShowBanner] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // Already installed — skip
-    if (
+    const nav = window.navigator as Navigator & { standalone?: boolean };
+    const win = window as Window & { MSStream?: unknown };
+
+    const isStandalone = () =>
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true
-    ) {
+      nav.standalone === true;
+
+    const isMobileDevice = () =>
+      MOBILE_REGEX.test(navigator.userAgent) || window.innerWidth <= 768;
+
+    const isIOSDevice = () =>
+      IOS_REGEX.test(navigator.userAgent) && !win.MSStream;
+
+    const isIOSSafari = () =>
+      SAFARI_REGEX.test(navigator.userAgent) &&
+      !IOS_OTHER_BROWSER_REGEX.test(navigator.userAgent);
+
+    // Already installed — skip
+    if (isStandalone()) {
       return;
     }
 
@@ -41,19 +66,16 @@ export default function PWAInstallPrompt() {
       }
     }
 
-    const isMobile =
-      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-      window.innerWidth <= 768;
-    if (!isMobile) {
+    if (!isMobileDevice()) {
       return;
     }
 
-    const ios =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const ios = isIOSDevice();
     setIsIOS(ios);
 
     // Android / Chrome: listen for beforeinstallprompt
-    const handler = (e: Event) => {
+    const handler = (event: Event) => {
+      const e = event as BeforeInstallPromptEvent;
       e.preventDefault();
       setDeferredPrompt(e);
       setTimeout(() => setShowBanner(true), 4000);
@@ -61,13 +83,8 @@ export default function PWAInstallPrompt() {
     window.addEventListener("beforeinstallprompt", handler);
 
     // iOS Safari: show instructions after delay
-    if (ios) {
-      const iosSafari =
-        /Safari/i.test(navigator.userAgent) &&
-        !/CriOS|FxiOS/i.test(navigator.userAgent);
-      if (iosSafari) {
-        setTimeout(() => setShowBanner(true), 4000);
-      }
+    if (ios && isIOSSafari()) {
+      setTimeout(() => setShowBanner(true), 4000);
     }
 
     // Listen for successful install
@@ -111,6 +128,7 @@ export default function PWAInstallPrompt() {
         <button
           className="touch-compact absolute top-3 left-3 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
           onClick={handleDismiss}
+          type="button"
         >
           <HugeiconsIcon icon={Cancel01Icon} size={16} />
         </button>
@@ -164,6 +182,7 @@ export default function PWAInstallPrompt() {
               <button
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-bold text-black text-fluid-sm transition-all hover:bg-primary/90"
                 onClick={handleInstall}
+                type="button"
               >
                 <HugeiconsIcon icon={Download01Icon} size={16} />
                 התקן עכשיו

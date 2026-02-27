@@ -66,7 +66,7 @@ export default function ReportMessageModal({
       onClose();
       setReportType("");
       setDescription("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting report:", error);
       toast.error("שגיאה בשליחת הדיווח");
     } finally {
@@ -95,6 +95,7 @@ export default function ReportMessageModal({
               <button
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                 onClick={onClose}
+                type="button"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={18} />
               </button>
@@ -119,6 +120,7 @@ export default function ReportMessageModal({
                     }`}
                     key={type.value}
                     onClick={() => setReportType(type.value)}
+                    type="button"
                   >
                     <span className="mb-1 block text-fluid-lg">
                       {type.icon}
@@ -129,11 +131,12 @@ export default function ReportMessageModal({
               </div>
 
               <div className="space-y-1 text-right">
-                <label className="font-medium text-fluid-sm text-gray-400">
+                <p className="font-medium text-fluid-sm text-gray-400">
                   פרטים נוספים (אופציונלי)
-                </label>
+                </p>
                 <textarea
                   className="h-24 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-3 text-right text-fluid-sm text-white outline-hidden focus:border-red-500/50"
+                  id="report-description"
                   maxLength={500}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="תאר את הבעיה..."
@@ -145,6 +148,7 @@ export default function ReportMessageModal({
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-3 font-bold text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!reportType || isSubmitting}
                 onClick={handleSubmit}
+                type="button"
               >
                 {isSubmitting ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />

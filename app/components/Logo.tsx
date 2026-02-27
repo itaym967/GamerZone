@@ -30,7 +30,7 @@ export default function Logo({ className = "", size = "md" }: LogoProps) {
 
       <div className="relative flex items-center text-primary">
         {/* The 'Z' represented by a lightning bolt */}
-        <div className="relative mx-px flex translate-y-[0.125rem] transform items-center justify-center">
+        <div className="relative mx-px flex translate-y-0.5 transform items-center justify-center">
           <HugeiconsIcon
             className="transform fill-current transition-all duration-300 group-hover:drop-shadow-[0_0_0.5rem_rgba(0,255,157,0.8)]"
             icon={ZapIcon}

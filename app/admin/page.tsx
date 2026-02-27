@@ -3,7 +3,7 @@
 import { SecurityCheckIcon, Shield01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
-import Navigation from "../components/Navigation";
+import Navigation from "../components/navigation";
 import BlacklistTab from "./components/blacklist-tab";
 import LogsTab from "./components/logs-tab";
 import ManagementTab from "./components/management-tab";

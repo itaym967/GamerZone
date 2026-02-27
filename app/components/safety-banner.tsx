@@ -38,6 +38,7 @@ export default function SafetyBanner() {
       <button
         className="rounded-lg p-1 transition-colors hover:bg-white/10"
         onClick={() => setDismissed(true)}
+        type="button"
       >
         <HugeiconsIcon icon={Cancel01Icon} size={14} />
       </button>

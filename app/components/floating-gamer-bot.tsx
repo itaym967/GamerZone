@@ -180,6 +180,7 @@ export default function FloatingGamerBot() {
                 <button
                   className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
                   onClick={() => setIsMinimized(!isMinimized)}
+                  type="button"
                 >
                   {isMinimized ? (
                     <HugeiconsIcon icon={Maximize02Icon} size={16} />
@@ -190,6 +191,7 @@ export default function FloatingGamerBot() {
                 <button
                   className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
                   onClick={() => setIsOpen(false)}
+                  type="button"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={16} />
                 </button>

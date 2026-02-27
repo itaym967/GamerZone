@@ -19,17 +19,17 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import OptimizedAvatar from "./OptimizedAvatar";
+import OptimizedAvatar from "./optimized-avatar";
 
 interface MobileNavProps {
   isAdmin: boolean;
   isMounted: boolean;
   isSigningOut: boolean;
   onSignOut: () => void;
-  profile: any;
+  profile: { avatar_url?: string | null; username?: string | null } | null;
   showSkeleton: boolean;
   unreadCount: number;
-  user: any;
+  user: { id: string } | null;
 }
 
 const bottomNavItems = [
@@ -94,6 +94,52 @@ export default function MobileNav({
     visibleDrawerItems.some((item) => pathname === item.href) ||
     (isAdmin && pathname === "/admin");
 
+  const renderDrawerHeaderContent = () => {
+    if (!isMounted || showSkeleton) {
+      return (
+        <div className="flex animate-pulse items-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-white/10" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-24 rounded-xs bg-white/10" />
+            <div className="h-3 w-16 rounded-xs bg-white/10" />
+          </div>
+        </div>
+      );
+    }
+
+    if (user) {
+      return (
+        <div className="flex items-center gap-3">
+          <OptimizedAvatar
+            className="rounded-full border-2 border-primary/30 bg-black"
+            seed={profile?.avatar_url || "/avatars/gamer.png"}
+            size={48}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-bold text-fluid-base text-white">
+              {profile?.username || "Gamer"}
+            </p>
+            <p className="flex items-center gap-1 text-fluid-xs text-primary">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              מחובר
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
+        href="/login"
+        onClick={() => setDrawerOpen(false)}
+      >
+        <HugeiconsIcon icon={Login01Icon} size={20} />
+        <span>התחברות</span>
+      </Link>
+    );
+  };
+
   return (
     <>
       {/* Bottom Nav Bar - 4 items max */}
@@ -103,7 +149,7 @@ export default function MobileNav({
             const isActive = pathname === item.href;
             return (
               <Link
-                className={`flex min-w-[3.5rem] flex-col items-center gap-0.5 py-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"}`}
+                className={`flex min-w-14 flex-col items-center gap-0.5 py-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"}`}
                 href={item.href}
                 key={item.href}
               >
@@ -124,8 +170,9 @@ export default function MobileNav({
 
           {/* Menu / Hamburger Button */}
           <button
-            className={`relative flex min-w-[3.5rem] flex-col items-center gap-0.5 py-1 transition-colors ${drawerOpen || isDrawerItemActive ? "text-primary" : "text-gray-500"}`}
+            className={`relative flex min-w-14 flex-col items-center gap-0.5 py-1 transition-colors ${drawerOpen || isDrawerItemActive ? "text-primary" : "text-gray-500"}`}
             onClick={toggleDrawer}
+            type="button"
           >
             <div
               className={`rounded-xl p-2 transition-all ${drawerOpen || isDrawerItemActive ? "bg-primary/15" : ""}`}
@@ -137,7 +184,7 @@ export default function MobileNav({
               )}
               {/* Show notification dot if there are unread notifications */}
               {!drawerOpen && unreadCount > 0 && (
-                <span className="absolute top-0.5 right-2.5 flex h-[1rem] min-w-[1rem] items-center justify-center rounded-full bg-blue-500 px-0.5 font-bold text-[0.5625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
+                <span className="absolute top-0.5 right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-0.5 font-bold text-[0.5625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
@@ -151,9 +198,11 @@ export default function MobileNav({
 
       {/* Overlay */}
       {drawerOpen && (
-        <div
+        <button
+          aria-label="Close menu drawer"
           className="fixed inset-0 z-45 bg-black/60 backdrop-blur-xs transition-opacity md:hidden"
           onClick={() => setDrawerOpen(false)}
+          type="button"
         />
       )}
 
@@ -164,41 +213,7 @@ export default function MobileNav({
       >
         {/* Drawer Header */}
         <div className="border-white/5 border-b p-5 pt-12">
-          {!isMounted || showSkeleton ? (
-            <div className="flex animate-pulse items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-white/10" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-24 rounded-xs bg-white/10" />
-                <div className="h-3 w-16 rounded-xs bg-white/10" />
-              </div>
-            </div>
-          ) : user ? (
-            <div className="flex items-center gap-3">
-              <OptimizedAvatar
-                className="rounded-full border-2 border-primary/30 bg-black"
-                seed={profile?.avatar_url || "/avatars/gamer.png"}
-                size={48}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-bold text-fluid-base text-white">
-                  {profile?.username || "Gamer"}
-                </p>
-                <p className="flex items-center gap-1 text-fluid-xs text-primary">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                  מחובר
-                </p>
-              </div>
-            </div>
-          ) : (
-            <Link
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
-              href="/login"
-              onClick={() => setDrawerOpen(false)}
-            >
-              <HugeiconsIcon icon={Login01Icon} size={20} />
-              <span>התחברות</span>
-            </Link>
-          )}
+          {renderDrawerHeaderContent()}
         </div>
 
         {/* Drawer Nav Items */}
@@ -215,7 +230,7 @@ export default function MobileNav({
                 <div className="relative">
                   <HugeiconsIcon icon={item.icon} size={20} />
                   {item.showBadge && unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[0.625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[0.625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
@@ -251,6 +266,7 @@ export default function MobileNav({
                 onSignOut();
                 setDrawerOpen(false);
               }}
+              type="button"
             >
               {isSigningOut ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />

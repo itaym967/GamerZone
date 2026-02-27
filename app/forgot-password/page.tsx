@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import Logo from "../components/Logo";
+import Logo from "../components/logo";
 
 const RESET_EMAIL_INPUT_ID = "forgot-password-email";
 

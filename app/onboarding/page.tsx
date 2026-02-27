@@ -18,8 +18,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import AvatarCreator from "../components/AvatarCreator";
-import Logo from "../components/Logo";
+import AvatarCreator from "../components/avatar-creator";
+import Logo from "../components/logo";
 
 export default function OnboardingPage() {
   const BIO_INPUT_ID = "onboarding-bio";

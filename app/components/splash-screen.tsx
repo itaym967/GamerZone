@@ -12,9 +12,10 @@ export default function SplashScreen() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    const nav = window.navigator as Navigator & { standalone?: boolean };
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
+      nav.standalone === true;
     setIsStandalone(standalone);
 
     if (!standalone) {

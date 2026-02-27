@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import Logo from "../components/Logo";
+import Logo from "../components/logo";
 
 const NEW_PASSWORD_ID = "update-password-new";
 const CONFIRM_PASSWORD_ID = "update-password-confirm";

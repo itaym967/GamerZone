@@ -17,8 +17,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { type FriendWithProfile, useFriendship } from "@/hooks/use-friendship";
-import Navigation from "../components/Navigation";
-import OptimizedAvatar from "../components/OptimizedAvatar";
+import Navigation from "../components/navigation";
+import OptimizedAvatar from "../components/optimized-avatar";
 
 type Tab = "friends" | "pending" | "sent";
 

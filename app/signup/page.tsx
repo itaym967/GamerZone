@@ -21,7 +21,7 @@ import {
   requiresCOPPAConsent,
   validateDateOfBirth,
 } from "@/utils/kid-safety";
-import Logo from "../components/Logo";
+import Logo from "../components/logo";
 
 type AccountType = "standard" | "minor" | "supervised";
 

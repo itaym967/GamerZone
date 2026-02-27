@@ -8,8 +8,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { useState } from "react";
-import GamerCard from "../components/GamerCard";
-import Navigation from "../components/Navigation";
+import GamerCard from "../components/gamer-card";
+import Navigation from "../components/navigation";
 import AccountTab from "./components/account-tab";
 import GamertagsTab from "./components/gamertags-tab";
 import ProfileEditTab from "./components/profile-edit-tab";

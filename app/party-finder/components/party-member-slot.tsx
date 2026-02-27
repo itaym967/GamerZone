@@ -1,7 +1,7 @@
 "use client";
 import { Add01Icon, CrownIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import OptimizedAvatar from "@/app/components/OptimizedAvatar";
+import OptimizedAvatar from "@/app/components/optimized-avatar";
 import type { Database } from "@/lib/database.types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];

@@ -11,8 +11,8 @@ import { useAuth } from "@/context/auth-context";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useFriendship } from "@/hooks/use-friendship";
 import { useSwapStatus } from "@/hooks/use-swap-status";
-import GamerCard from "../components/GamerCard";
-import Navigation from "../components/Navigation";
+import GamerCard from "../components/gamer-card";
+import Navigation from "../components/navigation";
 
 const FILTERS = {
   games: [

@@ -20,9 +20,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useNotifications } from "@/hooks/use-notifications";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
-import Logo from "./Logo";
-import MobileNav from "./MobileNav";
-import OptimizedAvatar from "./OptimizedAvatar";
+import Logo from "./logo";
+import MobileNav from "./mobile-nav";
+import OptimizedAvatar from "./optimized-avatar";
 
 const navItems = [
   { icon: Home01Icon, label: "בית", href: "/" },
@@ -83,6 +83,94 @@ export default function Navigation() {
     [user, isAdmin]
   );
 
+  const renderNotificationPrompt = () => {
+    if (!isMounted) {
+      return (
+        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black opacity-50">
+          <HugeiconsIcon icon={Login01Icon} size={20} />
+          <span>התחברות</span>
+        </div>
+      );
+    }
+
+    if (showSkeleton) {
+      return (
+        <div className="flex animate-pulse items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
+          <div className="h-8 w-8 rounded-full bg-white/10" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-20 rounded-xs bg-white/10" />
+            <div className="h-2 w-12 rounded-xs bg-white/10" />
+          </div>
+        </div>
+      );
+    }
+
+    if (user && !subscription) {
+      return (
+        <button
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-yellow-400 transition-all hover:bg-yellow-400/10 hover:text-yellow-300"
+          onClick={() => subscribeToPush()}
+          type="button"
+        >
+          <HugeiconsIcon icon={Notification01Icon} size={20} />
+          <span>הפעל התראות</span>
+        </button>
+      );
+    }
+
+    return null;
+  };
+
+  const renderAccountSection = () => {
+    if (!isMounted || showSkeleton) {
+      return null;
+    }
+
+    if (!user) {
+      return (
+        <Link
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
+          href="/login"
+        >
+          <HugeiconsIcon icon={Login01Icon} size={20} />
+          <span>התחברות</span>
+        </Link>
+      );
+    }
+
+    return (
+      <>
+        <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
+          <OptimizedAvatar
+            className="rounded-full border border-primary/20 bg-black"
+            seed={profile?.avatar_url || "/avatars/gamer.png"}
+            size={32}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-bold text-fluid-sm text-white">
+              {profile?.username || "Gamer"}
+            </p>
+            <p className="truncate text-[0.625rem] text-gray-500">מחובר</p>
+          </div>
+        </div>
+
+        <button
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-fluid-sm text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isSigningOut}
+          onClick={handleSignOut}
+          type="button"
+        >
+          {isSigningOut ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
+          ) : (
+            <HugeiconsIcon icon={Logout01Icon} size={18} />
+          )}
+          <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
+        </button>
+      </>
+    );
+  };
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -122,7 +210,7 @@ export default function Navigation() {
                     <span className="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_0.5rem_rgba(239,68,68,0.8)]" />
                   )}
                   {item.href === "/notifications" && unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[0.625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[0.625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
@@ -137,76 +225,8 @@ export default function Navigation() {
         </nav>
 
         <div className="mt-auto space-y-3 border-white/5 border-t pt-6">
-          {isMounted ? (
-            showSkeleton ? (
-              // Loading Skeleton - only shown after delay
-              <div className="flex animate-pulse items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
-                <div className="h-8 w-8 rounded-full bg-white/10" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 w-20 rounded-xs bg-white/10" />
-                  <div className="h-2 w-12 rounded-xs bg-white/10" />
-                </div>
-              </div>
-            ) : user && !subscription ? (
-              <button
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-yellow-400 transition-all hover:bg-yellow-400/10 hover:text-yellow-300"
-                onClick={() => subscribeToPush()}
-              >
-                <HugeiconsIcon icon={Notification01Icon} size={20} />
-                <span>הפעל התראות</span>
-              </button>
-            ) : null
-          ) : (
-            // Render placeholder during SSR to match initial client render
-            <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black opacity-50">
-              <HugeiconsIcon icon={Login01Icon} size={20} />
-              <span>התחברות</span>
-            </div>
-          )}
-
-          {isMounted ? (
-            showSkeleton ? null : user ? (
-              <>
-                {/* Mini Profile Summary */}
-                <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
-                  <OptimizedAvatar
-                    className="rounded-full border border-primary/20 bg-black"
-                    seed={profile?.avatar_url || "/avatars/gamer.png"}
-                    size={32}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-fluid-sm text-white">
-                      {profile?.username || "Gamer"}
-                    </p>
-                    <p className="truncate text-[0.625rem] text-gray-500">
-                      מחובר
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-fluid-sm text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isSigningOut}
-                  onClick={handleSignOut}
-                >
-                  {isSigningOut ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
-                  ) : (
-                    <HugeiconsIcon icon={Logout01Icon} size={18} />
-                  )}
-                  <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
-                </button>
-              </>
-            ) : (
-              <Link
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
-                href="/login"
-              >
-                <HugeiconsIcon icon={Login01Icon} size={20} />
-                <span>התחברות</span>
-              </Link>
-            )
-          ) : null}
+          {renderNotificationPrompt()}
+          {renderAccountSection()}
         </div>
       </aside>
 

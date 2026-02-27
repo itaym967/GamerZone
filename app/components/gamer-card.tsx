@@ -16,44 +16,101 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { haptic } from "@/utils/haptics";
-import OptimizedAvatar from "./OptimizedAvatar";
+import OptimizedAvatar from "./optimized-avatar";
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type SwapStatus =
+  | "initial"
+  | "pending_sent"
+  | "pending_received"
+  | "approved"
+  | "rejected";
+
+type FriendshipStatus =
+  | "none"
+  | "pending_sent"
+  | "pending_received"
+  | "accepted";
+
+interface SwapRequestRow {
+  receiver_id: string;
+  sender_id: string;
+  status: string;
+}
+
+interface GamerTagRow {
+  platform: string;
+  tag: string;
+}
+
+const getFriendButtonClassName = (friendshipStatus: FriendshipStatus) => {
+  if (friendshipStatus === "accepted") {
+    return "cursor-default bg-green-500/20 text-green-400";
+  }
+  if (friendshipStatus === "pending_sent") {
+    return "cursor-wait bg-white/5 text-yellow-400";
+  }
+  if (friendshipStatus === "pending_received") {
+    return "cursor-default bg-blue-500/20 text-blue-400";
+  }
+  return "bg-white/5 text-white hover:bg-white/10 hover:text-green-400";
+};
+
+const getFriendButtonTitle = (friendshipStatus: FriendshipStatus) => {
+  if (friendshipStatus === "accepted") {
+    return "חברים";
+  }
+  if (friendshipStatus === "pending_sent") {
+    return "בקשה נשלחה";
+  }
+  if (friendshipStatus === "pending_received") {
+    return "ממתין לאישורך";
+  }
+  return "הוסף חבר";
+};
+
+const getFriendButtonIcon = (friendshipStatus: FriendshipStatus) => {
+  if (friendshipStatus === "accepted") {
+    return <HugeiconsIcon icon={UserCheck01Icon} size={18} />;
+  }
+  if (friendshipStatus === "pending_sent") {
+    return <HugeiconsIcon icon={Clock01Icon} size={18} />;
+  }
+  if (friendshipStatus === "pending_received") {
+    return <HugeiconsIcon icon={UserCheck01Icon} size={18} />;
+  }
+  return <HugeiconsIcon icon={UserAdd01Icon} size={18} />;
+};
 
 interface GamerCardProps {
   avatarSeed?: string; // Optional override for avatar generation
   bio: string;
   currentUserId: string | null;
   // Friend system props
-  friendshipStatus?: "none" | "pending_sent" | "pending_received" | "accepted";
+  friendshipStatus?: FriendshipStatus;
   games: string[];
   hiddenTags?: { [key: string]: string }; // Map of game -> real gamertag
   id: string;
   // OPTIMIZATION: Accept swap status from parent to avoid per-card subscriptions
-  initialSwapStatus?:
-    | "initial"
-    | "pending_sent"
-    | "pending_received"
-    | "approved"
-    | "rejected";
+  initialSwapStatus?: SwapStatus;
   online?: boolean;
   onSendFriendRequest?: (targetId: string) => void;
-  onSwapStatusChange?: (
-    userId: string,
-    status:
-      | "initial"
-      | "pending_sent"
-      | "pending_received"
-      | "approved"
-      | "rejected"
-  ) => void;
+  onSwapStatusChange?: (userId: string, status: SwapStatus) => void;
   tag: string; // e.g. @cyber_ninja
   username: string;
 }
 
-function determineStatus(data: any, userId: string) {
+const getErrorMessage = (error: unknown) => {
+  return error instanceof Error ? error.message : "Unknown error";
+};
+
+function determineStatus(data: SwapRequestRow, userId: string): SwapStatus {
   if (data.status === "approved") {
     return "approved";
   }
@@ -65,6 +122,221 @@ function determineStatus(data: any, userId: string) {
   }
   return "initial";
 }
+
+interface LoadInitialStatusParams {
+  currentUserId: string | null;
+  fetchRealTags: () => Promise<void>;
+  id: string;
+  initialSwapStatus?: SwapStatus;
+  setStatus: (status: SwapStatus) => void;
+  supabase: ReturnType<typeof createClient>;
+}
+
+const loadInitialSwapStatus = async ({
+  currentUserId,
+  id,
+  initialSwapStatus,
+  supabase,
+  setStatus,
+  fetchRealTags,
+}: LoadInitialStatusParams) => {
+  if (!(currentUserId && id) || initialSwapStatus) {
+    return;
+  }
+  if (!(UUID_REGEX.test(currentUserId) && UUID_REGEX.test(id))) {
+    return;
+  }
+
+  const { data } = await supabase
+    .from("swap_requests")
+    .select("*")
+    .or(
+      `and(sender_id.eq.${currentUserId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${currentUserId})`
+    )
+    .maybeSingle();
+
+  if (!data) {
+    return;
+  }
+
+  const newStatus = determineStatus(data, currentUserId);
+  setStatus(newStatus);
+  if (newStatus === "approved") {
+    await fetchRealTags();
+  }
+};
+
+interface EnsureFriendshipParams {
+  receiverId: string;
+  senderId: string;
+  supabase: ReturnType<typeof createClient>;
+}
+
+const ensureFriendship = async ({
+  receiverId,
+  senderId,
+  supabase,
+}: EnsureFriendshipParams) => {
+  const { error: friendError } = await supabase.from("friendships").upsert(
+    {
+      sender_id: senderId,
+      receiver_id: receiverId,
+      status: "accepted",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "sender_id,receiver_id", ignoreDuplicates: true }
+  );
+
+  if (!friendError) {
+    return;
+  }
+
+  const { data: existing } = await supabase
+    .from("friendships")
+    .select("id")
+    .or(
+      `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
+    )
+    .maybeSingle();
+
+  if (!existing) {
+    await supabase.from("friendships").insert({
+      sender_id: senderId,
+      receiver_id: receiverId,
+      status: "accepted",
+    });
+  }
+};
+
+interface SwapActionsProps {
+  currentUserId: string | null;
+  handleApproveResponse: (approved: boolean) => Promise<void>;
+  handleSendRequest: () => Promise<void>;
+  isLoading: boolean;
+  status: SwapStatus;
+}
+
+const SwapActions = ({
+  status,
+  isLoading,
+  currentUserId,
+  handleSendRequest,
+  handleApproveResponse,
+}: SwapActionsProps): ReactNode => {
+  if (status === "initial" || status === "rejected") {
+    return (
+      <button
+        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2 font-bold text-black transition-all duration-300 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={isLoading || !currentUserId}
+        onClick={handleSendRequest}
+        title={status === "rejected" ? "הבקשה הקודמת נדחתה" : ""}
+        type="button"
+      >
+        {isLoading ? (
+          <HugeiconsIcon
+            className="animate-spin"
+            icon={Loading02Icon}
+            size={18}
+          />
+        ) : (
+          <HugeiconsIcon icon={Add01Icon} size={18} />
+        )}
+        <span>{status === "rejected" ? "שלח שוב" : "החלף פרטים"}</span>
+      </button>
+    );
+  }
+
+  if (status === "pending_sent") {
+    return (
+      <button
+        className="flex flex-1 cursor-wait items-center justify-center gap-2 rounded-xl bg-white/10 py-2 font-bold text-gray-400 transition-all duration-300"
+        disabled
+        type="button"
+      >
+        <HugeiconsIcon
+          className="animate-spin"
+          icon={Loading02Icon}
+          size={18}
+        />
+        <span>ממתין לאישור...</span>
+      </button>
+    );
+  }
+
+  if (status === "pending_received") {
+    return (
+      <div className="flex flex-1 gap-2">
+        <button
+          className="flex flex-1 items-center justify-center rounded-xl bg-green-500 py-2 font-bold text-black transition-all hover:bg-green-400"
+          disabled={isLoading}
+          onClick={() => handleApproveResponse(true)}
+          title="אשר החלפה"
+          type="button"
+        >
+          <HugeiconsIcon icon={Tick01Icon} size={18} />
+        </button>
+        <button
+          className="flex items-center justify-center rounded-xl bg-red-500/20 px-3 py-2 font-bold text-red-400 transition-all hover:bg-red-500/30"
+          disabled={isLoading}
+          onClick={() => handleApproveResponse(false)}
+          title="דחה בקשה"
+          type="button"
+        >
+          <HugeiconsIcon icon={Cancel01Icon} size={18} />
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "approved") {
+    return (
+      <button
+        className="flex flex-1 cursor-default items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/20 py-2 font-bold text-emerald-400 transition-all duration-300"
+        disabled
+        type="button"
+      >
+        <HugeiconsIcon icon={Shield01Icon} size={18} />
+        <span>חברים</span>
+      </button>
+    );
+  }
+
+  return null;
+};
+
+interface FriendActionButtonProps {
+  currentUserId: string | null;
+  friendshipStatus: FriendshipStatus;
+  id: string;
+  onSendFriendRequest?: (targetId: string) => void;
+}
+
+const FriendActionButton = ({
+  currentUserId,
+  id,
+  friendshipStatus,
+  onSendFriendRequest,
+}: FriendActionButtonProps): ReactNode => {
+  if (!currentUserId || currentUserId === id) {
+    return null;
+  }
+
+  return (
+    <button
+      className={`rounded-xl p-2 transition-colors ${getFriendButtonClassName(friendshipStatus)}`}
+      disabled={friendshipStatus !== "none"}
+      onClick={() => {
+        if (friendshipStatus === "none") {
+          onSendFriendRequest?.(id);
+        }
+      }}
+      title={getFriendButtonTitle(friendshipStatus)}
+      type="button"
+    >
+      {getFriendButtonIcon(friendshipStatus)}
+    </button>
+  );
+};
 
 export default function GamerCard({
   username,
@@ -81,9 +353,9 @@ export default function GamerCard({
   friendshipStatus = "none",
   onSendFriendRequest,
 }: GamerCardProps) {
-  const [status, setStatus] = useState<
-    "initial" | "pending_sent" | "pending_received" | "approved" | "rejected"
-  >(initialSwapStatus || "initial");
+  const [status, setStatus] = useState<SwapStatus>(
+    initialSwapStatus || "initial"
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [xp, setXp] = useState(Math.floor(Math.random() * 500) + 100);
@@ -94,7 +366,6 @@ export default function GamerCard({
   } | null>(null);
   // Bio enhancer state
   const [isEnhancingBio, _setIsEnhancingBio] = useState(false);
-  const [showBioEnhancer, setShowBioEnhancer] = useState(false);
 
   // OPTIMIZATION: Update local status when parent provides new status
   useEffect(() => {
@@ -120,47 +391,22 @@ export default function GamerCard({
 
     if (data) {
       const realTags: { [key: string]: string } = {};
-      data.forEach((t: any) => {
-        realTags[t.platform] = t.tag;
-      });
+      for (const tag of data as GamerTagRow[]) {
+        realTags[tag.platform] = tag.tag;
+      }
       setRevealedTags(realTags);
     }
   }, [id, supabase]);
 
-  // OPTIMIZATION: Only fetch initial status, no per-card realtime subscription
-  // Parent components should manage realtime subscriptions for all cards
   useEffect(() => {
-    if (!(currentUserId && id) || initialSwapStatus) {
-      return;
-    }
-
-    // Validate that currentUserId is a valid UUID (not 'preview' or other invalid values)
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!(uuidRegex.test(currentUserId) && uuidRegex.test(id))) {
-      return;
-    }
-
-    // Only fetch if parent didn't provide initial status
-    const checkStatus = async () => {
-      const { data } = await supabase
-        .from("swap_requests")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${currentUserId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${currentUserId})`
-        )
-        .maybeSingle();
-
-      if (data) {
-        const newStatus = determineStatus(data, currentUserId);
-        setStatus(newStatus);
-        if (newStatus === "approved") {
-          fetchRealTags();
-        }
-      }
-    };
-
-    checkStatus();
+    loadInitialSwapStatus({
+      currentUserId,
+      id,
+      initialSwapStatus,
+      supabase,
+      setStatus,
+      fetchRealTags,
+    });
   }, [currentUserId, id, initialSwapStatus, fetchRealTags, supabase]);
 
   const handleSendRequest = async () => {
@@ -183,16 +429,15 @@ export default function GamerCard({
 
       setStatus("pending_sent");
       haptic("success");
-      // Notify parent of status change
-      if (onSwapStatusChange) {
-        onSwapStatusChange(id, "pending_sent");
-      }
+      onSwapStatusChange?.(id, "pending_sent");
       toast.success("בקשה נשלחה!", {
         description: "תקבל התראה כשהמשתמש יאשר.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("שגיאה בשליחת הבקשה", { description: error.message });
+      toast.error("שגיאה בשליחת הבקשה", {
+        description: getErrorMessage(error),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -205,7 +450,7 @@ export default function GamerCard({
     }
     setIsLoading(true);
     try {
-      const newStatus = approved ? "approved" : "rejected";
+      const newStatus: SwapStatus = approved ? "approved" : "rejected";
 
       // Find requests where *I* am the receiver and *THEY* are the sender
       const { error } = await supabase
@@ -218,44 +463,17 @@ export default function GamerCard({
         throw error;
       }
 
-      setStatus(newStatus as any);
-      // Notify parent of status change
-      if (onSwapStatusChange) {
-        onSwapStatusChange(id, newStatus as any);
-      }
+      setStatus(newStatus);
+      onSwapStatusChange?.(id, newStatus);
 
       haptic(approved ? "success" : "medium");
 
       if (approved) {
-        // Auto-create friendship when swap is approved
-        const { error: friendError } = await supabase
-          .from("friendships")
-          .upsert(
-            {
-              sender_id: id,
-              receiver_id: currentUserId,
-              status: "accepted",
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "sender_id,receiver_id", ignoreDuplicates: true }
-          );
-        if (friendError) {
-          // Fallback: try insert if upsert fails (no unique constraint on pair)
-          const { data: existing } = await supabase
-            .from("friendships")
-            .select("id")
-            .or(
-              `and(sender_id.eq.${id},receiver_id.eq.${currentUserId}),and(sender_id.eq.${currentUserId},receiver_id.eq.${id})`
-            )
-            .maybeSingle();
-          if (!existing) {
-            await supabase.from("friendships").insert({
-              sender_id: id,
-              receiver_id: currentUserId,
-              status: "accepted",
-            });
-          }
-        }
+        await ensureFriendship({
+          receiverId: currentUserId,
+          senderId: id,
+          supabase,
+        });
 
         setXp((prev) => prev + 50);
         setShowXpGain(true);
@@ -267,8 +485,8 @@ export default function GamerCard({
       } else {
         toast.info("הבקשה נדחתה.");
       }
-    } catch (error: any) {
-      toast.error("שגיאה בעדכון", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("שגיאה בעדכון", { description: getErrorMessage(error) });
     } finally {
       setIsLoading(false);
     }
@@ -282,7 +500,7 @@ export default function GamerCard({
     setTimeout(() => setCopiedTag(null), 2000);
   };
 
-  const handleEnhanceBio = async () => {
+  const handleEnhanceBio = () => {
     toast.info("שיפור ביו עם AI הוסר מהמערכת.");
   };
 
@@ -305,7 +523,7 @@ export default function GamerCard({
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-[0.125rem]">
+            <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-0.5">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
                 <OptimizedAvatar
                   className="h-full w-full object-cover"
@@ -352,43 +570,33 @@ export default function GamerCard({
         </div>
       </div>
 
-      <div
-        className="group/bio relative mt-4"
-        onMouseEnter={() => currentUserId === id && setShowBioEnhancer(true)}
-        onMouseLeave={() => setShowBioEnhancer(false)}
-      >
-        <p className="line-clamp-2 min-h-[2.5rem] grow text-fluid-sm text-gray-300">
+      <div className="group/bio relative mt-4">
+        <p className="line-clamp-2 min-h-10 grow text-fluid-sm text-gray-300">
           {bio}
         </p>
         {/* Bio Enhancer Button - Only show for own card */}
         {currentUserId === id && (
-          <AnimatePresence>
-            {showBioEnhancer && (
-              <motion.button
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute top-0 left-0 rounded-lg bg-linear-to-r from-primary to-secondary p-1.5 transition-all hover:shadow-lg hover:shadow-primary/50 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={isEnhancingBio}
-                exit={{ opacity: 0, scale: 0.8 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                onClick={handleEnhanceBio}
-                title="שפר את הביו שלך עם AI"
-              >
-                {isEnhancingBio ? (
-                  <HugeiconsIcon
-                    className="animate-spin text-black"
-                    icon={Loading02Icon}
-                    size={14}
-                  />
-                ) : (
-                  <HugeiconsIcon
-                    className="text-black"
-                    icon={SparklesIcon}
-                    size={14}
-                  />
-                )}
-              </motion.button>
+          <motion.button
+            className="absolute top-0 left-0 rounded-lg bg-linear-to-r from-primary to-secondary p-1.5 opacity-0 transition-all hover:shadow-lg hover:shadow-primary/50 disabled:cursor-not-allowed disabled:opacity-50 group-hover/bio:opacity-100"
+            disabled={isEnhancingBio}
+            onClick={handleEnhanceBio}
+            title="שפר את הביו שלך עם AI"
+            type="button"
+          >
+            {isEnhancingBio ? (
+              <HugeiconsIcon
+                className="animate-spin text-black"
+                icon={Loading02Icon}
+                size={14}
+              />
+            ) : (
+              <HugeiconsIcon
+                className="text-black"
+                icon={SparklesIcon}
+                size={14}
+              />
             )}
-          </AnimatePresence>
+          </motion.button>
         )}
       </div>
 
@@ -409,6 +617,7 @@ export default function GamerCard({
                 className="group/tag flex w-full items-center justify-between rounded-lg border border-white/5 bg-white/5 p-2.5 text-fluid-xs transition-all hover:border-primary/30 hover:bg-white/10"
                 key={game}
                 onClick={() => copyToClipboard(realTag)}
+                type="button"
               >
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-400">{game}</span>
@@ -438,10 +647,10 @@ export default function GamerCard({
       </AnimatePresence>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {games.map((game, i) => (
+        {games.map((game) => (
           <span
             className="rounded-md border border-secondary/20 bg-secondary/10 px-2 py-1 font-bold text-[0.625rem] text-secondary uppercase tracking-wider"
-            key={i}
+            key={game}
           >
             {game}
           </span>
@@ -462,104 +671,20 @@ export default function GamerCard({
           )}
         </AnimatePresence>
 
-        {status === "initial" || status === "rejected" ? (
-          <button
-            className={
-              "flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2 font-bold text-black transition-all duration-300 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-            }
-            disabled={isLoading || !currentUserId}
-            onClick={handleSendRequest}
-            title={status === "rejected" ? "הבקשה הקודמת נדחתה" : ""}
-          >
-            {isLoading ? (
-              <HugeiconsIcon
-                className="animate-spin"
-                icon={Loading02Icon}
-                size={18}
-              />
-            ) : (
-              <HugeiconsIcon icon={Add01Icon} size={18} />
-            )}
-            <span>{status === "rejected" ? "שלח שוב" : "החלף פרטים"}</span>
-          </button>
-        ) : status === "pending_sent" ? (
-          <button
-            className="flex flex-1 cursor-wait items-center justify-center gap-2 rounded-xl bg-white/10 py-2 font-bold text-gray-400 transition-all duration-300"
-            disabled
-          >
-            <HugeiconsIcon
-              className="animate-spin"
-              icon={Loading02Icon}
-              size={18}
-            />
-            <span>ממתין לאישור...</span>
-          </button>
-        ) : status === "pending_received" ? (
-          <div className="flex flex-1 gap-2">
-            <button
-              className="flex flex-1 items-center justify-center rounded-xl bg-green-500 py-2 font-bold text-black transition-all hover:bg-green-400"
-              disabled={isLoading}
-              onClick={() => handleApproveResponse(true)}
-              title="אשר החלפה"
-            >
-              <HugeiconsIcon icon={Tick01Icon} size={18} />
-            </button>
-            <button
-              className="flex items-center justify-center rounded-xl bg-red-500/20 px-3 py-2 font-bold text-red-400 transition-all hover:bg-red-500/30"
-              disabled={isLoading}
-              onClick={() => handleApproveResponse(false)}
-              title="דחה בקשה"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} size={18} />
-            </button>
-          </div> // Approved
-        ) : (
-          <button
-            className="flex flex-1 cursor-default items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/20 py-2 font-bold text-emerald-400 transition-all duration-300"
-            disabled
-          >
-            <HugeiconsIcon icon={Shield01Icon} size={18} />
-            <span>חברים</span>
-          </button>
-        )}
+        <SwapActions
+          currentUserId={currentUserId}
+          handleApproveResponse={handleApproveResponse}
+          handleSendRequest={handleSendRequest}
+          isLoading={isLoading}
+          status={status}
+        />
 
-        {/* Friend Button */}
-        {currentUserId && currentUserId !== id && (
-          <button
-            className={`rounded-xl p-2 transition-colors ${
-              friendshipStatus === "accepted"
-                ? "cursor-default bg-green-500/20 text-green-400"
-                : friendshipStatus === "pending_sent"
-                  ? "cursor-wait bg-white/5 text-yellow-400"
-                  : friendshipStatus === "pending_received"
-                    ? "cursor-default bg-blue-500/20 text-blue-400"
-                    : "bg-white/5 text-white hover:bg-white/10 hover:text-green-400"
-            }`}
-            disabled={friendshipStatus !== "none"}
-            onClick={() =>
-              friendshipStatus === "none" && onSendFriendRequest?.(id)
-            }
-            title={
-              friendshipStatus === "accepted"
-                ? "חברים"
-                : friendshipStatus === "pending_sent"
-                  ? "בקשה נשלחה"
-                  : friendshipStatus === "pending_received"
-                    ? "ממתין לאישורך"
-                    : "הוסף חבר"
-            }
-          >
-            {friendshipStatus === "accepted" ? (
-              <HugeiconsIcon icon={UserCheck01Icon} size={18} />
-            ) : friendshipStatus === "pending_sent" ? (
-              <HugeiconsIcon icon={Clock01Icon} size={18} />
-            ) : friendshipStatus === "pending_received" ? (
-              <HugeiconsIcon icon={UserCheck01Icon} size={18} />
-            ) : (
-              <HugeiconsIcon icon={UserAdd01Icon} size={18} />
-            )}
-          </button>
-        )}
+        <FriendActionButton
+          currentUserId={currentUserId}
+          friendshipStatus={friendshipStatus}
+          id={id}
+          onSendFriendRequest={onSendFriendRequest}
+        />
 
         <Link
           className={`rounded-xl p-2 transition-colors ${status === "approved" ? "bg-primary text-black hover:bg-primary/90" : "bg-white/5 text-white hover:bg-white/10"}`}

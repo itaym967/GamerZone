@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
-import Navigation from "../components/Navigation";
+import Navigation from "../components/navigation";
 import PartyCard from "./components/party-card";
 import PartyFilters from "./components/party-filters";
 

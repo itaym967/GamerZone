@@ -7,7 +7,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import Logo from "../../components/Logo";
+import Logo from "../../components/logo";
 
 function SuccessContent() {
   const searchParams = useSearchParams();

@@ -38,6 +38,7 @@ export default function OfflineIndicator() {
       <button
         className="mr-2 text-black/70 hover:text-black"
         onClick={() => setShowBanner(false)}
+        type="button"
       >
         ✕
       </button>

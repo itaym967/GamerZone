@@ -19,7 +19,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { type Notification, useNotifications } from "@/hooks/use-notifications";
-import Navigation from "../components/Navigation";
+import Navigation from "../components/navigation";
 
 const TYPE_CONFIG: Record<
   string,

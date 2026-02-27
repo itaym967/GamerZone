@@ -3,6 +3,7 @@
 import { Refresh01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface AvatarCreatorProps {
@@ -51,10 +52,12 @@ export default function AvatarCreator({
         >
           <div className="h-40 w-40 rounded-full bg-linear-to-br from-primary to-secondary p-1">
             <div className="h-full w-full overflow-hidden rounded-full bg-black">
-              <img
+              <Image
                 alt="Avatar Preview"
                 className="h-full w-full object-cover"
+                height={160}
                 src={avatarUrl}
+                width={160}
               />
             </div>
           </div>
@@ -62,6 +65,7 @@ export default function AvatarCreator({
             className="absolute -right-2 -bottom-2 rounded-full bg-primary p-3 text-black shadow-lg transition-all hover:scale-110 hover:bg-primary/80"
             onClick={randomize}
             title="אווטאר אקראי"
+            type="button"
           >
             <HugeiconsIcon icon={Refresh01Icon} size={20} />
           </button>
@@ -70,9 +74,9 @@ export default function AvatarCreator({
 
       {/* Style Selector */}
       <div>
-        <label className="mb-3 block text-right font-medium text-fluid-sm text-gray-400">
+        <p className="mb-3 block text-right font-medium text-fluid-sm text-gray-400">
           בחר סגנון אווטאר
-        </label>
+        </p>
         <div className="grid grid-cols-4 gap-2">
           {AVATAR_STYLES.map((style) => (
             <button
@@ -83,6 +87,7 @@ export default function AvatarCreator({
               }`}
               key={style.id}
               onClick={() => setSelectedStyle(style.id)}
+              type="button"
             >
               <div className="mb-1 text-fluid-xl">{style.emoji}</div>
               <div className="font-medium text-fluid-xs text-white">
@@ -102,6 +107,7 @@ export default function AvatarCreator({
       <button
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-white transition-all hover:border-primary/50"
         onClick={randomize}
+        type="button"
       >
         <HugeiconsIcon icon={Refresh01Icon} size={18} />
         <span>אווטאר אקראי חדש</span>
