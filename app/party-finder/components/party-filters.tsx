@@ -1,7 +1,7 @@
+"use client";
+
 import { FilterIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-
-("use client");
 
 interface PartyFiltersProps {
   games: string[];

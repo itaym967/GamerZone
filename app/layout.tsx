@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/auth-context";
 import FloatingGamerBot from "./components/floating-gamer-bot";
@@ -9,11 +8,6 @@ import PWAInstallPrompt from "./components/pwa-install-prompt";
 import SafetyBanner from "./components/safety-banner";
 import SplashScreen from "./components/splash-screen";
 import "./globals.css";
-
-const rubik = Rubik({
-  variable: "--font-rubik",
-  subsets: ["hebrew", "latin"],
-});
 
 export const metadata: Metadata = {
   title: "GamerZone | Swap Gamertags",
@@ -95,7 +89,7 @@ export default function RootLayout({
         <meta content="GamerZone" name="apple-mobile-web-app-title" />
       </head>
       <body
-        className={`${rubik.variable} bg-background font-rubik text-foreground antialiased`}
+        className="bg-background font-rubik text-foreground antialiased"
         suppressHydrationWarning
       >
         <AuthProvider>

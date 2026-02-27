@@ -17,7 +17,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import Navigation from "@/app/components/navigation";
 import OptimizedAvatar from "@/app/components/optimized-avatar";
@@ -47,7 +47,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-export default function PartyDetailsPage() {
+function PartyDetailsPageContent() {
   const params = useParams();
   const partyId = params.id as string;
   const router = useRouter();
@@ -471,5 +471,21 @@ export default function PartyDetailsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PartyDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen">
+          <div className="flex h-screen items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-blue-500 border-t-2 border-b-2" />
+          </div>
+        </div>
+      }
+    >
+      <PartyDetailsPageContent />
+    </Suspense>
   );
 }

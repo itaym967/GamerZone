@@ -33,6 +33,8 @@ interface SignupError {
   toString?: () => string;
 }
 
+const MAX_DOB_DATE = new Date().toISOString().split("T")[0];
+
 function hasRefreshTokenIssue(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -367,7 +369,7 @@ export default function SignupPage() {
               <input
                 className="scheme-dark w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white outline-hidden transition-colors focus:border-primary/50"
                 id="signup-date-of-birth"
-                max={new Date().toISOString().split("T")[0]}
+                max={MAX_DOB_DATE}
                 onChange={(e) => handleDateOfBirthChange(e.target.value)}
                 required
                 type="date"

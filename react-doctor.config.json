@@ -1,0 +1,6 @@
+{
+  "diff": false,
+  "ignore": {
+    "rules": ["knip/files", "knip/exports", "knip/types"]
+  }
+}
