@@ -31,7 +31,7 @@ export default function FloatingGamerBot() {
       sender: "bot",
       content:
         "שלום! אני GamerBot 🎮 אני כאן לעזור לך עם כל שאלה על משחקים, טיפים, המלצות ועוד!",
-      timestamp: new Date().toISOString(),
+      timestamp: "",
     },
   ]);
   const [isTyping, setIsTyping] = useState(false);
@@ -233,10 +233,12 @@ export default function FloatingGamerBot() {
                                 : "text-gray-500"
                             }`}
                           >
-                            {new Date(msg.timestamp).toLocaleTimeString(
-                              "he-IL",
-                              { hour: "2-digit", minute: "2-digit" }
-                            )}
+                            {msg.timestamp
+                              ? new Date(msg.timestamp).toLocaleTimeString(
+                                  "he-IL",
+                                  { hour: "2-digit", minute: "2-digit" }
+                                )
+                              : ""}
                           </span>
                         </div>
                       </motion.div>
