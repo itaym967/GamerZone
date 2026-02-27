@@ -15,8 +15,8 @@ function SuccessContent() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
-      <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-green-500/10 blur-[120px]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
+      <div className="absolute top-[-20%] right-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-green-500/10 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-primary/10 blur-[7.5rem]" />
 
       <div className="relative z-10 w-full max-w-md text-center">
         <Logo className="mb-8 justify-center" size="lg" />
@@ -38,7 +38,7 @@ function SuccessContent() {
             )}
           </div>
 
-          <h1 className="mb-3 font-bold text-2xl text-white">
+          <h1 className="mb-3 font-bold text-fluid-xl text-white">
             {alreadyGranted ? "ההסכמה כבר אושרה" : "ההסכמה אושרה בהצלחה!"}
           </h1>
 
@@ -49,7 +49,7 @@ function SuccessContent() {
           </p>
 
           <div className="mb-6 space-y-3 rounded-xl bg-white/5 p-4 text-right">
-            <h3 className="flex items-center justify-end gap-2 font-bold text-sm text-white">
+            <h3 className="flex items-center justify-end gap-2 font-bold text-fluid-sm text-white">
               <span>הגנות פעילות</span>
               <HugeiconsIcon
                 className="text-green-500"
@@ -57,7 +57,7 @@ function SuccessContent() {
                 size={16}
               />
             </h3>
-            <ul className="space-y-2 text-gray-400 text-sm">
+            <ul className="space-y-2 text-fluid-sm text-gray-400">
               <li className="flex items-center justify-end gap-2">
                 <span>סינון תוכן מוגבר</span>
                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -77,7 +77,7 @@ function SuccessContent() {
             </ul>
           </div>
 
-          <p className="text-gray-500 text-xs">
+          <p className="text-fluid-xs text-gray-500">
             ניתן לפנות אלינו בכל שאלה בנוגע לבטיחות ילדים בפלטפורמה.
           </p>
         </div>

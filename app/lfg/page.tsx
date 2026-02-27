@@ -145,32 +145,37 @@ export default function LFGPage() {
       <Navigation />
 
       {/* Header */}
-      <div className="sticky top-0 z-20 border-white/5 border-b bg-[#0a0a0a]/80 px-4 pt-4 pb-4 backdrop-blur-xl">
-        <div className="mx-auto max-w-4xl">
+      <div className="sticky top-0 z-20 border-white/5 border-b bg-[#0a0a0a]/80 py-fluid-md backdrop-blur-xl">
+        <div className="max-w-4xl content-shell">
           <div className="mb-4 flex items-center justify-between">
-            <h1 className="font-bold text-2xl text-white">לוח חיפוש שחקנים</h1>
-            <Link href="/lfg/create">
-              <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95">
-                <HugeiconsIcon icon={Add01Icon} size={18} />
-                <span className="hidden sm:inline">פרסם מודעה</span>
-                <span className="sm:hidden">פרסם</span>
-              </button>
+            <h1 className="font-bold text-fluid-xl text-white">
+              לוח חיפוש שחקנים
+            </h1>
+            <Link
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-fluid-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95"
+              href="/lfg/create"
+            >
+              <HugeiconsIcon icon={Add01Icon} size={18} />
+              <span className="hidden sm:inline">פרסם מודעה</span>
+              <span className="sm:hidden">פרסם</span>
             </Link>
           </div>
 
           {/* Game Filter */}
-          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+          <div className="no-scrollbar bleed-fluid flex gap-2 overflow-x-auto pb-2">
             <button
-              className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-sm transition-all ${selectedGame ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10" : "border-white bg-white text-black"}`}
+              className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-fluid-sm transition-all ${selectedGame ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10" : "border-white bg-white text-black"}`}
               onClick={() => setSelectedGame(null)}
+              type="button"
             >
               כל המשחקים
             </button>
             {GAMES.map((game) => (
               <button
-                className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-sm transition-all ${selectedGame === game ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
+                className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-fluid-sm transition-all ${selectedGame === game ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
                 key={game}
                 onClick={() => setSelectedGame(game)}
+                type="button"
               >
                 {game}
               </button>
@@ -180,9 +185,9 @@ export default function LFGPage() {
       </div>
 
       {/* Feed */}
-      <div className="mx-auto max-w-4xl px-4 pt-6">
+      <div className="max-w-4xl pt-6 content-shell">
         {loading ? (
-          <div className="grid animate-pulse grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="auto-grid animate-pulse">
             {[1, 2, 3, 4].map((i) => (
               <div className="h-40 rounded-2xl bg-white/5" key={i} />
             ))}
@@ -196,15 +201,15 @@ export default function LFGPage() {
                 size={32}
               />
             </div>
-            <h3 className="font-semibold text-lg text-white">
+            <h3 className="font-semibold text-fluid-lg text-white">
               אין מודעות פעילות
             </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-white/40">
+            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
               היה הראשון לחפש קבוצה בקטגוריה זו!
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="auto-grid">
             {posts.map((post) => (
               <LFGCard
                 currentUserId={user?.id || null}

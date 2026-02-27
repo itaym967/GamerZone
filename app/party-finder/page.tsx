@@ -239,8 +239,8 @@ export default function PartyFinderPage() {
     <div className="min-h-screen pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
-      <div className="sticky top-0 z-20 border-white/5 border-b bg-[#0a0a0a]/80 px-4 pt-4 pb-4 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl">
+      <div className="sticky top-0 z-20 border-white/5 border-b bg-[#0a0a0a]/80 py-fluid-md backdrop-blur-xl">
+        <div className="max-w-6xl content-shell">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600">
@@ -250,14 +250,17 @@ export default function PartyFinderPage() {
                   size={20}
                 />
               </div>
-              <h1 className="font-bold text-2xl text-white">מוצא קבוצות</h1>
+              <h1 className="font-bold text-fluid-xl text-white">
+                מוצא קבוצות
+              </h1>
             </div>
-            <Link href="/party-finder/create">
-              <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95">
-                <HugeiconsIcon icon={Add01Icon} size={18} />
-                <span className="hidden sm:inline">צור קבוצה</span>
-                <span className="sm:hidden">צור</span>
-              </button>
+            <Link
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-fluid-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95"
+              href="/party-finder/create"
+            >
+              <HugeiconsIcon icon={Add01Icon} size={18} />
+              <span className="hidden sm:inline">צור קבוצה</span>
+              <span className="sm:hidden">צור</span>
             </Link>
           </div>
 
@@ -273,9 +276,9 @@ export default function PartyFinderPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 pt-6">
+      <div className="max-w-6xl pt-6 content-shell">
         {loading ? (
-          <div className="grid animate-pulse grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="auto-grid animate-pulse">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div className="h-64 rounded-2xl bg-white/5" key={i} />
             ))}
@@ -289,15 +292,15 @@ export default function PartyFinderPage() {
                 size={32}
               />
             </div>
-            <h3 className="font-semibold text-lg text-white">
+            <h3 className="font-semibold text-fluid-lg text-white">
               אין קבוצות פעילות
             </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-white/40">
+            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
               היה הראשון ליצור קבוצה בקטגוריה זו!
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="auto-grid">
             {parties.map((party) => (
               <PartyCard
                 currentUserId={user?.id || null}

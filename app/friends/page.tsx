@@ -55,16 +55,16 @@ function FriendCard({
           size={48}
         />
         {friend?.is_online && (
-          <span className="absolute right-0 bottom-0 h-3.5 w-3.5 rounded-full border-2 border-primary-foreground bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+          <span className="absolute right-0 bottom-0 h-3.5 w-3.5 rounded-full border-2 border-primary-foreground bg-green-500 shadow-[0_0_0.5rem_rgba(34,197,94,0.6)]" />
         )}
       </div>
 
       {/* Info */}
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-semibold text-sm text-white">
+        <h3 className="truncate font-semibold text-fluid-sm text-white">
           {friend?.username || "Unknown"}
         </h3>
-        <p className="truncate text-white/40 text-xs">
+        <p className="truncate text-fluid-xs text-white/40">
           {friend?.bio || (friend?.is_online ? "מחובר/ת" : "לא מחובר/ת")}
         </p>
       </div>
@@ -84,6 +84,7 @@ function FriendCard({
               className="rounded-xl p-2 text-white/40 opacity-0 transition-colors hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
               onClick={() => onUnfriend?.(item.id)}
               title="הסר חבר"
+              type="button"
             >
               <HugeiconsIcon icon={UserMinus01Icon} size={18} />
             </button>
@@ -96,6 +97,7 @@ function FriendCard({
               className="rounded-xl bg-green-500/10 p-2 text-green-400 transition-colors hover:bg-green-500/20"
               onClick={() => onAccept?.(item.id)}
               title="אשר"
+              type="button"
             >
               <HugeiconsIcon icon={Tick01Icon} size={18} />
             </button>
@@ -103,6 +105,7 @@ function FriendCard({
               className="rounded-xl bg-red-500/10 p-2 text-red-400 transition-colors hover:bg-red-500/20"
               onClick={() => onReject?.(item.id)}
               title="דחה"
+              type="button"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={18} />
             </button>
@@ -111,8 +114,9 @@ function FriendCard({
 
         {type === "sent" && (
           <button
-            className="rounded-xl bg-white/5 px-3 py-1.5 font-medium text-white/40 text-xs transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="rounded-xl bg-white/5 px-3 py-1.5 font-medium text-fluid-xs text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
             onClick={() => onCancel?.(item.id)}
+            type="button"
           >
             בטל בקשה
           </button>
@@ -219,11 +223,11 @@ export default function FriendsPage() {
     <div className="min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
-      <main className="mx-auto max-w-2xl p-6">
+      <main className="stack-fluid max-w-2xl p-fluid-lg content-shell">
         {/* Header */}
         <header className="mb-8">
           <div className="mb-2 flex items-center justify-between">
-            <h1 className="flex items-center gap-3 font-bold text-3xl text-white">
+            <h1 className="flex items-center gap-3 font-bold text-fluid-2xl text-white">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-emerald-600">
                 <HugeiconsIcon
                   className="text-white"
@@ -234,32 +238,35 @@ export default function FriendsPage() {
               <span>חברים</span>
             </h1>
             {friends.length > 0 && (
-              <div className="text-sm text-white/40">
+              <div className="text-fluid-sm text-white/40">
                 <span className="font-bold text-green-400">{onlineCount}</span>{" "}
                 מחוברים מתוך {friends.length}
               </div>
             )}
           </div>
-          <p className="text-gray-400">נהל את רשימת החברים שלך</p>
+          <p className="text-fluid-base text-gray-400">
+            נהל את רשימת החברים שלך
+          </p>
         </header>
 
         {/* Tabs */}
         <div className="mb-6 flex gap-2">
           {tabs.map((tab) => (
             <button
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2 font-medium text-sm transition-all ${
+              className={`flex items-center gap-2 rounded-xl border px-4 py-2 font-medium text-fluid-sm transition-all ${
                 activeTab === tab.key
                   ? "border-white bg-white text-black"
                   : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
               }`}
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
+              type="button"
             >
               <HugeiconsIcon icon={tab.icon} size={16} />
               {tab.label}
               {tab.count > 0 && (
                 <span
-                  className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 font-bold text-xs ${
+                  className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 font-bold text-fluid-xs ${
                     activeTab === tab.key
                       ? "bg-black/20 text-black"
                       : tab.key === "pending" && tab.count > 0
@@ -325,14 +332,14 @@ export default function FriendsPage() {
                 />
               )}
             </div>
-            <h3 className="font-semibold text-lg text-white">
+            <h3 className="font-semibold text-fluid-lg text-white">
               {activeTab === "friends"
                 ? "אין חברים עדיין"
                 : activeTab === "pending"
                   ? "אין בקשות ממתינות"
                   : "לא שלחת בקשות"}
             </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-white/40">
+            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
               {activeTab === "friends"
                 ? "גלה שחקנים בעמוד הגילוי ושלח להם בקשת חברות!"
                 : activeTab === "pending"
@@ -341,7 +348,7 @@ export default function FriendsPage() {
             </p>
             {activeTab === "friends" && (
               <Link
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-black text-sm transition-all hover:bg-primary/90"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-black text-fluid-sm transition-all hover:bg-primary/90"
                 href="/explore"
               >
                 <HugeiconsIcon icon={Search01Icon} size={16} />

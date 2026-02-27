@@ -121,8 +121,8 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Animated Background */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
-      <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-primary/20 blur-[120px]" />
-      <div className="absolute right-[-10%] bottom-[-20%] h-[600px] w-[600px] animate-pulse rounded-full bg-secondary/20 blur-[120px] delay-75" />
+      <div className="absolute top-[-20%] left-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute right-[-10%] bottom-[-20%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
 
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
@@ -155,7 +155,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-white/10 border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-fluid-xs uppercase">
               <span className="bg-card px-2 text-gray-500">
                 או התחבר עם אימייל
               </span>
@@ -164,7 +164,7 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">
+              <label className="font-medium text-fluid-sm text-gray-400">
                 אימייל
               </label>
               <input
@@ -176,7 +176,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">סיסמה</label>
+              <label className="font-medium text-fluid-sm text-gray-400">
+                סיסמה
+              </label>
               <div className="relative">
                 <input
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
@@ -200,7 +202,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-gray-400 text-xs">
+          <div className="flex items-center justify-between text-fluid-xs text-gray-400">
             <Link
               className="transition-colors hover:text-primary"
               href="/forgot-password"
@@ -239,7 +241,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-gray-400 text-sm">
+        <p className="mt-8 text-center text-fluid-sm text-gray-400">
           אין לך משתמש?{" "}
           <Link
             className="font-bold text-primary hover:underline"

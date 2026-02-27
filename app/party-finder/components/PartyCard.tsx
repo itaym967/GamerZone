@@ -76,10 +76,10 @@ export default function PartyCard({
     >
       <div className="mb-3 flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <h3 className="mb-1 truncate font-bold text-lg text-white">
+          <h3 className="mb-1 truncate font-bold text-fluid-lg text-white">
             {party.title}
           </h3>
-          <div className="flex items-center gap-2 text-white/40 text-xs">
+          <div className="flex items-center gap-2 text-fluid-xs text-white/40">
             <span className="flex items-center gap-1">
               <HugeiconsIcon icon={UserGroupIcon} size={12} />
               {members.length}/{party.max_members}
@@ -93,7 +93,7 @@ export default function PartyCard({
           </div>
         </div>
         {party.skill_level_required && (
-          <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-500/20 bg-purple-500/20 px-2.5 py-1 font-semibold text-purple-400 text-xs">
+          <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-500/20 bg-purple-500/20 px-2.5 py-1 font-semibold text-fluid-xs text-purple-400">
             <HugeiconsIcon icon={Shield01Icon} size={12} />
             {party.skill_level_required}
           </div>
@@ -101,21 +101,21 @@ export default function PartyCard({
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-2.5 py-1 font-semibold text-blue-400 text-sm">
+        <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-2.5 py-1 font-semibold text-blue-400 text-fluid-sm">
           <HugeiconsIcon icon={GameController02Icon} size={14} />
           {party.game}
         </span>
-        <span className="rounded-full border border-cyan-500/20 bg-cyan-500/20 px-2.5 py-1 font-medium text-cyan-400 text-sm">
+        <span className="rounded-full border border-cyan-500/20 bg-cyan-500/20 px-2.5 py-1 font-medium text-cyan-400 text-fluid-sm">
           {party.mode}
         </span>
         {party.mic_required && (
-          <span className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-2.5 py-1 font-medium text-red-400 text-sm">
+          <span className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-2.5 py-1 font-medium text-fluid-sm text-red-400">
             <HugeiconsIcon icon={Mic01Icon} size={14} />
             מיקרופון
           </span>
         )}
         {party.region && (
-          <span className="flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/20 px-2.5 py-1 font-medium text-green-400 text-sm">
+          <span className="flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/20 px-2.5 py-1 font-medium text-fluid-sm text-green-400">
             <HugeiconsIcon icon={GlobeIcon} size={14} />
             {party.region}
           </span>
@@ -167,7 +167,7 @@ export default function PartyCard({
         </button>
       )}
       {(isMember || isLeader) && (
-        <div className="w-full py-2.5 text-center font-semibold text-blue-400 text-sm">
+        <div className="w-full py-2.5 text-center font-semibold text-blue-400 text-fluid-sm">
           {isLeader ? "הקבוצה שלך" : "חבר בקבוצה"}
         </div>
       )}

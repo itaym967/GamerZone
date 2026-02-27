@@ -36,8 +36,8 @@ export default function SplashScreen() {
       <div className="splash-icon mb-6 rounded-2xl bg-primary p-5 text-black">
         <HugeiconsIcon icon={GameController02Icon} size={48} />
       </div>
-      <h1 className="mb-2 font-bold text-2xl text-white">GamerZone</h1>
-      <p className="text-gray-400 text-sm">מצא את הסקוואד שלך</p>
+      <h1 className="mb-2 font-bold text-fluid-xl text-white">GamerZone</h1>
+      <p className="text-fluid-sm text-gray-400">מצא את הסקוואד שלך</p>
       <div className="mt-8 flex gap-1.5">
         <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
         <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />

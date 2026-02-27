@@ -130,7 +130,7 @@ export default function CreateLFGPage() {
     <div className="min-h-screen pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
-      <div className="mx-auto max-w-lg px-4 pt-6">
+      <div className="max-w-lg pt-6 content-shell">
         <div className="mb-6 flex items-center gap-3">
           <Link
             className="-ml-2 rounded-full p-2 transition-colors hover:bg-white/10"
@@ -138,13 +138,15 @@ export default function CreateLFGPage() {
           >
             <HugeiconsIcon className="text-white" icon={ArrowLeft01Icon} />
           </Link>
-          <h1 className="font-bold text-2xl text-white">פרסום מודעה חדשה</h1>
+          <h1 className="font-bold text-fluid-xl text-white">
+            פרסום מודעה חדשה
+          </h1>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Game Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 font-medium text-sm text-white/80">
+            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
               <HugeiconsIcon
                 className="text-purple-400"
                 icon={GameController02Icon}
@@ -155,7 +157,7 @@ export default function CreateLFGPage() {
             <div className="grid grid-cols-2 gap-2">
               {GAMES.map((game) => (
                 <button
-                  className={`rounded-xl border p-3 text-left font-medium text-sm transition-all ${formData.game === game ? "border-blue-500 bg-blue-600 text-white shadow-blue-500/20 shadow-lg" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
+                  className={`rounded-xl border p-3 text-left font-medium text-fluid-sm transition-all ${formData.game === game ? "border-blue-500 bg-blue-600 text-white shadow-blue-500/20 shadow-lg" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
                   key={game}
                   onClick={() => setFormData({ ...formData, game })}
                   type="button"
@@ -168,14 +170,14 @@ export default function CreateLFGPage() {
 
           {/* Mode Input */}
           <div className="space-y-2">
-            <label className="font-medium text-sm text-white/80">
+            <label className="font-medium text-fluid-sm text-white/80">
               מצב משחק
             </label>
             {formData.game && (
               <div className="mb-2 flex flex-wrap gap-2">
                 {GAME_MODES[formData.game]?.map((mode: string) => (
                   <button
-                    className={`rounded-full border px-3 py-1.5 font-medium text-xs transition-all ${formData.mode === mode ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
+                    className={`rounded-full border px-3 py-1.5 font-medium text-fluid-xs transition-all ${formData.mode === mode ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
                     key={mode}
                     onClick={() => setFormData({ ...formData, mode })}
                     type="button"
@@ -205,7 +207,7 @@ export default function CreateLFGPage() {
 
           {/* Mic Required */}
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <label className="flex items-center gap-2 font-medium text-sm text-white/80">
+            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
               <HugeiconsIcon
                 className="text-red-400"
                 icon={Mic01Icon}
@@ -225,7 +227,9 @@ export default function CreateLFGPage() {
 
           {/* Description */}
           <div className="space-y-2">
-            <label className="font-medium text-sm text-white/80">תיאור</label>
+            <label className="font-medium text-fluid-sm text-white/80">
+              תיאור
+            </label>
             <textarea
               className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden"
               maxLength={140}
@@ -237,20 +241,20 @@ export default function CreateLFGPage() {
               rows={3}
               value={formData.description}
             />
-            <div className="text-right text-white/40 text-xs">
+            <div className="text-right text-fluid-xs text-white/40">
               {formData.description.length}/140
             </div>
           </div>
 
           {/* Submit */}
           <button
-            className="w-full rounded-xl bg-linear-to-r from-blue-600 to-cyan-500 py-4 font-bold text-lg text-white shadow-blue-600/20 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+            className="w-full rounded-xl bg-linear-to-r from-blue-600 to-cyan-500 py-4 font-bold text-fluid-lg text-white shadow-blue-600/20 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
             disabled={loading || !formData.game || !formData.mode}
             type="submit"
           >
             {loading ? "מפרסם..." : "פרסם ללוח"}
           </button>
-          <p className="text-center text-white/40 text-xs">
+          <p className="text-center text-fluid-xs text-white/40">
             המודעה תפוג אוטומטית תוך שעה.
           </p>
         </form>

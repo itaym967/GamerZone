@@ -116,11 +116,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
             icon={DatabaseIcon}
             size={28}
           />
-          <h2 className="font-bold text-2xl text-white">
+          <h2 className="font-bold text-fluid-xl text-white">
             ניטור ביצועי מסד נתונים
           </h2>
         </div>
-        <p className="text-gray-400 text-sm">
+        <p className="text-fluid-sm text-gray-400">
           מעקב אחר ביצועי Realtime Subscriptions ושאילתות איטיות
         </p>
       </div>
@@ -194,7 +194,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
 
       {/* Optimization Status */}
       <div className="rounded-2xl border border-white/5 bg-card p-6">
-        <h3 className="mb-4 flex items-center gap-2 font-bold text-lg text-white">
+        <h3 className="mb-4 flex items-center gap-2 font-bold text-fluid-lg text-white">
           <HugeiconsIcon
             className="text-blue-400"
             icon={Shield01Icon}
@@ -226,11 +226,13 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
                   )}
                   <div>
                     <div className="font-medium text-white">{phase.title}</div>
-                    <div className="text-gray-400 text-xs">{phase.desc}</div>
+                    <div className="text-fluid-xs text-gray-400">
+                      {phase.desc}
+                    </div>
                   </div>
                 </div>
                 <div
-                  className={`rounded-full px-3 py-1 font-bold text-xs ${done ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}
+                  className={`rounded-full px-3 py-1 font-bold text-fluid-xs ${done ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}
                 >
                   {done ? "הושלם ✓" : "ממתין"}
                 </div>
@@ -242,7 +244,9 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
 
       {/* Quick Actions */}
       <div className="rounded-2xl border border-white/5 bg-card p-6">
-        <h3 className="mb-4 font-bold text-lg text-white">פעולות מהירות</h3>
+        <h3 className="mb-4 font-bold text-fluid-lg text-white">
+          פעולות מהירות
+        </h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition-all hover:bg-blue-500"
@@ -271,7 +275,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           />
           <div>
             <h4 className="mb-2 font-bold text-white">אודות מערכת הניטור</h4>
-            <p className="text-gray-300 text-sm leading-relaxed">
+            <p className="text-fluid-sm text-gray-300 leading-relaxed">
               מערכת זו עוקבת אחר ביצועי מסד הנתונים בזמן אמת. המטרה היא להפחית
               את מספר ה-Realtime Subscriptions ב-90%+ על ידי אופטימיזציה של 4
               רכיבים עיקריים. עד כה הושלמו 2 שלבים (LFG Page + Chat Hook) עם
@@ -307,15 +311,15 @@ function MetricCard({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="font-medium text-gray-400 text-sm">{label}</h3>
+          <h3 className="font-medium text-fluid-sm text-gray-400">{label}</h3>
         </div>
         {pulse && (
           <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
         )}
       </div>
-      <div className="mb-2 font-bold text-3xl text-white">{value}</div>
-      <p className="text-gray-500 text-xs">{sub}</p>
-      <div className="mt-4 flex items-center gap-2 border-white/5 border-t pt-4 text-xs">
+      <div className="mb-2 font-bold text-fluid-2xl text-white">{value}</div>
+      <p className="text-fluid-xs text-gray-500">{sub}</p>
+      <div className="mt-4 flex items-center gap-2 border-white/5 border-t pt-4 text-fluid-xs">
         {footer}
       </div>
     </div>

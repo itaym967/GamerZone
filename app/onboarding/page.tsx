@@ -174,16 +174,16 @@ export default function OnboardingPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Background Effects */}
-      <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-primary/20 blur-[120px]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-secondary/20 blur-[120px]" />
+      <div className="absolute top-[-20%] right-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/20 blur-[7.5rem]" />
 
       <div className="relative z-10 w-full max-w-2xl">
         <div className="mb-10 text-center">
           <Logo className="mb-4 justify-center" size="lg" />
-          <h1 className="mb-2 font-bold text-3xl text-white">
+          <h1 className="mb-2 font-bold text-fluid-2xl text-white">
             בוא נבנה את הפרופיל שלך
           </h1>
-          <p className="text-gray-400">
+          <p className="text-fluid-base text-gray-400">
             אנחנו צריכים כמה פרטים כדי למצוא לך את הסקוואד המושלם
           </p>
 
@@ -207,7 +207,7 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <div className="min-h-[500px] rounded-3xl border border-white/10 bg-card p-8 shadow-2xl backdrop-blur-xl">
+        <div className="min-h-[31.25rem] rounded-3xl border border-white/10 bg-card p-8 shadow-2xl backdrop-blur-xl">
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div
@@ -218,10 +218,10 @@ export default function OnboardingPage() {
                 key="step0"
               >
                 <div className="py-6">
-                  <div className="mx-auto mb-6 flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary text-4xl">
+                  <div className="mx-auto mb-6 flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary text-fluid-2xl">
                     🎮
                   </div>
-                  <h2 className="mb-4 font-bold text-3xl text-white">
+                  <h2 className="mb-4 font-bold text-fluid-2xl text-white">
                     ברוכים הבאים ל-GamerZone!
                   </h2>
                   <p className="mx-auto mb-8 max-w-md text-gray-400">
@@ -237,10 +237,10 @@ export default function OnboardingPage() {
                         icon={BotIcon}
                         size={32}
                       />
-                      <h3 className="mb-1 font-bold text-sm text-white">
+                      <h3 className="mb-1 font-bold text-fluid-sm text-white">
                         GamerBot AI
                       </h3>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-fluid-xs text-gray-400">
                         בוט חכם שעונה על שאלות על משחקים
                       </p>
                     </div>
@@ -250,10 +250,10 @@ export default function OnboardingPage() {
                         icon={Message01Icon}
                         size={32}
                       />
-                      <h3 className="mb-1 font-bold text-sm text-white">
+                      <h3 className="mb-1 font-bold text-fluid-sm text-white">
                         צ'אט בזמן אמת
                       </h3>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-fluid-xs text-gray-400">
                         שלח הודעות לשחקנים אחרים מיידית
                       </p>
                     </div>
@@ -263,10 +263,10 @@ export default function OnboardingPage() {
                         icon={ZapIcon}
                         size={32}
                       />
-                      <h3 className="mb-1 font-bold text-sm text-white">
+                      <h3 className="mb-1 font-bold text-fluid-sm text-white">
                         Live Board
                       </h3>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-fluid-xs text-gray-400">
                         מצא שחקנים שמחפשים קבוצה עכשיו
                       </p>
                     </div>
@@ -276,10 +276,10 @@ export default function OnboardingPage() {
                         icon={UserGroupIcon}
                         size={32}
                       />
-                      <h3 className="mb-1 font-bold text-sm text-white">
+                      <h3 className="mb-1 font-bold text-fluid-sm text-white">
                         גלה שחקנים
                       </h3>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-fluid-xs text-gray-400">
                         חפש לפי משחק, סגנון ועוד
                       </p>
                     </div>
@@ -306,7 +306,7 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0, x: 20 }}
                 key="step1"
               >
-                <div className="mb-6 flex items-center gap-3 font-bold text-white text-xl">
+                <div className="mb-6 flex items-center gap-3 font-bold text-fluid-lg text-white">
                   <HugeiconsIcon className="text-primary" icon={UserIcon} />
                   <span>בחר את האווטאר שלך</span>
                 </div>
@@ -342,13 +342,13 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0, x: 20 }}
                 key="step2"
               >
-                <div className="mb-6 flex items-center gap-3 font-bold text-white text-xl">
+                <div className="mb-6 flex items-center gap-3 font-bold text-fluid-lg text-white">
                   <HugeiconsIcon className="text-primary" icon={UserIcon} />
                   <span>קצת עליך</span>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-right font-medium text-gray-400 text-sm">
+                  <label className="mb-2 block text-right font-medium text-fluid-sm text-gray-400">
                     הביו שלך
                   </label>
                   <textarea
@@ -357,7 +357,7 @@ export default function OnboardingPage() {
                     placeholder="ספר קצת על סגנון המשחק שלך, באילו שעות אתה משחק, ומה אתה מחפש..."
                     value={bio}
                   />
-                  <p className="mt-2 text-right text-gray-500 text-xs">
+                  <p className="mt-2 text-right text-fluid-xs text-gray-500">
                     זה מה שאנשים יראו כשהם יחפשו אותך.
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0, x: 20 }}
                 key="step3"
               >
-                <div className="mb-6 flex items-center gap-3 font-bold text-white text-xl">
+                <div className="mb-6 flex items-center gap-3 font-bold text-fluid-lg text-white">
                   <HugeiconsIcon
                     className="text-primary"
                     icon={GameController02Icon}
@@ -407,7 +407,7 @@ export default function OnboardingPage() {
                       type="text"
                       value={newTag}
                     />
-                    <div className="relative min-w-[120px]">
+                    <div className="relative min-w-[7.5rem]">
                       <select
                         className="h-full w-full appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-white outline-hidden focus:border-primary/50"
                         onChange={(e) => setNewPlatform(e.target.value)}
@@ -424,7 +424,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Tags List */}
-                <div className="custom-scrollbar max-h-[200px] space-y-2 overflow-y-auto pr-2">
+                <div className="custom-scrollbar max-h-[12.5rem] space-y-2 overflow-y-auto pr-2">
                   {gamertags.map((g, i) => (
                     <div
                       className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 p-3"
@@ -437,15 +437,17 @@ export default function OnboardingPage() {
                         <HugeiconsIcon icon={Delete02Icon} size={16} />
                       </button>
                       <div className="text-right">
-                        <div className="font-bold text-sm text-white">
+                        <div className="font-bold text-fluid-sm text-white">
                           {g.tag}
                         </div>
-                        <div className="text-primary text-xs">{g.platform}</div>
+                        <div className="text-fluid-xs text-primary">
+                          {g.platform}
+                        </div>
                       </div>
                     </div>
                   ))}
                   {gamertags.length === 0 && (
-                    <div className="py-8 text-center text-gray-500 text-sm">
+                    <div className="py-8 text-center text-fluid-sm text-gray-500">
                       עדיין לא הוספת משחקים. הוסף לפחות אחד כדי להמשיך.
                     </div>
                   )}
@@ -482,7 +484,7 @@ export default function OnboardingPage() {
                   <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500">
                     <HugeiconsIcon icon={SparklesIcon} size={40} />
                   </div>
-                  <h2 className="mb-2 font-bold text-2xl text-white">
+                  <h2 className="mb-2 font-bold text-fluid-xl text-white">
                     אתה מוכן ב-100%!
                   </h2>
                   <p className="mx-auto max-w-sm text-gray-400">
@@ -504,7 +506,7 @@ export default function OnboardingPage() {
                     onClick={handleComplete}
                   >
                     {isLoading ? (
-                      <span className="animate-spin text-xl">⏳</span>
+                      <span className="animate-spin text-fluid-lg">⏳</span>
                     ) : (
                       <span>יאללה מתחילים!</span>
                     )}

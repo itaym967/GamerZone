@@ -292,7 +292,7 @@ export default function GamerCard({
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className={`glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${status === "approved" ? "border-primary shadow-[0_0_20px_rgba(0,255,157,0.1)]" : "border-transparent hover:border-primary"}`}
+      className={`cq-card glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl border p-fluid-lg transition-all duration-300 ${status === "approved" ? "border-primary shadow-[0_0_1.25rem_rgba(0,255,157,0.1)]" : "border-transparent hover:border-primary"}`}
       initial={{ opacity: 0, y: 20 }}
       layout
       whileHover={{ scale: 1.02, y: -5 }}
@@ -305,7 +305,7 @@ export default function GamerCard({
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-[2px]">
+            <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-[0.125rem]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
                 <OptimizedAvatar
                   className="h-full w-full object-cover"
@@ -318,7 +318,7 @@ export default function GamerCard({
               </div>
             </div>
             {/* Level Badge */}
-            <div className="absolute -right-1 -bottom-2 z-20 rounded-md border border-primary bg-black px-1.5 font-bold text-[10px] text-primary shadow-lg">
+            <div className="absolute -right-1 -bottom-2 z-20 rounded-md border border-primary bg-black px-1.5 font-bold text-[0.625rem] text-primary shadow-lg">
               LVL {level}
             </div>
           </div>
@@ -327,14 +327,17 @@ export default function GamerCard({
             {" "}
             {/* RTL Alignment */}
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg text-white leading-tight">
+              <h3 className="cq-card-title font-bold text-fluid-lg text-white leading-tight">
                 {username}
               </h3>
               {online && (
                 <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
               )}
             </div>
-            <span className="block text-gray-400 text-xs" dir="ltr">
+            <span
+              className="cq-card-subtitle block text-fluid-xs text-gray-400"
+              dir="ltr"
+            >
               {tag}
             </span>
             {/* XP Bar */}
@@ -354,7 +357,7 @@ export default function GamerCard({
         onMouseEnter={() => currentUserId === id && setShowBioEnhancer(true)}
         onMouseLeave={() => setShowBioEnhancer(false)}
       >
-        <p className="line-clamp-2 min-h-[40px] grow text-gray-300 text-sm">
+        <p className="line-clamp-2 min-h-[2.5rem] grow text-fluid-sm text-gray-300">
           {bio}
         </p>
         {/* Bio Enhancer Button - Only show for own card */}
@@ -398,12 +401,12 @@ export default function GamerCard({
             exit={{ height: 0, opacity: 0 }}
             initial={{ height: 0, opacity: 0 }}
           >
-            <h4 className="mb-2 font-bold text-[10px] text-primary uppercase tracking-wider opacity-80">
+            <h4 className="mb-2 font-bold text-[0.625rem] text-primary uppercase tracking-wider opacity-80">
               Private Gamertags (Click to Copy):
             </h4>
             {Object.entries(displayTags).map(([game, realTag]) => (
               <button
-                className="group/tag flex w-full items-center justify-between rounded-lg border border-white/5 bg-white/5 p-2.5 text-xs transition-all hover:border-primary/30 hover:bg-white/10"
+                className="group/tag flex w-full items-center justify-between rounded-lg border border-white/5 bg-white/5 p-2.5 text-fluid-xs transition-all hover:border-primary/30 hover:bg-white/10"
                 key={game}
                 onClick={() => copyToClipboard(realTag)}
               >
@@ -437,7 +440,7 @@ export default function GamerCard({
       <div className="mt-4 flex flex-wrap gap-2">
         {games.map((game, i) => (
           <span
-            className="rounded-md border border-secondary/20 bg-secondary/10 px-2 py-1 font-bold text-[10px] text-secondary uppercase tracking-wider"
+            className="rounded-md border border-secondary/20 bg-secondary/10 px-2 py-1 font-bold text-[0.625rem] text-secondary uppercase tracking-wider"
             key={i}
           >
             {game}

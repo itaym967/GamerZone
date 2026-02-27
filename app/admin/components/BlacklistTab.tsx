@@ -159,10 +159,10 @@ export default function BlacklistTab({
               size={28}
             />
             <div>
-              <h3 className="font-bold text-lg text-white">
+              <h3 className="font-bold text-fluid-lg text-white">
                 ניתוח רעלנות עם AI
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-fluid-sm text-gray-400">
                 קבל המלצות חכמות לשיפור הרשימה השחורה
               </p>
             </div>
@@ -193,14 +193,16 @@ export default function BlacklistTab({
         {showAnalysis && analysisResult && (
           <div className="mt-6 space-y-4">
             <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-              <h4 className="mb-2 font-bold text-purple-400 text-sm">ניתוח:</h4>
-              <p className="whitespace-pre-wrap text-gray-300 text-sm leading-relaxed">
+              <h4 className="mb-2 font-bold text-fluid-sm text-purple-400">
+                ניתוח:
+              </h4>
+              <p className="whitespace-pre-wrap text-fluid-sm text-gray-300 leading-relaxed">
                 {analysisResult.analysis}
               </p>
             </div>
             {analysisResult.suggestions.length > 0 && (
               <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-                <h4 className="mb-3 font-bold text-blue-400 text-sm">
+                <h4 className="mb-3 font-bold text-blue-400 text-fluid-sm">
                   המלצות למילים נוספות:
                 </h4>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
@@ -210,7 +212,7 @@ export default function BlacklistTab({
                       key={idx}
                       onClick={() => addSuggestedWord(word)}
                     >
-                      <span className="text-sm text-white">{word}</span>
+                      <span className="text-fluid-sm text-white">{word}</span>
                       <HugeiconsIcon
                         className="text-gray-500 group-hover:text-blue-400"
                         icon={Add01Icon}
@@ -229,7 +231,7 @@ export default function BlacklistTab({
         {/* Add New Word */}
         <div className="lg:col-span-1">
           <div className="sticky top-6 rounded-2xl border border-white/5 bg-card p-6">
-            <h3 className="mb-4 flex items-center gap-2 font-bold text-lg text-white">
+            <h3 className="mb-4 flex items-center gap-2 font-bold text-fluid-lg text-white">
               <HugeiconsIcon
                 className="text-red-500"
                 icon={Add01Icon}
@@ -239,7 +241,7 @@ export default function BlacklistTab({
             </h3>
             <form className="space-y-4" onSubmit={addWord}>
               <div>
-                <label className="mb-1 block text-gray-400 text-sm">
+                <label className="mb-1 block text-fluid-sm text-gray-400">
                   המילה לחסימה
                 </label>
                 <input
@@ -249,7 +251,7 @@ export default function BlacklistTab({
                   type="text"
                   value={newWord}
                 />
-                <p className="mt-2 text-gray-500 text-xs">
+                <p className="mt-2 text-fluid-xs text-gray-500">
                   * מילים אלו יסוננו אוטומטית מהצ'אט.
                 </p>
               </div>
@@ -274,7 +276,7 @@ export default function BlacklistTab({
               size={16}
             />
             <input
-              className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-sm text-white outline-hidden focus:border-red-500/30"
+              className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-fluid-sm text-white outline-hidden focus:border-red-500/30"
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="חפש מילה..."
               type="text"

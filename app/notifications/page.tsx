@@ -120,7 +120,7 @@ function NotificationItem({
     >
       {/* Unread dot */}
       {!notification.is_read && (
-        <div className="absolute top-4 left-4 h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+        <div className="absolute top-4 left-4 h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]" />
       )}
 
       {/* Icon */}
@@ -132,13 +132,13 @@ function NotificationItem({
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <h3 className="mb-1 font-semibold text-sm text-white leading-tight">
+        <h3 className="mb-1 font-semibold text-fluid-sm text-white leading-tight">
           {notification.title}
         </h3>
-        <p className="text-sm text-white/50 leading-relaxed">
+        <p className="text-fluid-sm text-white/50 leading-relaxed">
           {notification.message}
         </p>
-        <span className="mt-2 block text-white/30 text-xs">
+        <span className="mt-2 block text-fluid-xs text-white/30">
           {formatTimeAgo(notification.created_at)}
         </span>
       </div>
@@ -154,6 +154,7 @@ function NotificationItem({
               onMarkRead(notification.id);
             }}
             title="סמן כנקרא"
+            type="button"
           >
             <HugeiconsIcon icon={TickDouble01Icon} size={16} />
           </button>
@@ -166,6 +167,7 @@ function NotificationItem({
             onDelete(notification.id);
           }}
           title="מחק"
+          type="button"
         >
           <HugeiconsIcon icon={Delete02Icon} size={16} />
         </button>
@@ -195,7 +197,7 @@ function NotificationItem({
 }
 
 export default function NotificationsPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -225,11 +227,11 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
       <Navigation />
 
-      <main className="mx-auto max-w-2xl p-6">
+      <main className="stack-fluid max-w-2xl p-fluid-lg content-shell">
         {/* Header */}
         <header className="mb-8">
           <div className="mb-2 flex items-center justify-between">
-            <h1 className="flex items-center gap-3 font-bold text-3xl text-white">
+            <h1 className="flex items-center gap-3 font-bold text-fluid-2xl text-white">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600">
                 <HugeiconsIcon
                   className="text-white"
@@ -239,7 +241,7 @@ export default function NotificationsPage() {
               </div>
               <span>התראות</span>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-blue-600 px-2.5 py-0.5 font-bold text-sm text-white">
+                <span className="rounded-full bg-blue-600 px-2.5 py-0.5 font-bold text-fluid-sm text-white">
                   {unreadCount}
                 </span>
               )}
@@ -247,36 +249,41 @@ export default function NotificationsPage() {
 
             {unreadCount > 0 && (
               <button
-                className="flex items-center gap-1.5 font-medium text-blue-400 text-sm transition-colors hover:text-blue-300"
+                className="flex items-center gap-1.5 font-medium text-blue-400 text-fluid-sm transition-colors hover:text-blue-300"
                 onClick={handleMarkAllRead}
+                type="button"
               >
                 <HugeiconsIcon icon={TickDouble01Icon} size={16} />
                 סמן הכל כנקרא
               </button>
             )}
           </div>
-          <p className="text-gray-400">כל העדכונים שלך במקום אחד</p>
+          <p className="text-fluid-base text-gray-400">
+            כל העדכונים שלך במקום אחד
+          </p>
         </header>
 
         {/* Filter Tabs */}
         <div className="mb-6 flex gap-2">
           <button
-            className={`rounded-xl border px-4 py-2 font-medium text-sm transition-all ${
+            className={`rounded-xl border px-4 py-2 font-medium text-fluid-sm transition-all ${
               filter === "all"
                 ? "border-white bg-white text-black"
                 : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
             }`}
             onClick={() => setFilter("all")}
+            type="button"
           >
             הכל ({notifications.length})
           </button>
           <button
-            className={`rounded-xl border px-4 py-2 font-medium text-sm transition-all ${
+            className={`rounded-xl border px-4 py-2 font-medium text-fluid-sm transition-all ${
               filter === "unread"
                 ? "border-blue-500 bg-blue-600 text-white"
                 : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
             }`}
             onClick={() => setFilter("unread")}
+            type="button"
           >
             לא נקראו ({unreadCount})
           </button>
@@ -301,10 +308,10 @@ export default function NotificationsPage() {
                 size={32}
               />
             </div>
-            <h3 className="font-semibold text-lg text-white">
+            <h3 className="font-semibold text-fluid-lg text-white">
               {filter === "unread" ? "אין התראות חדשות" : "אין התראות"}
             </h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-white/40">
+            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
               {filter === "unread"
                 ? "כל ההתראות שלך נקראו!"
                 : "כשיהיו עדכונים חדשים, הם יופיעו כאן."}

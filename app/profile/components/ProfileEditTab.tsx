@@ -38,9 +38,9 @@ export default function ProfileEditTab({
         <div className="rounded-lg bg-primary/10 p-2 text-primary">
           <HugeiconsIcon icon={GameController02Icon} size={24} />
         </div>
-        <h2 className="font-bold text-white text-xl">עריכת פרטים</h2>
+        <h2 className="font-bold text-fluid-lg text-white">עריכת פרטים</h2>
         {hasUnsavedChanges && (
-          <span className="mr-auto flex items-center gap-1 text-xs text-yellow-400">
+          <span className="mr-auto flex items-center gap-1 text-fluid-xs text-yellow-400">
             <HugeiconsIcon icon={AlertCircleIcon} size={12} />
             שינויים לא נשמרו
           </span>
@@ -50,7 +50,7 @@ export default function ProfileEditTab({
       <div className="space-y-4">
         {/* Username */}
         <div>
-          <label className="mb-1 block text-gray-400 text-sm">
+          <label className="mb-1 block text-fluid-sm text-gray-400">
             כינוי (Username)
           </label>
           <input
@@ -70,7 +70,7 @@ export default function ProfileEditTab({
             value={formData.username}
           />
           {usernameError && (
-            <p className="mt-1 text-red-400 text-xs">
+            <p className="mt-1 text-fluid-xs text-red-400">
               שם משתמש חייב להכיל לפחות 3 תווים
             </p>
           )}
@@ -78,7 +78,7 @@ export default function ProfileEditTab({
 
         {/* Tag (read-only) */}
         <div>
-          <label className="mb-1 block text-gray-400 text-sm">
+          <label className="mb-1 block text-fluid-sm text-gray-400">
             תיוג (@Tag)
           </label>
           <input
@@ -92,13 +92,15 @@ export default function ProfileEditTab({
 
         {/* Avatar Picker */}
         <div>
-          <label className="mb-1 block text-gray-400 text-sm">בחר דמות</label>
+          <label className="mb-1 block text-fluid-sm text-gray-400">
+            בחר דמות
+          </label>
           <div className="grid grid-cols-3 gap-2">
             {AVATARS.map((avatar) => (
               <button
                 className={`aspect-square overflow-hidden rounded-xl border-2 transition-all ${
                   avatarSeed === avatar.id
-                    ? "scale-105 border-primary shadow-[0_0_15px_rgba(0,255,157,0.3)]"
+                    ? "scale-105 border-primary shadow-[0_0_0.9375rem_rgba(0,255,157,0.3)]"
                     : "border-transparent opacity-60 hover:scale-105 hover:opacity-100"
                 }`}
                 key={avatar.id}
@@ -117,9 +119,11 @@ export default function ProfileEditTab({
         {/* Bio */}
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <label className="block text-gray-400 text-sm">על עצמי (Bio)</label>
+            <label className="block text-fluid-sm text-gray-400">
+              על עצמי (Bio)
+            </label>
             <span
-              className={`text-xs ${bioOverLimit ? "text-red-400" : "text-gray-500"}`}
+              className={`text-fluid-xs ${bioOverLimit ? "text-red-400" : "text-gray-500"}`}
             >
               {bioLength}/200
             </span>

@@ -128,7 +128,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
             size={16}
           />
           <input
-            className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-sm text-white outline-hidden focus:border-red-500/30"
+            className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-fluid-sm text-white outline-hidden focus:border-red-500/30"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חפש בלוגים..."
             type="text"
@@ -144,7 +144,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
           {(["all", "words", "users", "reports", "ai"] as ActionFilter[]).map(
             (f) => (
               <button
-                className={`rounded-lg px-3 py-1.5 font-bold text-xs transition-all ${
+                className={`rounded-lg px-3 py-1.5 font-bold text-fluid-xs transition-all ${
                   actionFilter === f
                     ? "border border-red-500/30 bg-red-500/20 text-red-400"
                     : "border border-white/5 bg-white/5 text-gray-400 hover:bg-white/10"
@@ -174,13 +174,13 @@ export default function LogsTab({ supabase }: LogsTabProps) {
         </div>
       </div>
 
-      <div className="text-right text-gray-500 text-xs">
+      <div className="text-right text-fluid-xs text-gray-500">
         {filtered.length} רשומות
       </div>
 
       {/* Logs Table */}
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
-        <table className="w-full text-right text-sm">
+        <table className="w-full text-right text-fluid-sm">
           <thead className="bg-white/5 text-gray-400">
             <tr>
               <th className="p-4 font-medium">זמן</th>
@@ -193,18 +193,18 @@ export default function LogsTab({ supabase }: LogsTabProps) {
               const display = getActionDisplay(log.action);
               return (
                 <tr className="transition-colors hover:bg-white/5" key={log.id}>
-                  <td className="p-4 font-mono text-xs opacity-60">
+                  <td className="p-4 font-mono text-fluid-xs opacity-60">
                     {new Date(log.created_at).toLocaleString("he-IL")}
                   </td>
                   <td className="p-4">
                     <span
-                      className={`rounded-xs px-2 py-1 font-bold text-xs ${display.color}`}
+                      className={`rounded-xs px-2 py-1 font-bold text-fluid-xs ${display.color}`}
                     >
                       {display.label}
                     </span>
                   </td>
                   <td
-                    className="max-w-[300px] truncate p-4 opacity-80"
+                    className="max-w-[18.75rem] truncate p-4 opacity-80"
                     title={JSON.stringify(log.details)}
                   >
                     {formatDetails(log.details)}

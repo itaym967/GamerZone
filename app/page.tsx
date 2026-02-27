@@ -12,6 +12,18 @@ import Navigation from "./components/Navigation";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import { GamerCardSkeleton } from "./components/Skeleton";
 
+const DASHBOARD_FILTERS = ["הכל", "פופולרי עכשיו", "תחרותי", "קז'ואל", "חדשים"];
+const DASHBOARD_SKELETON_KEYS = [
+  "sk-1",
+  "sk-2",
+  "sk-3",
+  "sk-4",
+  "sk-5",
+  "sk-6",
+  "sk-7",
+  "sk-8",
+];
+
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
 
@@ -53,14 +65,16 @@ export default function Dashboard() {
       <ServiceWorkerRegistration />
       <Navigation />
 
-      <main className="mx-auto max-w-7xl space-y-8 p-6">
+      <main className="fluid-container stack-fluid p-fluid-lg">
         {/* Header Section */}
         <header className="mt-8 flex flex-col justify-between gap-4 md:mt-0 md:flex-row md:items-center">
           <div>
-            <h1 className="mb-2 bg-linear-to-l from-primary to-white bg-clip-text font-bold text-3xl text-transparent md:text-4xl">
+            <h1 className="mb-2 bg-linear-to-l from-primary to-white bg-clip-text font-bold text-fluid-2xl text-transparent">
               שלום, {currentUsername || "אורח"} 👋
             </h1>
-            <p className="text-gray-400">מוכן למצוא את הסקוואד הבא שלך?</p>
+            <p className="text-fluid-base text-gray-400">
+              מוכן למצוא את הסקוואד הבא שלך?
+            </p>
           </div>
 
           {/* Search bar removed as per request - search is now only in Explore page */}
@@ -68,38 +82,40 @@ export default function Dashboard() {
 
         {/* Categories / Filters */}
         <div className="scrollbar-none flex gap-3 overflow-x-auto pb-2">
-          {["הכל", "פופולרי עכשיו", "תחרותי", "קז'ואל", "חדשים"].map(
-            (filter, i) => (
-              <button
-                className={`whitespace-nowrap rounded-full px-4 py-2 font-medium text-sm transition-all ${i === 0 ? "bg-primary font-bold text-black" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}
-                key={i}
-              >
-                {filter}
-              </button>
-            )
-          )}
+          {DASHBOARD_FILTERS.map((filter) => (
+            <button
+              className={`whitespace-nowrap rounded-full px-4 py-2 font-medium text-fluid-sm transition-all ${filter === "הכל" ? "bg-primary font-bold text-black" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}
+              key={filter}
+              type="button"
+            >
+              {filter}
+            </button>
+          ))}
         </div>
 
         {/* Grid of Cards */}
         <section>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold text-white text-xl">
+            <h2 className="flex items-center gap-2 font-bold text-fluid-xl text-white">
               <span className="block h-6 w-1 rounded-full bg-secondary" />
               שחקנים מומלצים עבורך
             </h2>
-            <button className="font-medium text-primary text-sm hover:underline">
+            <button
+              className="font-medium text-fluid-sm text-primary hover:underline"
+              type="button"
+            >
               הצג הכל
             </button>
           </div>
 
           {loading ? (
-            <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[...new Array(8)].map((_, i) => (
-                <GamerCardSkeleton key={i} />
+            <div className="auto-grid auto-rows-fr">
+              {DASHBOARD_SKELETON_KEYS.map((skeletonKey) => (
+                <GamerCardSkeleton key={skeletonKey} />
               ))}
             </div>
           ) : (
-            <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="auto-grid auto-rows-fr">
               {gamers.length > 0 ? (
                 gamers.map((gamer) => (
                   <GamerCard
@@ -127,7 +143,7 @@ export default function Dashboard() {
             <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl transition-opacity group-hover:opacity-80" />
             <div className="relative z-20 flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-right">
               <div>
-                <h3 className="mb-2 font-bold text-2xl text-white">
+                <h3 className="mb-2 font-bold text-fluid-xl text-white">
                   רוצה שכולם יראו אותך?
                 </h3>
                 <p className="text-gray-300">

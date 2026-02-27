@@ -21,7 +21,7 @@ export default function SafetyBanner() {
 
   return (
     <div
-      className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-sm ${
+      className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-fluid-sm ${
         isSupervisedAccount
           ? "border-amber-500/20 border-b bg-amber-500/10 text-amber-400"
           : "border-blue-500/20 border-b bg-blue-500/10 text-blue-400"

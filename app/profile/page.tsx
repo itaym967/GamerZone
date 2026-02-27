@@ -47,7 +47,7 @@ export default function ProfilePage() {
       <div className="flex min-h-screen items-center justify-center bg-primary-foreground">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-          <span className="text-gray-400 text-sm">טוען פרופיל...</span>
+          <span className="text-fluid-sm text-gray-400">טוען פרופיל...</span>
         </div>
       </div>
     );
@@ -57,23 +57,28 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">
       <Navigation />
 
-      <main className="mx-auto max-w-7xl p-6">
+      <main className="fluid-container stack-fluid p-fluid-lg">
         <header className="mb-6">
-          <h1 className="mb-2 font-bold text-3xl text-white">הפרופיל שלי</h1>
-          <p className="text-gray-400">ככה אחרים רואים אותך ב-GamerZone</p>
+          <h1 className="mb-2 font-bold text-fluid-2xl text-white">
+            הפרופיל שלי
+          </h1>
+          <p className="text-fluid-base text-gray-400">
+            ככה אחרים רואים אותך ב-GamerZone
+          </p>
         </header>
 
         {/* Tab Navigation */}
         <div className="mb-8 flex gap-1 overflow-x-auto rounded-xl bg-white/5 p-1">
           {TABS.map((tab) => (
             <button
-              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 font-medium text-sm transition-all ${
+              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 font-medium text-fluid-sm transition-all ${
                 activeTab === tab.id
                   ? "bg-primary text-black"
                   : "text-gray-400 hover:bg-white/5 hover:text-white"
               }`}
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              type="button"
             >
               <HugeiconsIcon icon={tab.icon} size={16} />
               <span>{tab.label}</span>
@@ -84,7 +89,7 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
+        <div className="auto-grid items-start">
           {/* Active Tab Content */}
           <div>
             {activeTab === "edit" && (
@@ -113,13 +118,13 @@ export default function ProfilePage() {
           {/* Live Preview */}
           <div className="space-y-4">
             <div className="mb-2 flex items-center justify-center gap-2 lg:justify-start">
-              <span className="font-medium text-gray-400 text-sm uppercase tracking-wider">
+              <span className="font-medium text-fluid-sm text-gray-400 uppercase tracking-wider">
                 תצוגה מקדימה
               </span>
               <span className="h-px w-full flex-1 bg-white/10" />
             </div>
 
-            <div className="sticky top-10 mx-auto max-w-md lg:mx-0">
+            <div className="sticky top-10 max-w-md lg:mx-0">
               <GamerCard
                 avatarSeed={avatarSeed}
                 bio={formData.bio}
@@ -132,7 +137,7 @@ export default function ProfilePage() {
                 username={formData.username}
               />
               <div className="mt-4 text-center">
-                <p className="text-gray-500 text-xs">
+                <p className="text-fluid-xs text-gray-500">
                   * ככה הכרטיס שלך נראה למשתמשים אחרים לפני ואחרי החלפה
                 </p>
               </div>

@@ -8,10 +8,10 @@ interface LogoProps {
 
 export default function Logo({ className = "", size = "md" }: LogoProps) {
   const sizeConfig = {
-    sm: { text: "text-lg", icon: 18 },
-    md: { text: "text-2xl", icon: 24 },
-    lg: { text: "text-4xl", icon: 40 },
-    xl: { text: "text-6xl", icon: 64 },
+    sm: { text: "text-fluid-lg", icon: 18 },
+    md: { text: "text-fluid-xl", icon: 24 },
+    lg: { text: "text-fluid-2xl", icon: 40 },
+    xl: { text: "text-fluid-2xl", icon: 64 },
   };
 
   const { text, icon } = sizeConfig[size];
@@ -30,12 +30,12 @@ export default function Logo({ className = "", size = "md" }: LogoProps) {
 
       <div className="relative flex items-center text-primary">
         {/* The 'Z' represented by a lightning bolt */}
-        <div className="relative mx-px flex translate-y-[2px] transform items-center justify-center">
+        <div className="relative mx-px flex translate-y-[0.125rem] transform items-center justify-center">
           <HugeiconsIcon
-            className="transform fill-current transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(0,255,157,0.8)]"
+            className="transform fill-current transition-all duration-300 group-hover:drop-shadow-[0_0_0.5rem_rgba(0,255,157,0.8)]"
             icon={ZapIcon}
             size={icon * 1.1}
-            style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.5))" }}
+            style={{ filter: "drop-shadow(0 0 0.0625rem rgba(0,0,0,0.5))" }}
           />
           <div className="absolute inset-0 -z-10 rounded-full bg-primary/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
         </div>

@@ -90,9 +90,9 @@ export default function ExplorePage() {
     <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">
       <Navigation />
 
-      <main className="mx-auto max-w-7xl p-6">
+      <main className="fluid-container stack-fluid p-fluid-lg">
         <header className="mb-8">
-          <h1 className="mb-2 flex items-center gap-3 font-bold text-3xl text-white">
+          <h1 className="mb-2 flex items-center gap-3 font-bold text-fluid-2xl text-white">
             <HugeiconsIcon
               className="text-primary"
               icon={Search01Icon}
@@ -100,11 +100,13 @@ export default function ExplorePage() {
             />
             <span>גלה שחקנים</span>
           </h1>
-          <p className="text-gray-400">מצא את השותפים המושלמים למשחק הבא שלך</p>
+          <p className="text-fluid-base text-gray-400">
+            מצא את השותפים המושלמים למשחק הבא שלך
+          </p>
         </header>
 
         {/* Search & Filter Bar */}
-        <div className="sticky top-4 z-30 mb-8 flex flex-col gap-4 rounded-2xl border border-white/5 bg-card/90 p-4 shadow-xl backdrop-blur-md xl:flex-row">
+        <div className="sticky top-4 z-30 mb-8 flex flex-col gap-fluid rounded-2xl border border-white/5 bg-card/90 p-fluid-md shadow-xl backdrop-blur-md xl:flex-row">
           <div className="relative flex-1">
             <input
               className="h-12 w-full rounded-xl border border-white/10 bg-black/20 px-10 py-3 text-right text-white outline-hidden transition-all focus:border-primary/50 focus:bg-white/5"
@@ -129,6 +131,7 @@ export default function ExplorePage() {
                   : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
               }`}
               onClick={() => setOnlineOnly(!onlineOnly)}
+              type="button"
             >
               <span
                 className={`h-2 w-2 rounded-full ${onlineOnly ? "animate-pulse bg-primary" : "bg-gray-500"}`}
@@ -145,6 +148,7 @@ export default function ExplorePage() {
                     : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
                 }`}
                 onClick={() => setFriendsOnly(!friendsOnly)}
+                type="button"
               >
                 <HugeiconsIcon icon={UserGroupIcon} size={16} />
                 <span className="whitespace-nowrap">חברים בלבד</span>
@@ -152,7 +156,7 @@ export default function ExplorePage() {
             )}
 
             {/* Game Select */}
-            <div className="relative min-w-[160px]">
+            <div className="relative min-w-[10rem]">
               <select
                 className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-hidden transition-colors hover:bg-white/5 focus:border-primary/50"
                 onChange={(e) => setActiveGame(e.target.value)}
@@ -183,7 +187,7 @@ export default function ExplorePage() {
             <span className="h-10 w-10 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
           </div>
         ) : (
-          <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="auto-grid auto-rows-fr">
             {filteredGamers.map((gamer) => (
               <GamerCard
                 key={gamer.id}
@@ -208,16 +212,19 @@ export default function ExplorePage() {
                 size={40}
               />
             </div>
-            <h3 className="mb-2 font-bold text-white text-xl">
+            <h3 className="mb-2 font-bold text-fluid-xl text-white">
               לא נמצאו תוצאות
             </h3>
-            <p className="text-gray-400">נסה לשנות את הסינון או לחפש שם אחר.</p>
+            <p className="text-fluid-base text-gray-400">
+              נסה לשנות את הסינון או לחפש שם אחר.
+            </p>
             <button
               className="mt-4 font-bold text-primary hover:underline"
               onClick={() => {
                 setActiveGame("All");
                 setSearchTerm("");
               }}
+              type="button"
             >
               נקה סינון
             </button>

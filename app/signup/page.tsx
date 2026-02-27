@@ -218,8 +218,8 @@ export default function SignupPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Animated Background */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
-      <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-primary/20 blur-[120px]" />
-      <div className="absolute right-[-10%] bottom-[-20%] h-[600px] w-[600px] animate-pulse rounded-full bg-secondary/20 blur-[120px] delay-75" />
+      <div className="absolute top-[-20%] left-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute right-[-10%] bottom-[-20%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
 
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
@@ -269,7 +269,7 @@ export default function SignupPage() {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-white/10 border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-fluid-xs uppercase">
               <span className="bg-card px-2 text-gray-500">
                 או הירשם עם אימייל
               </span>
@@ -278,7 +278,7 @@ export default function SignupPage() {
 
           <div className="space-y-3">
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">
+              <label className="font-medium text-fluid-sm text-gray-400">
                 שם משתמש
               </label>
               <input
@@ -292,11 +292,11 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">
+              <label className="font-medium text-fluid-sm text-gray-400">
                 תאריך לידה
               </label>
               <input
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white outline-hidden transition-colors scheme-dark focus:border-primary/50"
+                className="scheme-dark w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white outline-hidden transition-colors focus:border-primary/50"
                 max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => handleDateOfBirthChange(e.target.value)}
                 required
@@ -305,7 +305,7 @@ export default function SignupPage() {
               />
               {ageInfo && (
                 <div
-                  className={`mt-2 flex items-center justify-end gap-2 rounded-lg p-3 text-sm ${
+                  className={`mt-2 flex items-center justify-end gap-2 rounded-lg p-3 text-fluid-sm ${
                     ageInfo.needsConsent
                       ? "border border-amber-500/20 bg-amber-500/10 text-amber-400"
                       : ageInfo.accountType === "minor"
@@ -331,7 +331,7 @@ export default function SignupPage() {
 
             {showParentalForm && (
               <div className="space-y-1 rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 text-right">
-                <label className="flex items-center justify-end gap-2 font-medium text-amber-400 text-sm">
+                <label className="flex items-center justify-end gap-2 font-medium text-amber-400 text-fluid-sm">
                   <span>אימייל הורה / אפוטרופוס</span>
                   <HugeiconsIcon icon={SecurityCheckIcon} size={14} />
                 </label>
@@ -345,14 +345,14 @@ export default function SignupPage() {
                   type="email"
                   value={form.parentalEmail}
                 />
-                <p className="mt-1 text-gray-500 text-xs">
+                <p className="mt-1 text-fluid-xs text-gray-500">
                   נשלח קישור אישור לאימייל ההורה. החשבון יהיה מוגבל עד לאישור.
                 </p>
               </div>
             )}
 
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">
+              <label className="font-medium text-fluid-sm text-gray-400">
                 אימייל
               </label>
               <input
@@ -365,7 +365,9 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">סיסמה</label>
+              <label className="font-medium text-fluid-sm text-gray-400">
+                סיסמה
+              </label>
               <div className="relative">
                 <input
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
@@ -413,7 +415,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-gray-400 text-sm">
+        <p className="mt-8 text-center text-fluid-sm text-gray-400">
           כבר יש לך משתמש?{" "}
           <Link
             className="font-bold text-primary hover:underline"

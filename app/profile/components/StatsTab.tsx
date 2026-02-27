@@ -81,7 +81,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
         <div className="rounded-lg bg-primary/10 p-2 text-primary">
           <HugeiconsIcon icon={BarChartIcon} size={24} />
         </div>
-        <h2 className="font-bold text-white text-xl">סטטיסטיקות</h2>
+        <h2 className="font-bold text-fluid-lg text-white">סטטיסטיקות</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -96,9 +96,9 @@ export default function StatsTab({ stats }: StatsTabProps) {
                 icon={card.icon}
                 size={16}
               />
-              <span className="text-gray-400 text-xs">{card.label}</span>
+              <span className="text-fluid-xs text-gray-400">{card.label}</span>
             </div>
-            <p className={`font-bold text-2xl ${card.color}`}>
+            <p className={`font-bold text-fluid-xl ${card.color}`}>
               {typeof card.value === "number"
                 ? card.value.toLocaleString()
                 : card.value}
@@ -111,8 +111,10 @@ export default function StatsTab({ stats }: StatsTabProps) {
       {stats.swapsSent + stats.swapsReceived > 0 && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-gray-400 text-sm">אחוז הצלחה בהחלפות</span>
-            <span className="font-bold text-primary text-sm">
+            <span className="text-fluid-sm text-gray-400">
+              אחוז הצלחה בהחלפות
+            </span>
+            <span className="font-bold text-fluid-sm text-primary">
               {Math.round(
                 (stats.swapsApproved /
                   (stats.swapsSent + stats.swapsReceived)) *

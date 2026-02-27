@@ -35,7 +35,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
         <div className="rounded-lg bg-white/10 p-2 text-gray-400">
           <HugeiconsIcon icon={Settings01Icon} size={24} />
         </div>
-        <h2 className="font-bold text-white text-xl">הגדרות חשבון</h2>
+        <h2 className="font-bold text-fluid-lg text-white">הגדרות חשבון</h2>
       </div>
 
       {/* Email */}
@@ -47,8 +47,8 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
             size={18}
           />
           <div className="flex-1">
-            <p className="mb-0.5 text-gray-500 text-xs">כתובת אימייל</p>
-            <p className="font-mono text-sm text-white" dir="ltr">
+            <p className="mb-0.5 text-fluid-xs text-gray-500">כתובת אימייל</p>
+            <p className="font-mono text-fluid-sm text-white" dir="ltr">
               {userEmail || "לא זמין"}
             </p>
           </div>
@@ -60,11 +60,11 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
         <div className="flex items-center gap-3">
           <HugeiconsIcon className="text-gray-400" icon={Key01Icon} size={18} />
           <div className="flex-1">
-            <p className="mb-0.5 text-gray-500 text-xs">סיסמה</p>
-            <p className="text-gray-400 text-sm">••••••••</p>
+            <p className="mb-0.5 text-fluid-xs text-gray-500">סיסמה</p>
+            <p className="text-fluid-sm text-gray-400">••••••••</p>
           </div>
           <Link
-            className="font-medium text-primary text-xs transition-colors hover:text-primary/80"
+            className="font-medium text-fluid-xs text-primary transition-colors hover:text-primary/80"
             href="/update-password"
           >
             שנה סיסמה
@@ -94,13 +94,13 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
             icon={Alert01Icon}
             size={16}
           />
-          <h3 className="font-bold text-red-400 text-sm">אזור מסוכן</h3>
+          <h3 className="font-bold text-fluid-sm text-red-400">אזור מסוכן</h3>
         </div>
-        <p className="mb-3 text-gray-500 text-xs">
+        <p className="mb-3 text-fluid-xs text-gray-500">
           פעולות אלו הן בלתי הפיכות. אנא היזהר.
         </p>
         <button
-          className="w-full cursor-not-allowed rounded-xl border border-red-500/20 py-2.5 text-red-400/50 text-sm"
+          className="w-full cursor-not-allowed rounded-xl border border-red-500/20 py-2.5 text-fluid-sm text-red-400/50"
           disabled
           title="פיצ'ר זה יהיה זמין בקרוב"
         >

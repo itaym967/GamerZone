@@ -143,7 +143,7 @@ export default function FloatingGamerBot() {
               opacity: 1,
               scale: 1,
               y: 0,
-              height: isMinimized ? "auto" : "600px",
+              height: isMinimized ? "auto" : "37.5rem",
             }}
             className="fixed bottom-24 left-6 z-9999 flex w-96 flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl md:bottom-6"
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -162,7 +162,7 @@ export default function FloatingGamerBot() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <h3 className="flex items-center gap-1 font-bold text-sm text-white">
+                  <h3 className="flex items-center gap-1 font-bold text-fluid-sm text-white">
                     GamerBot
                     <HugeiconsIcon
                       className="text-primary"
@@ -170,7 +170,7 @@ export default function FloatingGamerBot() {
                       size={12}
                     />
                   </h3>
-                  <span className="flex items-center gap-1 text-[10px] text-green-500">
+                  <span className="flex items-center gap-1 text-fluid-xs text-green-500">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />{" "}
                     מחובר
                   </span>
@@ -217,7 +217,7 @@ export default function FloatingGamerBot() {
                         key={msg.id}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          className={`max-w-[clamp(16rem,85%,28rem)] rounded-2xl px-4 py-2.5 text-fluid-sm leading-relaxed ${
                             msg.sender === "user"
                               ? "rounded-tl-sm bg-primary text-black"
                               : "rounded-tr-sm border border-white/5 bg-[#1a1a2e] text-gray-200"
@@ -225,7 +225,7 @@ export default function FloatingGamerBot() {
                         >
                           {msg.content}
                           <span
-                            className={`mt-1 flex items-center justify-end gap-1 text-[9px] opacity-60 ${
+                            className={`mt-1 flex items-center justify-end gap-1 text-fluid-xs opacity-60 ${
                               msg.sender === "user"
                                 ? "text-black/70"
                                 : "text-gray-500"
@@ -264,7 +264,7 @@ export default function FloatingGamerBot() {
                     onSubmit={handleSend}
                   >
                     <input
-                      className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-hidden placeholder:text-gray-600"
+                      className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-fluid-sm text-white outline-hidden placeholder:text-gray-600"
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="כתוב הודעה..."
                       type="text"

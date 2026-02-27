@@ -317,7 +317,7 @@ function ChatContent() {
           <div className="border-white/5 border-b p-4">
             <div className="relative">
               <input
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 pr-10 text-right text-sm text-white outline-hidden focus:border-primary/50"
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 pr-10 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
                 placeholder="חפש שיחות..."
                 type="text"
               />
@@ -349,7 +349,7 @@ function ChatContent() {
               </div>
               <div className="min-w-0 flex-1 text-right">
                 <div className="mb-0.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1 truncate font-medium text-sm text-white">
+                  <span className="flex items-center gap-1 truncate font-medium text-fluid-sm text-white">
                     GamerBot
                     <HugeiconsIcon
                       className="text-primary"
@@ -358,7 +358,7 @@ function ChatContent() {
                     />
                   </span>
                 </div>
-                <p className="truncate text-gray-400 text-xs opacity-80">
+                <p className="truncate text-fluid-xs text-gray-400 opacity-80">
                   {gamerbotContact.last_msg}
                 </p>
               </div>
@@ -385,21 +385,21 @@ function ChatContent() {
                   )}
                   {/* Unread badge */}
                   {contact.unread_count && contact.unread_count > 0 && (
-                    <span className="absolute -top-1 -left-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 font-bold text-[10px] text-white">
+                    <span className="absolute -top-1 -left-1 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-red-500 px-1 font-bold text-fluid-xs text-white">
                       {contact.unread_count > 99 ? "99+" : contact.unread_count}
                     </span>
                   )}
                 </div>
                 <div className="min-w-0 flex-1 text-right">
                   <div className="mb-0.5 flex items-center justify-between">
-                    <span className="truncate font-medium text-sm text-white">
+                    <span className="truncate font-medium text-fluid-sm text-white">
                       {contact.username}
                     </span>
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-fluid-xs text-gray-500">
                       {contact.last_msg_time}
                     </span>
                   </div>
-                  <p className="truncate text-gray-400 text-xs opacity-80">
+                  <p className="truncate text-fluid-xs text-gray-400 opacity-80">
                     {contact.last_msg}
                   </p>
                 </div>
@@ -431,16 +431,16 @@ function ChatContent() {
                   />
                 </div>
                 <div className="text-right">
-                  <h3 className="font-bold text-sm text-white">
+                  <h3 className="font-bold text-fluid-sm text-white">
                     {activeChat.username}
                   </h3>
                   {activeChat.online ? (
-                    <span className="flex items-center gap-1 text-[10px] text-green-500">
+                    <span className="flex items-center gap-1 text-fluid-xs text-green-500">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />{" "}
                       מחובר
                     </span>
                   ) : (
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-fluid-xs text-gray-500">
                       נראה לאחרונה לפני שעה
                     </span>
                   )}
@@ -485,7 +485,7 @@ function ChatContent() {
                     >
                       <div className="relative">
                         <div
-                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          className={`max-w-[clamp(16rem,75%,30rem)] rounded-2xl px-4 py-2.5 text-fluid-sm leading-relaxed ${
                             msg.sender_id === user?.id
                               ? "rounded-tl-sm bg-primary text-black"
                               : "rounded-tr-sm border border-white/5 bg-[#1a1a2e] text-gray-200"
@@ -493,7 +493,7 @@ function ChatContent() {
                         >
                           {msg.content}
                           <span
-                            className={`mt-1 flex items-center justify-end gap-1 text-[9px] opacity-60 ${msg.sender_id === user?.id ? "text-black/70" : "text-gray-500"}`}
+                            className={`mt-1 flex items-center justify-end gap-1 text-fluid-xs opacity-60 ${msg.sender_id === user?.id ? "text-black/70" : "text-gray-500"}`}
                           >
                             {new Date(msg.created_at).toLocaleTimeString(
                               "he-IL",
@@ -583,7 +583,7 @@ function ChatContent() {
 
           {/* Chat restriction notice for supervised accounts */}
           {isChatRestricted && activeChat && activeChat.id !== GAMERBOT_ID && (
-            <div className="flex items-center justify-end gap-2 border-amber-500/20 border-t bg-amber-500/10 px-4 py-2 text-amber-400 text-sm">
+            <div className="flex items-center justify-end gap-2 border-amber-500/20 border-t bg-amber-500/10 px-4 py-2 text-amber-400 text-fluid-sm">
               <span>הצ׳אט מוגבל לחברים בלבד - סינון תוכן מוגבר פעיל</span>
               <HugeiconsIcon icon={Shield01Icon} size={14} />
             </div>
@@ -606,7 +606,7 @@ function ChatContent() {
                 />
               </button>
               <input
-                className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-hidden placeholder:text-gray-600 disabled:cursor-not-allowed"
+                className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-fluid-sm text-white outline-hidden placeholder:text-gray-600 disabled:cursor-not-allowed"
                 disabled={!activeChat}
                 onChange={(e) => {
                   setInput(e.target.value);

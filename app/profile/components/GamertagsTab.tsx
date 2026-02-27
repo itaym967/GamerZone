@@ -84,8 +84,8 @@ export default function GamertagsTab({
         <div className="rounded-lg bg-secondary/10 p-2 text-secondary">
           <HugeiconsIcon icon={GameController02Icon} size={24} />
         </div>
-        <h2 className="font-bold text-white text-xl">Gamertags</h2>
-        <span className="mr-auto text-gray-500 text-xs">
+        <h2 className="font-bold text-fluid-lg text-white">Gamertags</h2>
+        <span className="mr-auto text-fluid-xs text-gray-500">
           {formData.games.length} משחקים
         </span>
       </div>
@@ -93,7 +93,9 @@ export default function GamertagsTab({
       {/* Add New Gamertag */}
       {availablePlatforms.length > 0 && (
         <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-          <h3 className="mb-3 font-bold text-sm text-white">הוסף משחק חדש</h3>
+          <h3 className="mb-3 font-bold text-fluid-sm text-white">
+            הוסף משחק חדש
+          </h3>
           <div className="flex gap-2">
             <button
               className="rounded-xl bg-primary p-2.5 text-black transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
@@ -103,7 +105,7 @@ export default function GamertagsTab({
               <HugeiconsIcon icon={Add01Icon} size={18} />
             </button>
             <input
-              className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-sm text-white outline-hidden focus:border-primary/50"
+              className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-fluid-sm text-white outline-hidden focus:border-primary/50"
               dir="ltr"
               onChange={(e) => setNewTag(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
@@ -112,7 +114,7 @@ export default function GamertagsTab({
               value={newTag}
             />
             <select
-              className="min-w-[120px] appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-sm text-white outline-hidden focus:border-primary/50"
+              className="min-w-[7.5rem] appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
               onChange={(e) => setNewPlatform(e.target.value)}
               value={newPlatform}
             >
@@ -135,8 +137,8 @@ export default function GamertagsTab({
               icon={GameController02Icon}
               size={32}
             />
-            <p className="text-sm">עדיין לא הוספת משחקים</p>
-            <p className="mt-1 text-gray-600 text-xs">
+            <p className="text-fluid-sm">עדיין לא הוספת משחקים</p>
+            <p className="mt-1 text-fluid-xs text-gray-600">
               הוסף את ה-Gamertags שלך כדי שאחרים יוכלו למצוא אותך
             </p>
           </div>
@@ -147,7 +149,7 @@ export default function GamertagsTab({
               key={platform}
             >
               {/* Platform Name */}
-              <span className="min-w-[100px] text-right font-bold text-primary text-sm">
+              <span className="min-w-[6.25rem] text-right font-bold text-fluid-sm text-primary">
                 {platform}
               </span>
 
@@ -156,7 +158,7 @@ export default function GamertagsTab({
                 <div className="flex flex-1 gap-2">
                   <input
                     autoFocus
-                    className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-sm text-white outline-hidden"
+                    className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-fluid-sm text-white outline-hidden"
                     dir="ltr"
                     onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={(e) => {
@@ -186,7 +188,7 @@ export default function GamertagsTab({
               ) : (
                 <>
                   <span
-                    className="flex-1 text-left font-mono text-sm text-white"
+                    className="flex-1 text-left font-mono text-fluid-sm text-white"
                     dir="ltr"
                   >
                     {formData.hiddenTags[platform]}
@@ -223,7 +225,7 @@ export default function GamertagsTab({
       </div>
 
       {availablePlatforms.length === 0 && formData.games.length > 0 && (
-        <p className="text-center text-gray-500 text-xs">
+        <p className="text-center text-fluid-xs text-gray-500">
           הוספת את כל המשחקים הזמינים 🎮
         </p>
       )}

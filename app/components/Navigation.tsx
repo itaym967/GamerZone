@@ -119,17 +119,17 @@ export default function Navigation() {
                     size={20}
                   />
                   {isLiveBoard && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                    <span className="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_0.5rem_rgba(239,68,68,0.8)]" />
                   )}
                   {item.href === "/notifications" && unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[10px] text-white shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[0.625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </div>
                 <span className="font-medium">{item.label}</span>
                 {isActive && (
-                  <div className="absolute top-1/2 left-0 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_10px_#00ff9d]" />
+                  <div className="absolute top-1/2 left-0 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_0.625rem_#00ff9d]" />
                 )}
               </Link>
             );
@@ -175,15 +175,17 @@ export default function Navigation() {
                     size={32}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-sm text-white">
+                    <p className="truncate font-bold text-fluid-sm text-white">
                       {profile?.username || "Gamer"}
                     </p>
-                    <p className="truncate text-[10px] text-gray-500">מחובר</p>
+                    <p className="truncate text-[0.625rem] text-gray-500">
+                      מחובר
+                    </p>
                   </div>
                 </div>
 
                 <button
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-red-400 text-sm transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-fluid-sm text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={isSigningOut}
                   onClick={handleSignOut}
                 >

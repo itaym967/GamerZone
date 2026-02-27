@@ -98,7 +98,7 @@ export default function ReportMessageModal({
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={18} />
               </button>
-              <h2 className="flex items-center gap-2 font-bold text-lg text-white">
+              <h2 className="flex items-center gap-2 font-bold text-fluid-lg text-white">
                 <span>דיווח על תוכן</span>
                 <HugeiconsIcon
                   className="text-red-400"
@@ -112,7 +112,7 @@ export default function ReportMessageModal({
               <div className="grid grid-cols-2 gap-2">
                 {REPORT_TYPES.map((type) => (
                   <button
-                    className={`rounded-xl border p-3 text-right text-sm transition-all ${
+                    className={`rounded-xl border p-3 text-right text-fluid-sm transition-all ${
                       reportType === type.value
                         ? "border-red-500/50 bg-red-500/10 text-red-400"
                         : "border-white/10 bg-white/5 text-gray-400 hover:bg-white/10"
@@ -120,18 +120,20 @@ export default function ReportMessageModal({
                     key={type.value}
                     onClick={() => setReportType(type.value)}
                   >
-                    <span className="mb-1 block text-lg">{type.icon}</span>
+                    <span className="mb-1 block text-fluid-lg">
+                      {type.icon}
+                    </span>
                     <span>{type.label}</span>
                   </button>
                 ))}
               </div>
 
               <div className="space-y-1 text-right">
-                <label className="font-medium text-gray-400 text-sm">
+                <label className="font-medium text-fluid-sm text-gray-400">
                   פרטים נוספים (אופציונלי)
                 </label>
                 <textarea
-                  className="h-24 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-3 text-right text-sm text-white outline-hidden focus:border-red-500/50"
+                  className="h-24 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-3 text-right text-fluid-sm text-white outline-hidden focus:border-red-500/50"
                   maxLength={500}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="תאר את הבעיה..."
@@ -154,7 +156,7 @@ export default function ReportMessageModal({
                 )}
               </button>
 
-              <p className="text-center text-gray-500 text-xs">
+              <p className="text-center text-fluid-xs text-gray-500">
                 דיווחים שקריים עלולים להוביל להשעיית חשבון.
               </p>
             </div>

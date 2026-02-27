@@ -124,18 +124,18 @@ export default function PWAInstallPrompt() {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="mb-1 font-bold text-sm text-white">
+            <h3 className="mb-1 font-bold text-fluid-sm text-white">
               התקן את GamerZone
             </h3>
-            <p className="mb-3 text-gray-400 text-xs leading-relaxed">
+            <p className="mb-3 text-fluid-xs text-gray-400 leading-relaxed">
               גישה מהירה מהמסך הראשי, התראות ומצב אופליין
             </p>
 
             {isIOS ? (
               /* iOS Safari instructions */
               <div className="space-y-2 rounded-xl bg-white/5 p-3">
-                <div className="flex items-center gap-2 text-gray-300 text-xs">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-blue-500/20 font-bold text-[10px] text-blue-400">
+                <div className="flex items-center gap-2 text-fluid-xs text-gray-300">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-blue-500/20 font-bold text-[0.625rem] text-blue-400">
                     1
                   </span>
                   <span>לחץ על</span>
@@ -146,8 +146,8 @@ export default function PWAInstallPrompt() {
                   />
                   <span>בתפריט הדפדפן</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-300 text-xs">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-blue-500/20 font-bold text-[10px] text-blue-400">
+                <div className="flex items-center gap-2 text-fluid-xs text-gray-300">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-blue-500/20 font-bold text-[0.625rem] text-blue-400">
                     2
                   </span>
                   <span>בחר</span>
@@ -162,7 +162,7 @@ export default function PWAInstallPrompt() {
             ) : (
               /* Android / Chrome install button */
               <button
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-bold text-black text-sm transition-all hover:bg-primary/90"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-bold text-black text-fluid-sm transition-all hover:bg-primary/90"
                 onClick={handleInstall}
               >
                 <HugeiconsIcon icon={Download01Icon} size={16} />

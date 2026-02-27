@@ -103,7 +103,7 @@ export default function MobileNav({
             const isActive = pathname === item.href;
             return (
               <Link
-                className={`flex min-w-[56px] flex-col items-center gap-0.5 py-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"}`}
+                className={`flex min-w-[3.5rem] flex-col items-center gap-0.5 py-1 transition-colors ${isActive ? "text-primary" : "text-gray-500"}`}
                 href={item.href}
                 key={item.href}
               >
@@ -112,10 +112,10 @@ export default function MobileNav({
                 >
                   <HugeiconsIcon icon={item.icon} size={22} />
                   {item.isLive && (
-                    <span className="absolute top-1 right-1 h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                    <span className="absolute top-1 right-1 h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_0.5rem_rgba(239,68,68,0.8)]" />
                   )}
                 </div>
-                <span className="font-medium text-[10px] leading-tight">
+                <span className="font-medium text-[0.625rem] leading-tight">
                   {item.label}
                 </span>
               </Link>
@@ -124,7 +124,7 @@ export default function MobileNav({
 
           {/* Menu / Hamburger Button */}
           <button
-            className={`relative flex min-w-[56px] flex-col items-center gap-0.5 py-1 transition-colors ${drawerOpen || isDrawerItemActive ? "text-primary" : "text-gray-500"}`}
+            className={`relative flex min-w-[3.5rem] flex-col items-center gap-0.5 py-1 transition-colors ${drawerOpen || isDrawerItemActive ? "text-primary" : "text-gray-500"}`}
             onClick={toggleDrawer}
           >
             <div
@@ -137,12 +137,14 @@ export default function MobileNav({
               )}
               {/* Show notification dot if there are unread notifications */}
               {!drawerOpen && unreadCount > 0 && (
-                <span className="absolute top-0.5 right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-blue-500 px-0.5 font-bold text-[9px] text-white shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                <span className="absolute top-0.5 right-2.5 flex h-[1rem] min-w-[1rem] items-center justify-center rounded-full bg-blue-500 px-0.5 font-bold text-[0.5625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </div>
-            <span className="font-medium text-[10px] leading-tight">תפריט</span>
+            <span className="font-medium text-[0.625rem] leading-tight">
+              תפריט
+            </span>
           </button>
         </div>
       </nav>
@@ -158,7 +160,7 @@ export default function MobileNav({
       {/* Side Drawer - slides from right (RTL) */}
       <div
         className={`fixed top-0 right-0 z-46 flex w-72 transform flex-col border-white/10 border-l bg-[#0a0a1e] transition-transform duration-300 ease-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
-        style={{ height: "calc(100dvh - 72px)" }}
+        style={{ height: "calc(100dvh - 4.5rem)" }}
       >
         {/* Drawer Header */}
         <div className="border-white/5 border-b p-5 pt-12">
@@ -178,10 +180,10 @@ export default function MobileNav({
                 size={48}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-bold text-base text-white">
+                <p className="truncate font-bold text-fluid-base text-white">
                   {profile?.username || "Gamer"}
                 </p>
-                <p className="flex items-center gap-1 text-primary text-xs">
+                <p className="flex items-center gap-1 text-fluid-xs text-primary">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                   מחובר
                 </p>
@@ -213,14 +215,14 @@ export default function MobileNav({
                 <div className="relative">
                   <HugeiconsIcon icon={item.icon} size={20} />
                   {item.showBadge && unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[10px] text-white shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[0.625rem] text-white shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </div>
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className="font-medium text-fluid-sm">{item.label}</span>
                 {isActive && (
-                  <div className="mr-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_#00ff9d]" />
+                  <div className="mr-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0.375rem_#00ff9d]" />
                 )}
               </Link>
             );
@@ -234,7 +236,7 @@ export default function MobileNav({
               onClick={() => setDrawerOpen(false)}
             >
               <HugeiconsIcon icon={Shield01Icon} size={20} />
-              <span className="font-medium text-sm">ניהול</span>
+              <span className="font-medium text-fluid-sm">ניהול</span>
             </Link>
           )}
         </nav>
@@ -243,7 +245,7 @@ export default function MobileNav({
         {isMounted && !showSkeleton && user && (
           <div className="border-white/5 border-t p-4">
             <button
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-red-400 text-sm transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-fluid-sm text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isSigningOut}
               onClick={() => {
                 onSignOut();

@@ -70,7 +70,7 @@ export default function AvatarCreator({
 
       {/* Style Selector */}
       <div>
-        <label className="mb-3 block text-right font-medium text-gray-400 text-sm">
+        <label className="mb-3 block text-right font-medium text-fluid-sm text-gray-400">
           בחר סגנון אווטאר
         </label>
         <div className="grid grid-cols-4 gap-2">
@@ -84,8 +84,10 @@ export default function AvatarCreator({
               key={style.id}
               onClick={() => setSelectedStyle(style.id)}
             >
-              <div className="mb-1 text-2xl">{style.emoji}</div>
-              <div className="font-medium text-white text-xs">{style.name}</div>
+              <div className="mb-1 text-fluid-xl">{style.emoji}</div>
+              <div className="font-medium text-fluid-xs text-white">
+                {style.name}
+              </div>
               {selectedStyle === style.id && (
                 <div className="absolute -top-1 -right-1 rounded-full bg-primary p-0.5 text-black">
                   <HugeiconsIcon icon={Tick01Icon} size={12} />

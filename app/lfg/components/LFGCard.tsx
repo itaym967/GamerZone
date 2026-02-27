@@ -88,7 +88,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
           <h3 className="truncate font-bold text-white">
             {post.profiles?.username || "Unknown Gamer"}
           </h3>
-          <div className="flex items-center gap-2 text-white/40 text-xs">
+          <div className="flex items-center gap-2 text-fluid-xs text-white/40">
             <span className="flex items-center gap-1">
               <HugeiconsIcon icon={Clock01Icon} size={10} />
               {formatDistanceToNow(new Date(post.created_at), {
@@ -111,16 +111,16 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
       {/* Content */}
       <div className="mb-4 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-2.5 py-1 font-semibold text-blue-400 text-sm">
+          <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-2.5 py-1 font-semibold text-blue-400 text-fluid-sm">
             <HugeiconsIcon icon={GameController02Icon} size={14} />
             {post.game}
           </span>
-          <span className="rounded-full border border-purple-500/20 bg-purple-500/20 px-2.5 py-1 font-medium text-purple-400 text-sm">
+          <span className="rounded-full border border-purple-500/20 bg-purple-500/20 px-2.5 py-1 font-medium text-fluid-sm text-purple-400">
             {post.mode}
           </span>
           {post.mic_required && (
             <span
-              className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-2.5 py-1 font-medium text-red-400 text-sm"
+              className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-2.5 py-1 font-medium text-fluid-sm text-red-400"
               title="Mic Required"
             >
               <HugeiconsIcon icon={Mic01Icon} size={14} />
@@ -128,7 +128,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
             </span>
           )}
         </div>
-        <p className="text-sm text-white/80 leading-relaxed">
+        <p className="text-fluid-sm text-white/80 leading-relaxed">
           {post.description}
         </p>
       </div>
@@ -145,7 +145,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
         </button>
       )}
       {isOwner && (
-        <div className="w-full py-2.5 text-center text-sm text-white/30 italic">
+        <div className="w-full py-2.5 text-center text-fluid-sm text-white/30 italic">
           המודעה שלך
         </div>
       )}

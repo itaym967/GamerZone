@@ -164,11 +164,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
             icon={SecurityCheckIcon}
             size={28}
           />
-          <h2 className="font-bold text-2xl text-white">
+          <h2 className="font-bold text-fluid-xl text-white">
             בטיחות ילדים ומודרציה
           </h2>
         </div>
-        <p className="text-gray-400 text-sm">
+        <p className="text-fluid-sm text-gray-400">
           ניהול חשבונות קטינים, דיווחי תוכן, ובקרת הורים
         </p>
       </div>
@@ -225,7 +225,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       {/* Content Reports */}
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
         <div className="flex items-center justify-between border-white/5 border-b p-4">
-          <h3 className="flex items-center gap-2 font-bold text-lg text-white">
+          <h3 className="flex items-center gap-2 font-bold text-fluid-lg text-white">
             <HugeiconsIcon
               className="text-amber-400"
               icon={Flag01Icon}
@@ -244,7 +244,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
               ] as ReportStatusFilter[]
             ).map((f) => (
               <button
-                className={`rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
+                className={`rounded-lg px-2.5 py-1 font-bold text-[0.6875rem] transition-all ${
                   reportFilter === f
                     ? "border border-amber-500/30 bg-amber-500/20 text-amber-400"
                     : "border border-white/5 bg-white/5 text-gray-500 hover:bg-white/10"
@@ -277,21 +277,21 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   <div className="flex-1 text-right">
                     <div className="mb-1 flex items-center justify-end gap-2">
                       <span
-                        className={`rounded-xs px-2 py-0.5 font-bold text-[11px] ${REPORT_TYPE_COLORS[report.report_type] || "bg-gray-500/20 text-gray-400"}`}
+                        className={`rounded-xs px-2 py-0.5 font-bold text-[0.6875rem] ${REPORT_TYPE_COLORS[report.report_type] || "bg-gray-500/20 text-gray-400"}`}
                       >
                         {REPORT_TYPE_LABELS[report.report_type] ||
                           report.report_type}
                       </span>
                       <StatusBadge status={report.status} />
-                      <span className="font-mono text-[11px] text-gray-600">
+                      <span className="font-mono text-[0.6875rem] text-gray-600">
                         {new Date(report.created_at).toLocaleString("he-IL")}
                       </span>
                     </div>
-                    <p className="text-gray-300 text-sm">
+                    <p className="text-fluid-sm text-gray-300">
                       {report.description || "ללא תיאור"}
                     </p>
                     {report.admin_notes && (
-                      <p className="mt-1 flex items-center justify-end gap-1 text-gray-500 text-xs">
+                      <p className="mt-1 flex items-center justify-end gap-1 text-fluid-xs text-gray-500">
                         <HugeiconsIcon icon={Message01Icon} size={10} />
                         <span>הערת מנהל: {report.admin_notes}</span>
                       </p>
@@ -305,7 +305,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                       {activeReportId === report.id ? (
                         <div className="w-64 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
                           <textarea
-                            className="h-16 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-right text-white text-xs outline-hidden"
+                            className="h-16 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-right text-fluid-xs text-white outline-hidden"
                             onChange={(e) => setAdminNotes(e.target.value)}
                             placeholder="הערות מנהל (אופציונלי)..."
                             value={adminNotes}
@@ -313,7 +313,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                           <div className="flex gap-1.5">
                             {report.status === "pending" && (
                               <button
-                                className="flex-1 rounded-lg bg-blue-500/20 px-2 py-1.5 font-bold text-[11px] text-blue-400 transition-colors hover:bg-blue-500/30"
+                                className="flex-1 rounded-lg bg-blue-500/20 px-2 py-1.5 font-bold text-[0.6875rem] text-blue-400 transition-colors hover:bg-blue-500/30"
                                 onClick={() =>
                                   updateReportStatus(report.id, "reviewing")
                                 }
@@ -322,7 +322,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                               </button>
                             )}
                             <button
-                              className="flex-1 rounded-lg bg-green-500/20 px-2 py-1.5 font-bold text-[11px] text-green-400 transition-colors hover:bg-green-500/30"
+                              className="flex-1 rounded-lg bg-green-500/20 px-2 py-1.5 font-bold text-[0.6875rem] text-green-400 transition-colors hover:bg-green-500/30"
                               onClick={() =>
                                 updateReportStatus(report.id, "resolved")
                               }
@@ -330,7 +330,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                               טופל
                             </button>
                             <button
-                              className="flex-1 rounded-lg bg-gray-500/20 px-2 py-1.5 font-bold text-[11px] text-gray-400 transition-colors hover:bg-gray-500/30"
+                              className="flex-1 rounded-lg bg-gray-500/20 px-2 py-1.5 font-bold text-[0.6875rem] text-gray-400 transition-colors hover:bg-gray-500/30"
                               onClick={() =>
                                 updateReportStatus(report.id, "dismissed")
                               }
@@ -350,7 +350,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                         </div>
                       ) : (
                         <button
-                          className="rounded-lg bg-amber-500/10 px-3 py-1.5 font-bold text-amber-400 text-xs transition-colors hover:bg-amber-500/20"
+                          className="rounded-lg bg-amber-500/10 px-3 py-1.5 font-bold text-amber-400 text-fluid-xs transition-colors hover:bg-amber-500/20"
                           onClick={() => setActiveReportId(report.id)}
                         >
                           טפל בדיווח
@@ -381,7 +381,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       {/* Minor Users List */}
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
         <div className="flex items-center justify-between border-white/5 border-b p-4">
-          <h3 className="flex items-center gap-2 font-bold text-lg text-white">
+          <h3 className="flex items-center gap-2 font-bold text-fluid-lg text-white">
             <HugeiconsIcon
               className="text-blue-400"
               icon={UserGroupIcon}
@@ -396,7 +396,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
               size={14}
             />
             <input
-              className="w-full rounded-lg border border-white/5 bg-black/20 py-1.5 pr-8 pl-3 text-right text-white text-xs outline-hidden"
+              className="w-full rounded-lg border border-white/5 bg-black/20 py-1.5 pr-8 pl-3 text-right text-fluid-xs text-white outline-hidden"
               onChange={(e) => setMinorSearch(e.target.value)}
               placeholder="חפש קטין..."
               type="text"
@@ -405,7 +405,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
           </div>
         </div>
         {filteredMinors.length > 0 ? (
-          <table className="w-full text-right text-sm">
+          <table className="w-full text-right text-fluid-sm">
             <thead className="bg-white/5 text-gray-400">
               <tr>
                 <th className="p-3 font-medium">שם משתמש</th>
@@ -426,22 +426,24 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   </td>
                   <td className="p-3">
                     <span
-                      className={`rounded-xs px-2 py-1 font-bold text-xs ${minor.account_type === "supervised" ? "bg-amber-500/20 text-amber-400" : "bg-blue-500/20 text-blue-400"}`}
+                      className={`rounded-xs px-2 py-1 font-bold text-fluid-xs ${minor.account_type === "supervised" ? "bg-amber-500/20 text-amber-400" : "bg-blue-500/20 text-blue-400"}`}
                     >
                       {minor.account_type === "supervised"
                         ? "מפוקח (מתחת ל-13)"
                         : "צעיר (13-17)"}
                     </span>
                   </td>
-                  <td className="p-3 text-xs">{minor.date_of_birth || "-"}</td>
+                  <td className="p-3 text-fluid-xs">
+                    {minor.date_of_birth || "-"}
+                  </td>
                   <td className="p-3">
                     {minor.parental_consent ? (
-                      <span className="flex items-center justify-end gap-1 font-bold text-green-400 text-xs">
+                      <span className="flex items-center justify-end gap-1 font-bold text-fluid-xs text-green-400">
                         <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />{" "}
                         מאושר
                       </span>
                     ) : (
-                      <span className="flex items-center justify-end gap-1 font-bold text-amber-400 text-xs">
+                      <span className="flex items-center justify-end gap-1 font-bold text-amber-400 text-fluid-xs">
                         <HugeiconsIcon icon={AlertCircleIcon} size={14} /> ממתין
                       </span>
                     )}
@@ -449,17 +451,17 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1">
                       {minor.chat_restricted && (
-                        <span className="rounded-xs bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">
+                        <span className="rounded-xs bg-red-500/20 px-1.5 py-0.5 text-[0.625rem] text-red-400">
                           צ׳אט מוגבל
                         </span>
                       )}
                       {minor.profile_restricted && (
-                        <span className="rounded-xs bg-orange-500/20 px-1.5 py-0.5 text-[10px] text-orange-400">
+                        <span className="rounded-xs bg-orange-500/20 px-1.5 py-0.5 text-[0.625rem] text-orange-400">
                           פרופיל מוגבל
                         </span>
                       )}
                       {minor.safe_mode && (
-                        <span className="rounded-xs bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">
+                        <span className="rounded-xs bg-green-500/20 px-1.5 py-0.5 text-[0.625rem] text-green-400">
                           מצב בטוח
                         </span>
                       )}
@@ -503,10 +505,10 @@ function StatCard({
     >
       <div className="mb-2 flex items-center gap-2">
         {icon}
-        <span className="text-gray-400 text-sm">{label}</span>
+        <span className="text-fluid-sm text-gray-400">{label}</span>
       </div>
       <div
-        className={`font-bold text-2xl ${highlight ? "text-amber-400" : "text-white"}`}
+        className={`font-bold text-fluid-xl ${highlight ? "text-amber-400" : "text-white"}`}
       >
         {value}
       </div>
@@ -529,7 +531,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   return (
     <span
-      className={`rounded-xs px-2 py-0.5 font-bold text-[11px] ${styles[status] || "bg-gray-500/20 text-gray-400"}`}
+      className={`rounded-xs px-2 py-0.5 font-bold text-[0.6875rem] ${styles[status] || "bg-gray-500/20 text-gray-400"}`}
     >
       {labels[status] || status}
     </span>

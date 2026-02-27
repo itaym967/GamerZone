@@ -56,8 +56,8 @@ export default function UpdatePasswordPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Animated Background */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
-      <div className="absolute top-[-20%] right-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-primary/20 blur-[120px]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-secondary/20 blur-[120px] delay-75" />
+      <div className="absolute top-[-20%] right-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
 
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
@@ -69,14 +69,16 @@ export default function UpdatePasswordPage() {
           <div className="mb-6 flex justify-center">
             <Logo className="justify-center" size="lg" />
           </div>
-          <h1 className="mb-2 font-bold text-2xl text-white">עדכון סיסמה</h1>
+          <h1 className="mb-2 font-bold text-fluid-xl text-white">
+            עדכון סיסמה
+          </h1>
           <p className="text-gray-400">בחר סיסמה חדשה לחשבון שלך</p>
         </div>
 
         <form className="space-y-6" onSubmit={handleUpdate}>
           <div className="space-y-4">
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">
+              <label className="font-medium text-fluid-sm text-gray-400">
                 סיסמה חדשה
               </label>
               <div className="relative">
@@ -97,7 +99,7 @@ export default function UpdatePasswordPage() {
             </div>
 
             <div className="space-y-1 text-right">
-              <label className="font-medium text-gray-400 text-sm">
+              <label className="font-medium text-fluid-sm text-gray-400">
                 אימות סיסמה
               </label>
               <div className="relative">

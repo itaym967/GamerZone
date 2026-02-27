@@ -270,7 +270,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
             size={16}
           />
           <input
-            className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-sm text-white outline-hidden focus:border-red-500/30"
+            className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-fluid-sm text-white outline-hidden focus:border-red-500/30"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חפש לפי שם משתמש, שם מלא או אימייל..."
             type="text"
@@ -286,7 +286,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           {(["all", "user", "admin", "minor", "banned"] as RoleFilter[]).map(
             (f) => (
               <button
-                className={`rounded-lg px-3 py-1.5 font-bold text-xs transition-all ${
+                className={`rounded-lg px-3 py-1.5 font-bold text-fluid-xs transition-all ${
                   roleFilter === f
                     ? "border border-red-500/30 bg-red-500/20 text-red-400"
                     : "border border-white/5 bg-white/5 text-gray-400 hover:bg-white/10"
@@ -309,13 +309,13 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         </div>
       </div>
 
-      <div className="text-right text-gray-500 text-xs">
+      <div className="text-right text-fluid-xs text-gray-500">
         {filtered.length} מתוך {users.length} משתמשים
       </div>
 
       {/* Users Table */}
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-card">
-        <table className="w-full text-right text-sm">
+        <table className="w-full text-right text-fluid-sm">
           <thead className="bg-white/5 text-gray-400">
             <tr>
               <th className="p-4 font-medium">שם משתמש</th>
@@ -335,12 +335,12 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                 <td className="p-4 font-bold text-white">
                   {user.username}
                   {user.is_banned && (
-                    <span className="mr-2 rounded-full bg-red-950 px-2 py-0.5 text-red-500 text-xs">
+                    <span className="mr-2 rounded-full bg-red-950 px-2 py-0.5 text-fluid-xs text-red-500">
                       מוקפא
                     </span>
                   )}
                   {user.is_minor && (
-                    <span className="mr-2 rounded-full bg-amber-950 px-2 py-0.5 text-amber-500 text-xs">
+                    <span className="mr-2 rounded-full bg-amber-950 px-2 py-0.5 text-amber-500 text-fluid-xs">
                       קטין
                     </span>
                   )}
@@ -348,7 +348,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                 <td className="p-4">{user.full_name}</td>
                 <td className="p-4">
                   <select
-                    className={`cursor-pointer rounded border bg-transparent px-2 py-1 font-bold text-xs disabled:cursor-not-allowed disabled:opacity-50 ${
+                    className={`cursor-pointer rounded border bg-transparent px-2 py-1 font-bold text-fluid-xs disabled:cursor-not-allowed disabled:opacity-50 ${
                       user.role === "admin"
                         ? "border-red-500/30 text-red-400"
                         : "border-blue-500/30 text-blue-400"
@@ -374,7 +374,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                   </div>
                 </td>
                 <td
-                  className="max-w-[150px] truncate p-4 text-gray-400 text-sm"
+                  className="max-w-[9.375rem] truncate p-4 text-fluid-sm text-gray-400"
                   title={user.ban_reason || undefined}
                 >
                   {user.ban_reason || "-"}

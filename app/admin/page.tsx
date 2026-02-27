@@ -46,10 +46,10 @@ export default function AdminPage() {
     <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">
       <Navigation />
 
-      <main className="mx-auto max-w-7xl p-6">
+      <main className="fluid-container stack-fluid p-fluid-lg">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="mb-2 flex items-center gap-3 font-bold text-3xl text-white">
+            <h1 className="mb-2 flex items-center gap-3 font-bold text-fluid-2xl text-white">
               <HugeiconsIcon
                 className="text-red-500"
                 icon={Shield01Icon}
@@ -57,7 +57,9 @@ export default function AdminPage() {
               />
               <span>ניהול ומודרציה</span>
             </h1>
-            <p className="text-gray-400">מערכת הגנה על השיחות ב-GamerZone</p>
+            <p className="text-fluid-base text-gray-400">
+              מערכת הגנה על השיחות ב-GamerZone
+            </p>
           </div>
         </header>
 
@@ -68,13 +70,14 @@ export default function AdminPage() {
             const color = tab.color || "red";
             return (
               <button
-                className={`relative flex items-center gap-1.5 whitespace-nowrap px-4 pb-3 font-bold text-sm transition-all ${
+                className={`relative flex items-center gap-1.5 whitespace-nowrap px-4 pb-3 font-bold text-fluid-sm transition-all ${
                   isActive
                     ? `text-${color}-500`
                     : "text-gray-500 hover:text-white"
                 }`}
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
+                type="button"
               >
                 {tab.icon}
                 {tab.label}

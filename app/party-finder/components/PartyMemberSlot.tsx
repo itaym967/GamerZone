@@ -57,7 +57,7 @@ export default function PartyMemberSlot({
         <div className="absolute -right-1 -bottom-1 h-4 w-4 rounded-full border-2 border-[#0a0a0a] bg-green-500" />
       )}
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover/member:opacity-100">
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xs bg-black/90 px-2 py-1 text-white text-xs">
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xs bg-black/90 px-2 py-1 text-fluid-xs text-white">
           {member.profile.username}
         </div>
       </div>
