@@ -1,7 +1,8 @@
 "use client";
 
+import { LockIcon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "framer-motion";
-import { Check, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -87,8 +88,9 @@ export default function UpdatePasswordPage() {
                   type="password"
                   value={password}
                 />
-                <Lock
+                <HugeiconsIcon
                   className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
+                  icon={LockIcon}
                   size={18}
                 />
               </div>
@@ -107,8 +109,9 @@ export default function UpdatePasswordPage() {
                   type="password"
                   value={confirmPassword}
                 />
-                <Lock
+                <HugeiconsIcon
                   className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
+                  icon={LockIcon}
                   size={18}
                 />
               </div>
@@ -125,7 +128,7 @@ export default function UpdatePasswordPage() {
             ) : (
               <>
                 <span>עדכן סיסמה</span>
-                <Check size={18} />
+                <HugeiconsIcon icon={Tick01Icon} size={18} />
               </>
             )}
           </button>

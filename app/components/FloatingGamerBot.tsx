@@ -1,7 +1,15 @@
 "use client";
 
+import {
+  BotIcon,
+  Cancel01Icon,
+  Maximize02Icon,
+  Minimize02Icon,
+  SentIcon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, Maximize2, Minimize2, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -119,8 +127,9 @@ export default function FloatingGamerBot() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
-            <Bot
+            <HugeiconsIcon
               className="text-black transition-transform group-hover:scale-110"
+              icon={BotIcon}
               size={28}
             />
             <span className="absolute -top-1 -right-1 h-4 w-4 animate-pulse rounded-full border-2 border-[#050510] bg-green-500" />
@@ -147,13 +156,21 @@ export default function FloatingGamerBot() {
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-black">
-                    <Bot className="text-primary" size={20} />
+                    <HugeiconsIcon
+                      className="text-primary"
+                      icon={BotIcon}
+                      size={20}
+                    />
                   </div>
                 </div>
                 <div className="text-right">
                   <h3 className="flex items-center gap-1 font-bold text-sm text-white">
                     GamerBot
-                    <Sparkles className="text-primary" size={12} />
+                    <HugeiconsIcon
+                      className="text-primary"
+                      icon={SparklesIcon}
+                      size={12}
+                    />
                   </h3>
                   <span className="flex items-center gap-1 text-[10px] text-green-500">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />{" "}
@@ -167,16 +184,16 @@ export default function FloatingGamerBot() {
                   onClick={() => setIsMinimized(!isMinimized)}
                 >
                   {isMinimized ? (
-                    <Maximize2 size={16} />
+                    <HugeiconsIcon icon={Maximize02Icon} size={16} />
                   ) : (
-                    <Minimize2 size={16} />
+                    <HugeiconsIcon icon={Minimize02Icon} size={16} />
                   )}
                 </button>
                 <button
                   className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
                   onClick={() => setIsOpen(false)}
                 >
-                  <X size={16} />
+                  <HugeiconsIcon icon={Cancel01Icon} size={16} />
                 </button>
               </div>
             </div>
@@ -258,12 +275,13 @@ export default function FloatingGamerBot() {
                       disabled={!input.trim() || isTyping}
                       type="submit"
                     >
-                      <Send
+                      <HugeiconsIcon
                         className={
                           input.trim() && !isTyping
                             ? "translate-x-0.5 -translate-y-0.5"
                             : ""
                         }
+                        icon={SentIcon}
                         size={18}
                       />
                     </button>

@@ -1,17 +1,18 @@
 "use client";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  AlertCircle,
-  CheckCircle2,
-  Eye,
-  Flag,
-  MessageSquare,
-  Search,
-  ShieldCheck,
-  Users,
-  X,
-} from "lucide-react";
+  AlertCircleIcon,
+  Cancel01Icon,
+  CheckmarkCircle02Icon,
+  Flag01Icon,
+  Message01Icon,
+  Search01Icon,
+  SecurityCheckIcon,
+  UserGroupIcon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ContentReport, Profile } from "../types";
@@ -158,7 +159,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       {/* Header */}
       <div className="rounded-2xl border border-green-500/20 bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-6">
         <div className="mb-2 flex items-center gap-3">
-          <ShieldCheck className="text-green-400" size={28} />
+          <HugeiconsIcon
+            className="text-green-400"
+            icon={SecurityCheckIcon}
+            size={28}
+          />
           <h2 className="font-bold text-2xl text-white">
             בטיחות ילדים ומודרציה
           </h2>
@@ -171,23 +176,47 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <StatCard
-          icon={<Users className="text-blue-400" size={18} />}
+          icon={
+            <HugeiconsIcon
+              className="text-blue-400"
+              icon={UserGroupIcon}
+              size={18}
+            />
+          }
           label="חשבונות קטינים"
           value={stats.totalMinors}
         />
         <StatCard
           highlight={stats.pendingReports > 0}
-          icon={<Flag className="text-amber-400" size={18} />}
+          icon={
+            <HugeiconsIcon
+              className="text-amber-400"
+              icon={Flag01Icon}
+              size={18}
+            />
+          }
           label="דיווחים ממתינים"
           value={stats.pendingReports}
         />
         <StatCard
-          icon={<Eye className="text-purple-400" size={18} />}
+          icon={
+            <HugeiconsIcon
+              className="text-purple-400"
+              icon={ViewIcon}
+              size={18}
+            />
+          }
           label="חשבונות מפוקחים"
           value={stats.supervised}
         />
         <StatCard
-          icon={<ShieldCheck className="text-green-400" size={18} />}
+          icon={
+            <HugeiconsIcon
+              className="text-green-400"
+              icon={SecurityCheckIcon}
+              size={18}
+            />
+          }
           label="עם אישור הורים"
           value={stats.withConsent}
         />
@@ -197,7 +226,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
         <div className="flex items-center justify-between border-white/5 border-b p-4">
           <h3 className="flex items-center gap-2 font-bold text-lg text-white">
-            <Flag className="text-amber-400" size={18} />
+            <HugeiconsIcon
+              className="text-amber-400"
+              icon={Flag01Icon}
+              size={18}
+            />
             דיווחי תוכן
           </h3>
           <div className="flex gap-2">
@@ -259,7 +292,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                     </p>
                     {report.admin_notes && (
                       <p className="mt-1 flex items-center justify-end gap-1 text-gray-500 text-xs">
-                        <MessageSquare size={10} />
+                        <HugeiconsIcon icon={Message01Icon} size={10} />
                         <span>הערת מנהל: {report.admin_notes}</span>
                       </p>
                     )}
@@ -311,7 +344,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                                 setAdminNotes("");
                               }}
                             >
-                              <X size={12} />
+                              <HugeiconsIcon icon={Cancel01Icon} size={12} />
                             </button>
                           </div>
                         </div>
@@ -331,7 +364,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
           </div>
         ) : (
           <div className="p-12 text-center text-gray-500">
-            <ShieldCheck className="mx-auto mb-3 opacity-50" size={32} />
+            <HugeiconsIcon
+              className="mx-auto mb-3 opacity-50"
+              icon={SecurityCheckIcon}
+              size={32}
+            />
             <p>
               {reportFilter !== "all"
                 ? "אין דיווחים בסטטוס זה"
@@ -345,12 +382,17 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0e0e1b]">
         <div className="flex items-center justify-between border-white/5 border-b p-4">
           <h3 className="flex items-center gap-2 font-bold text-lg text-white">
-            <Users className="text-blue-400" size={18} />
+            <HugeiconsIcon
+              className="text-blue-400"
+              icon={UserGroupIcon}
+              size={18}
+            />
             חשבונות קטינים
           </h3>
           <div className="relative w-48">
-            <Search
+            <HugeiconsIcon
               className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-500"
+              icon={Search01Icon}
               size={14}
             />
             <input
@@ -395,11 +437,12 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   <td className="p-3">
                     {minor.parental_consent ? (
                       <span className="flex items-center justify-end gap-1 font-bold text-green-400 text-xs">
-                        <CheckCircle2 size={14} /> מאושר
+                        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />{" "}
+                        מאושר
                       </span>
                     ) : (
                       <span className="flex items-center justify-end gap-1 font-bold text-amber-400 text-xs">
-                        <AlertCircle size={14} /> ממתין
+                        <HugeiconsIcon icon={AlertCircleIcon} size={14} /> ממתין
                       </span>
                     )}
                   </td>
@@ -428,7 +471,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
           </table>
         ) : (
           <div className="p-12 text-center text-gray-500">
-            <Users className="mx-auto mb-3 opacity-50" size={32} />
+            <HugeiconsIcon
+              className="mx-auto mb-3 opacity-50"
+              icon={UserGroupIcon}
+              size={32}
+            />
             <p>
               {minorSearch ? "לא נמצאו קטינים" : "אין חשבונות קטינים רשומים"}
             </p>

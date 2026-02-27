@@ -28,6 +28,38 @@ export function useSwapStatus(currentUserId: string | null) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isSubscribedRef = useRef(false);
 
+  // Handle realtime updates
+  const handleRealtimeUpdate = useCallback(
+    (payload: any) => {
+      if (!currentUserId) {
+        return;
+      }
+
+      const data = payload.new || payload.old;
+      if (!data) {
+        return;
+      }
+
+      const otherUserId =
+        data.sender_id === currentUserId ? data.receiver_id : data.sender_id;
+
+      if (payload.eventType === "DELETE") {
+        setSwapStatuses((prev) => {
+          const newStatuses = { ...prev };
+          delete newStatuses[otherUserId];
+          return newStatuses;
+        });
+      } else {
+        const newStatus = determineStatus(data, currentUserId);
+        setSwapStatuses((prev) => ({
+          ...prev,
+          [otherUserId]: newStatus,
+        }));
+      }
+    },
+    [currentUserId]
+  );
+
   // Fetch initial swap statuses for all visible users
   const fetchSwapStatuses = useCallback(
     async (userIds: string[]) => {
@@ -139,35 +171,6 @@ export function useSwapStatus(currentUserId: string | null) {
       }
     };
   }, [currentUserId, supabase, handleRealtimeUpdate]);
-
-  // Handle realtime updates
-  const handleRealtimeUpdate = (payload: any) => {
-    if (!currentUserId) {
-      return;
-    }
-
-    const data = payload.new || payload.old;
-    if (!data) {
-      return;
-    }
-
-    const otherUserId =
-      data.sender_id === currentUserId ? data.receiver_id : data.sender_id;
-
-    if (payload.eventType === "DELETE") {
-      setSwapStatuses((prev) => {
-        const newStatuses = { ...prev };
-        delete newStatuses[otherUserId];
-        return newStatuses;
-      });
-    } else {
-      const newStatus = determineStatus(data, currentUserId);
-      setSwapStatuses((prev) => ({
-        ...prev,
-        [otherUserId]: newStatus,
-      }));
-    }
-  };
 
   // Update status for a specific user (called by GamerCard when user takes action)
   const updateSwapStatus = useCallback((userId: string, status: SwapStatus) => {

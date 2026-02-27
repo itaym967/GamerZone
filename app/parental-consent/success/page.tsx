@@ -1,6 +1,10 @@
 "use client";
 
-import { CheckCircle, ShieldCheck } from "lucide-react";
+import {
+  CheckmarkCircle01Icon,
+  SecurityCheckIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Logo from "../../components/Logo";
@@ -20,9 +24,17 @@ function SuccessContent() {
         <div className="rounded-3xl border border-white/10 bg-[#0e0e1b] p-8 shadow-2xl">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
             {alreadyGranted ? (
-              <ShieldCheck className="text-green-500" size={40} />
+              <HugeiconsIcon
+                className="text-green-500"
+                icon={SecurityCheckIcon}
+                size={40}
+              />
             ) : (
-              <CheckCircle className="text-green-500" size={40} />
+              <HugeiconsIcon
+                className="text-green-500"
+                icon={CheckmarkCircle01Icon}
+                size={40}
+              />
             )}
           </div>
 
@@ -39,7 +51,11 @@ function SuccessContent() {
           <div className="mb-6 space-y-3 rounded-xl bg-white/5 p-4 text-right">
             <h3 className="flex items-center justify-end gap-2 font-bold text-sm text-white">
               <span>הגנות פעילות</span>
-              <ShieldCheck className="text-green-500" size={16} />
+              <HugeiconsIcon
+                className="text-green-500"
+                icon={SecurityCheckIcon}
+                size={16}
+              />
             </h3>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li className="flex items-center justify-end gap-2">

@@ -1,13 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
-  AlertTriangle,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-} from "lucide-react";
+  Alert01Icon,
+  ArrowRight01Icon,
+  SecurityCheckIcon,
+  ViewIcon,
+  ViewOffIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -317,9 +318,9 @@ export default function SignupPage() {
                         : "חשבון רגיל"}
                   </span>
                   {ageInfo.needsConsent ? (
-                    <AlertTriangle size={16} />
+                    <HugeiconsIcon icon={Alert01Icon} size={16} />
                   ) : (
-                    <ShieldCheck size={16} />
+                    <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
                   )}
                 </div>
               )}
@@ -329,7 +330,7 @@ export default function SignupPage() {
               <div className="space-y-1 rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 text-right">
                 <label className="flex items-center justify-end gap-2 font-medium text-amber-400 text-sm">
                   <span>אימייל הורה / אפוטרופוס</span>
-                  <ShieldCheck size={14} />
+                  <HugeiconsIcon icon={SecurityCheckIcon} size={14} />
                 </label>
                 <input
                   className="w-full rounded-xl border border-amber-500/20 bg-black/20 px-4 py-3 text-right text-white outline-none transition-colors placeholder:text-gray-600 focus:border-amber-500/50"
@@ -379,7 +380,11 @@ export default function SignupPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   type="button"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? (
+                    <HugeiconsIcon icon={ViewOffIcon} size={18} />
+                  ) : (
+                    <HugeiconsIcon icon={ViewIcon} size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -395,7 +400,11 @@ export default function SignupPage() {
             ) : (
               <>
                 <span>הירשם</span>
-                <ArrowRight className="rotate-180" size={18} />
+                <HugeiconsIcon
+                  className="rotate-180"
+                  icon={ArrowRight01Icon}
+                  size={18}
+                />
               </>
             )}
           </button>

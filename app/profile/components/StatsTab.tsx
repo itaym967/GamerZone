@@ -1,14 +1,14 @@
 "use client";
-
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  BarChart3,
-  Calendar,
-  Gamepad2,
-  Handshake,
-  Users,
-} from "lucide-react";
+  Agreement01Icon,
+  ArrowDownLeft01Icon,
+  ArrowUpRight01Icon,
+  BarChartIcon,
+  Calendar01Icon,
+  GameController02Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ProfileStats } from "../types";
 
 interface StatsTabProps {
@@ -26,7 +26,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
 
   const statCards = [
     {
-      icon: ArrowUpRight,
+      icon: ArrowUpRight01Icon,
       label: "בקשות שנשלחו",
       value: stats.swapsSent,
       color: "text-blue-400",
@@ -34,7 +34,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
       border: "border-blue-500/20",
     },
     {
-      icon: ArrowDownLeft,
+      icon: ArrowDownLeft01Icon,
       label: "בקשות שהתקבלו",
       value: stats.swapsReceived,
       color: "text-purple-400",
@@ -42,7 +42,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
       border: "border-purple-500/20",
     },
     {
-      icon: Handshake,
+      icon: Agreement01Icon,
       label: "החלפות מוצלחות",
       value: stats.swapsApproved,
       color: "text-primary",
@@ -50,7 +50,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
       border: "border-primary/20",
     },
     {
-      icon: Users,
+      icon: UserGroupIcon,
       label: "חברים",
       value: stats.friendsCount,
       color: "text-pink-400",
@@ -58,7 +58,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
       border: "border-pink-500/20",
     },
     {
-      icon: Gamepad2,
+      icon: GameController02Icon,
       label: "משחקים",
       value: stats.gamesCount,
       color: "text-yellow-400",
@@ -66,7 +66,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
       border: "border-yellow-500/20",
     },
     {
-      icon: Calendar,
+      icon: Calendar01Icon,
       label: "חבר מאז",
       value: memberSinceFormatted,
       color: "text-gray-400",
@@ -79,7 +79,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
     <div className="glass-panel space-y-6 rounded-2xl border border-white/5 p-6">
       <div className="mb-4 flex items-center gap-2">
         <div className="rounded-lg bg-primary/10 p-2 text-primary">
-          <BarChart3 size={24} />
+          <HugeiconsIcon icon={BarChartIcon} size={24} />
         </div>
         <h2 className="font-bold text-white text-xl">סטטיסטיקות</h2>
       </div>
@@ -91,7 +91,11 @@ export default function StatsTab({ stats }: StatsTabProps) {
             key={card.label}
           >
             <div className="mb-2 flex items-center gap-2">
-              <card.icon className={card.color} size={16} />
+              <HugeiconsIcon
+                className={card.color}
+                icon={card.icon}
+                size={16}
+              />
               <span className="text-gray-400 text-xs">{card.label}</span>
             </div>
             <p className={`font-bold text-2xl ${card.color}`}>

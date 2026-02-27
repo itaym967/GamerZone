@@ -1,18 +1,19 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Bot,
-  Gamepad2,
-  MessageSquare,
-  Plus,
-  Sparkles,
-  Trash2,
-  User,
-  Users,
-  Zap,
-} from "lucide-react";
+  Add01Icon,
+  ArrowLeft01Icon,
+  BotIcon,
+  Delete02Icon,
+  GameController02Icon,
+  Message01Icon,
+  SparklesIcon,
+  UserGroupIcon,
+  UserIcon,
+  ZapIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -231,7 +232,11 @@ export default function OnboardingPage() {
                   {/* Features Grid */}
                   <div className="mx-auto mb-8 grid max-w-lg grid-cols-2 gap-4">
                     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4">
-                      <Bot className="mx-auto mb-2 text-primary" size={32} />
+                      <HugeiconsIcon
+                        className="mx-auto mb-2 text-primary"
+                        icon={BotIcon}
+                        size={32}
+                      />
                       <h3 className="mb-1 font-bold text-sm text-white">
                         GamerBot AI
                       </h3>
@@ -240,8 +245,9 @@ export default function OnboardingPage() {
                       </p>
                     </div>
                     <div className="rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/10 to-secondary/5 p-4">
-                      <MessageSquare
+                      <HugeiconsIcon
                         className="mx-auto mb-2 text-secondary"
+                        icon={Message01Icon}
                         size={32}
                       />
                       <h3 className="mb-1 font-bold text-sm text-white">
@@ -252,7 +258,11 @@ export default function OnboardingPage() {
                       </p>
                     </div>
                     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4">
-                      <Zap className="mx-auto mb-2 text-primary" size={32} />
+                      <HugeiconsIcon
+                        className="mx-auto mb-2 text-primary"
+                        icon={ZapIcon}
+                        size={32}
+                      />
                       <h3 className="mb-1 font-bold text-sm text-white">
                         Live Board
                       </h3>
@@ -261,8 +271,9 @@ export default function OnboardingPage() {
                       </p>
                     </div>
                     <div className="rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/10 to-secondary/5 p-4">
-                      <Users
+                      <HugeiconsIcon
                         className="mx-auto mb-2 text-secondary"
+                        icon={UserGroupIcon}
                         size={32}
                       />
                       <h3 className="mb-1 font-bold text-sm text-white">
@@ -281,7 +292,7 @@ export default function OnboardingPage() {
                     onClick={nextStep}
                   >
                     <span>בוא נתחיל!</span>
-                    <ArrowLeft size={20} />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
                   </button>
                 </div>
               </motion.div>
@@ -296,7 +307,7 @@ export default function OnboardingPage() {
                 key="step1"
               >
                 <div className="mb-6 flex items-center gap-3 font-bold text-white text-xl">
-                  <User className="text-primary" />
+                  <HugeiconsIcon className="text-primary" icon={UserIcon} />
                   <span>בחר את האווטאר שלך</span>
                 </div>
 
@@ -317,7 +328,7 @@ export default function OnboardingPage() {
                     onClick={nextStep}
                   >
                     <span>המשך</span>
-                    <ArrowLeft size={18} />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
                   </button>
                 </div>
               </motion.div>
@@ -332,7 +343,7 @@ export default function OnboardingPage() {
                 key="step2"
               >
                 <div className="mb-6 flex items-center gap-3 font-bold text-white text-xl">
-                  <User className="text-primary" />
+                  <HugeiconsIcon className="text-primary" icon={UserIcon} />
                   <span>קצת עליך</span>
                 </div>
 
@@ -357,7 +368,7 @@ export default function OnboardingPage() {
                     onClick={nextStep}
                   >
                     <span>המשך</span>
-                    <ArrowLeft size={18} />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
                   </button>
                 </div>
               </motion.div>
@@ -372,7 +383,10 @@ export default function OnboardingPage() {
                 key="step3"
               >
                 <div className="mb-6 flex items-center gap-3 font-bold text-white text-xl">
-                  <Gamepad2 className="text-primary" />
+                  <HugeiconsIcon
+                    className="text-primary"
+                    icon={GameController02Icon}
+                  />
                   <span>המשחקים שלך</span>
                 </div>
 
@@ -384,7 +398,7 @@ export default function OnboardingPage() {
                       disabled={!newTag}
                       onClick={handleAddGamertag}
                     >
-                      <Plus size={20} />
+                      <HugeiconsIcon icon={Add01Icon} size={20} />
                     </button>
                     <input
                       className="flex-1 rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-none focus:border-primary/50"
@@ -420,7 +434,7 @@ export default function OnboardingPage() {
                         className="text-gray-500 transition-colors hover:text-red-500"
                         onClick={() => removeGamertag(g.platform)}
                       >
-                        <Trash2 size={16} />
+                        <HugeiconsIcon icon={Delete02Icon} size={16} />
                       </button>
                       <div className="text-right">
                         <div className="font-bold text-sm text-white">
@@ -450,7 +464,7 @@ export default function OnboardingPage() {
                     onClick={nextStep}
                   >
                     <span>המשך</span>
-                    <ArrowLeft size={18} />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
                   </button>
                 </div>
               </motion.div>
@@ -466,7 +480,7 @@ export default function OnboardingPage() {
               >
                 <div className="flex flex-col items-center py-10">
                   <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500">
-                    <Sparkles size={40} />
+                    <HugeiconsIcon icon={SparklesIcon} size={40} />
                   </div>
                   <h2 className="mb-2 font-bold text-2xl text-white">
                     אתה מוכן ב-100%!

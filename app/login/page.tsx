@@ -1,7 +1,12 @@
 "use client";
 
+import {
+  ArrowRight01Icon,
+  ViewIcon,
+  ViewOffIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -181,7 +186,11 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   type="button"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? (
+                    <HugeiconsIcon icon={ViewOffIcon} size={18} />
+                  ) : (
+                    <HugeiconsIcon icon={ViewIcon} size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -216,7 +225,11 @@ export default function LoginPage() {
             ) : (
               <>
                 <span>התחבר</span>
-                <ArrowRight className="rotate-180" size={18} />
+                <HugeiconsIcon
+                  className="rotate-180"
+                  icon={ArrowRight01Icon}
+                  size={18}
+                />
               </>
             )}
           </button>

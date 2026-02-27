@@ -1,7 +1,14 @@
 "use client";
 
+import {
+  Clock01Icon,
+  GameController02Icon,
+  GlobeIcon,
+  MessageCircle,
+  Mic01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDistanceToNow } from "date-fns";
-import { Clock, Gamepad2, Globe, MessageCircle, Mic } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import OptimizedAvatar from "@/app/components/OptimizedAvatar";
@@ -83,7 +90,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
           </h3>
           <div className="flex items-center gap-2 text-white/40 text-xs">
             <span className="flex items-center gap-1">
-              <Clock size={10} />
+              <HugeiconsIcon icon={Clock01Icon} size={10} />
               {formatDistanceToNow(new Date(post.created_at), {
                 addSuffix: true,
               })}
@@ -92,7 +99,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
               <>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Globe size={10} />
+                  <HugeiconsIcon icon={GlobeIcon} size={10} />
                   {post.region}
                 </span>
               </>
@@ -105,7 +112,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
       <div className="mb-4 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-2.5 py-1 font-semibold text-blue-400 text-sm">
-            <Gamepad2 size={14} />
+            <HugeiconsIcon icon={GameController02Icon} size={14} />
             {post.game}
           </span>
           <span className="rounded-full border border-purple-500/20 bg-purple-500/20 px-2.5 py-1 font-medium text-purple-400 text-sm">
@@ -116,7 +123,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
               className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-2.5 py-1 font-medium text-red-400 text-sm"
               title="Mic Required"
             >
-              <Mic size={14} />
+              <HugeiconsIcon icon={Mic01Icon} size={14} />
               Mic
             </span>
           )}
@@ -133,7 +140,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
           disabled={loading}
           onClick={handleConnect}
         >
-          <MessageCircle size={18} />
+          <HugeiconsIcon icon={MessageCircle} size={18} />
           {loading ? "מתחבר..." : "התחבר"}
         </button>
       )}

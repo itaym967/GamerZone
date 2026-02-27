@@ -1,6 +1,7 @@
-"use client";
+import { FilterIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
-import { Filter } from "lucide-react";
+("use client");
 
 interface PartyFiltersProps {
   games: string[];
@@ -56,7 +57,7 @@ export default function PartyFilters({
       </div>
 
       <div className="flex items-center gap-2">
-        <Filter className="text-white/40" size={16} />
+        <HugeiconsIcon className="text-white/40" icon={FilterIcon} size={16} />
         <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
           <button
             className={`whitespace-nowrap rounded-full border px-3 py-1 font-medium text-xs transition-all ${

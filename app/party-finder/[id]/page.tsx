@@ -1,19 +1,20 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
 import {
-  ChevronLeft,
-  Crown,
-  Gamepad2,
-  Globe,
-  LogOut,
-  Mic,
-  Play,
-  Shield,
-  UserMinus,
-  Users,
-  X,
-} from "lucide-react";
+  ArrowLeft01Icon,
+  Cancel01Icon,
+  CrownIcon,
+  GameController02Icon,
+  GlobeIcon,
+  Logout01Icon,
+  Mic01Icon,
+  PlayIcon,
+  Shield01Icon,
+  UserGroupIcon,
+  UserMinus01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -273,7 +274,7 @@ export default function PartyDetailsPage() {
             className="-mr-2 rounded-full p-2 transition-colors hover:bg-white/10"
             href="/party-finder"
           >
-            <ChevronLeft className="text-white" />
+            <HugeiconsIcon className="text-white" icon={ArrowLeft01Icon} />
           </Link>
           <h1 className="font-bold text-2xl text-white">פרטי קבוצה</h1>
         </div>
@@ -285,7 +286,7 @@ export default function PartyDetailsPage() {
                 {party.title}
               </h2>
               <div className="flex items-center gap-2 text-sm text-white/40">
-                <Users size={14} />
+                <HugeiconsIcon icon={UserGroupIcon} size={14} />
                 <span>
                   {members.length}/{party.max_members} חברים
                 </span>
@@ -299,7 +300,7 @@ export default function PartyDetailsPage() {
             </div>
             {party.skill_level_required && (
               <div className="flex items-center gap-1.5 rounded-full border border-purple-500/20 bg-purple-500/20 px-3 py-1.5 font-semibold text-purple-400 text-sm">
-                <Shield size={14} />
+                <HugeiconsIcon icon={Shield01Icon} size={14} />
                 {party.skill_level_required}
               </div>
             )}
@@ -307,7 +308,7 @@ export default function PartyDetailsPage() {
 
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-3 py-1.5 font-semibold text-blue-400 text-sm">
-              <Gamepad2 size={14} />
+              <HugeiconsIcon icon={GameController02Icon} size={14} />
               {party.game}
             </span>
             <span className="rounded-full border border-cyan-500/20 bg-cyan-500/20 px-3 py-1.5 font-medium text-cyan-400 text-sm">
@@ -315,13 +316,13 @@ export default function PartyDetailsPage() {
             </span>
             {party.mic_required && (
               <span className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-3 py-1.5 font-medium text-red-400 text-sm">
-                <Mic size={14} />
+                <HugeiconsIcon icon={Mic01Icon} size={14} />
                 מיקרופון חובה
               </span>
             )}
             {party.region && (
               <span className="flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/20 px-3 py-1.5 font-medium text-green-400 text-sm">
-                <Globe size={14} />
+                <HugeiconsIcon icon={GlobeIcon} size={14} />
                 {party.region}
               </span>
             )}
@@ -329,7 +330,7 @@ export default function PartyDetailsPage() {
 
           <div className="space-y-3">
             <h3 className="flex items-center gap-2 font-semibold text-lg text-white">
-              <Users size={18} />
+              <HugeiconsIcon icon={UserGroupIcon} size={18} />
               חברי הקבוצה
             </h3>
 
@@ -350,9 +351,10 @@ export default function PartyDetailsPage() {
                         />
                       </div>
                       <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#0a0a0a] bg-yellow-500">
-                        <Crown
+                        <HugeiconsIcon
                           className="text-black"
                           fill="currentColor"
+                          icon={CrownIcon}
                           size={12}
                         />
                       </div>
@@ -401,7 +403,7 @@ export default function PartyDetailsPage() {
                       disabled={actionLoading}
                       onClick={() => handleKickMember(member.user_id)}
                     >
-                      <UserMinus size={18} />
+                      <HugeiconsIcon icon={UserMinus01Icon} size={18} />
                     </button>
                   )}
                 </div>
@@ -419,7 +421,7 @@ export default function PartyDetailsPage() {
                   disabled={actionLoading}
                   onClick={handleStartGame}
                 >
-                  <Play size={18} />
+                  <HugeiconsIcon icon={PlayIcon} size={18} />
                   התחל משחק
                 </button>
               ) : null}
@@ -428,7 +430,7 @@ export default function PartyDetailsPage() {
                 disabled={actionLoading}
                 onClick={handleCloseParty}
               >
-                <X size={18} />
+                <HugeiconsIcon icon={Cancel01Icon} size={18} />
                 סגור קבוצה
               </button>
             </>
@@ -439,7 +441,7 @@ export default function PartyDetailsPage() {
               disabled={actionLoading}
               onClick={handleLeaveParty}
             >
-              <LogOut size={18} />
+              <HugeiconsIcon icon={Logout01Icon} size={18} />
               עזוב קבוצה
             </button>
           )}

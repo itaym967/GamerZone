@@ -1,7 +1,13 @@
 "use client";
 
+import {
+  FilterIcon,
+  Refresh01Icon,
+  Search01Icon,
+  Shield01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Filter, RefreshCw, Search, Shield } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { AdminLog } from "../types";
@@ -116,8 +122,9 @@ export default function LogsTab({ supabase }: LogsTabProps) {
       {/* Search & Filters */}
       <div className="flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
-          <Search
+          <HugeiconsIcon
             className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500"
+            icon={Search01Icon}
             size={16}
           />
           <input
@@ -129,7 +136,11 @@ export default function LogsTab({ supabase }: LogsTabProps) {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="text-gray-500" size={14} />
+          <HugeiconsIcon
+            className="text-gray-500"
+            icon={FilterIcon}
+            size={14}
+          />
           {(["all", "words", "users", "reports", "ai"] as ActionFilter[]).map(
             (f) => (
               <button
@@ -158,7 +169,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
             onClick={fetchLogs}
             title="רענן"
           >
-            <RefreshCw size={14} />
+            <HugeiconsIcon icon={Refresh01Icon} size={14} />
           </button>
         </div>
       </div>
@@ -206,7 +217,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
         {filtered.length === 0 && (
           <div className="flex flex-col items-center gap-3 p-12 text-center text-gray-500">
             <div className="rounded-full bg-white/5 p-4">
-              <Shield size={32} />
+              <HugeiconsIcon icon={Shield01Icon} size={32} />
             </div>
             <p>{searchQuery ? "לא נמצאו תוצאות" : "אין לוגים להצגה."}</p>
           </div>

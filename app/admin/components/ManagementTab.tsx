@@ -1,15 +1,16 @@
 "use client";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  Activity,
-  AlertCircle,
-  CheckCircle2,
-  Database,
-  Shield,
-  TrendingDown,
-  Zap,
-} from "lucide-react";
+  Activity01Icon,
+  AlertCircleIcon,
+  AnalyticsDownIcon,
+  CheckmarkCircle02Icon,
+  DatabaseIcon,
+  Shield01Icon,
+  ZapIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
 import type { DBMetrics } from "../types";
 
@@ -110,7 +111,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
       {/* Header */}
       <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-6">
         <div className="mb-2 flex items-center gap-3">
-          <Database className="text-blue-400" size={28} />
+          <HugeiconsIcon
+            className="text-blue-400"
+            icon={DatabaseIcon}
+            size={28}
+          />
           <h2 className="font-bold text-2xl text-white">
             ניטור ביצועי מסד נתונים
           </h2>
@@ -125,11 +130,21 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
         <MetricCard
           footer={
             <>
-              <TrendingDown className="text-green-400" size={14} />
+              <HugeiconsIcon
+                className="text-green-400"
+                icon={AnalyticsDownIcon}
+                size={14}
+              />
               <span className="text-green-400">90% ירידה מהבסיס</span>
             </>
           }
-          icon={<Activity className="text-green-400" size={20} />}
+          icon={
+            <HugeiconsIcon
+              className="text-green-400"
+              icon={Activity01Icon}
+              size={20}
+            />
+          }
           label="מנויים פעילים"
           pulse
           sub="Realtime Subscriptions"
@@ -144,7 +159,13 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
               </span>
             </span>
           }
-          icon={<Zap className="text-yellow-400" size={20} />}
+          icon={
+            <HugeiconsIcon
+              className="text-yellow-400"
+              icon={ZapIcon}
+              size={20}
+            />
+          }
           label="שאילתות איטיות"
           sub="בשעה האחרונה"
           value={dbMetrics.slowQueryCount}
@@ -158,7 +179,13 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
               />
             </div>
           }
-          icon={<CheckCircle2 className="text-blue-400" size={20} />}
+          icon={
+            <HugeiconsIcon
+              className="text-blue-400"
+              icon={CheckmarkCircle02Icon}
+              size={20}
+            />
+          }
           label="התקדמות אופטימיזציה"
           sub={`${completedPhases} מתוך 4 שלבים`}
           value={`${progressPct}%`}
@@ -168,7 +195,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
       {/* Optimization Status */}
       <div className="rounded-2xl border border-white/5 bg-[#0e0e1b] p-6">
         <h3 className="mb-4 flex items-center gap-2 font-bold text-lg text-white">
-          <Shield className="text-blue-400" size={20} />
+          <HugeiconsIcon
+            className="text-blue-400"
+            icon={Shield01Icon}
+            size={20}
+          />
           סטטוס אופטימיזציות
         </h3>
         <div className="space-y-3">
@@ -181,9 +212,17 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
               >
                 <div className="flex items-center gap-3">
                   {done ? (
-                    <CheckCircle2 className="text-green-400" size={20} />
+                    <HugeiconsIcon
+                      className="text-green-400"
+                      icon={CheckmarkCircle02Icon}
+                      size={20}
+                    />
                   ) : (
-                    <AlertCircle className="text-yellow-400" size={20} />
+                    <HugeiconsIcon
+                      className="text-yellow-400"
+                      icon={AlertCircleIcon}
+                      size={20}
+                    />
                   )}
                   <div>
                     <div className="font-medium text-white">{phase.title}</div>
@@ -209,14 +248,14 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
             className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition-all hover:bg-blue-500"
             onClick={fetchMetrics}
           >
-            <Activity size={18} />
+            <HugeiconsIcon icon={Activity01Icon} size={18} />
             רענן נתונים
           </button>
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 font-bold text-white transition-all hover:bg-purple-500"
             onClick={() => window.open("/SLOW_QUERY_ANALYSIS.md", "_blank")}
           >
-            <Database size={18} />
+            <HugeiconsIcon icon={DatabaseIcon} size={18} />
             צפה בניתוח מלא
           </button>
         </div>
@@ -225,7 +264,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
       {/* Info Box */}
       <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-6">
         <div className="flex items-start gap-3">
-          <AlertCircle className="mt-1 flex-shrink-0 text-blue-400" size={20} />
+          <HugeiconsIcon
+            className="mt-1 flex-shrink-0 text-blue-400"
+            icon={AlertCircleIcon}
+            size={20}
+          />
           <div>
             <h4 className="mb-2 font-bold text-white">אודות מערכת הניטור</h4>
             <p className="text-gray-300 text-sm leading-relaxed">

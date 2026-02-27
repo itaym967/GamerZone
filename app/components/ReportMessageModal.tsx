@@ -1,7 +1,12 @@
 "use client";
 
+import {
+  Cancel01Icon,
+  SentIcon,
+  Shield01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Send, ShieldAlert, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
@@ -91,11 +96,15 @@ export default function ReportMessageModal({
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                 onClick={onClose}
               >
-                <X size={18} />
+                <HugeiconsIcon icon={Cancel01Icon} size={18} />
               </button>
               <h2 className="flex items-center gap-2 font-bold text-lg text-white">
                 <span>דיווח על תוכן</span>
-                <ShieldAlert className="text-red-400" size={20} />
+                <HugeiconsIcon
+                  className="text-red-400"
+                  icon={Shield01Icon}
+                  size={20}
+                />
               </h2>
             </div>
 
@@ -139,7 +148,7 @@ export default function ReportMessageModal({
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 ) : (
                   <>
-                    <Send size={16} />
+                    <HugeiconsIcon icon={SentIcon} size={16} />
                     <span>שלח דיווח</span>
                   </>
                 )}

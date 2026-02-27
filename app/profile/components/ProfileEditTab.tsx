@@ -1,6 +1,10 @@
 "use client";
-
-import { AlertCircle, Gamepad2, Save } from "lucide-react";
+import {
+  AlertCircleIcon,
+  FloppyDiskIcon,
+  GameController02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ProfileFormData } from "../types";
 import { AVATARS } from "../types";
 
@@ -32,12 +36,12 @@ export default function ProfileEditTab({
     <div className="glass-panel space-y-6 rounded-2xl border border-white/5 p-6">
       <div className="mb-4 flex items-center gap-2">
         <div className="rounded-lg bg-primary/10 p-2 text-primary">
-          <Gamepad2 size={24} />
+          <HugeiconsIcon icon={GameController02Icon} size={24} />
         </div>
         <h2 className="font-bold text-white text-xl">עריכת פרטים</h2>
         {hasUnsavedChanges && (
           <span className="mr-auto flex items-center gap-1 text-xs text-yellow-400">
-            <AlertCircle size={12} />
+            <HugeiconsIcon icon={AlertCircleIcon} size={12} />
             שינויים לא נשמרו
           </span>
         )}
@@ -144,7 +148,7 @@ export default function ProfileEditTab({
           {isSaving ? (
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
           ) : (
-            <Save size={18} />
+            <HugeiconsIcon icon={FloppyDiskIcon} size={18} />
           )}
           <span>{isSaving ? "שומר..." : "שמור שינויים"}</span>
         </button>

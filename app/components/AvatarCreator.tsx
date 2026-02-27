@@ -1,7 +1,8 @@
 "use client";
 
+import { Refresh01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "framer-motion";
-import { Check, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface AvatarCreatorProps {
@@ -62,7 +63,7 @@ export default function AvatarCreator({
             onClick={randomize}
             title="אווטאר אקראי"
           >
-            <RefreshCw size={20} />
+            <HugeiconsIcon icon={Refresh01Icon} size={20} />
           </button>
         </motion.div>
       </div>
@@ -87,7 +88,7 @@ export default function AvatarCreator({
               <div className="font-medium text-white text-xs">{style.name}</div>
               {selectedStyle === style.id && (
                 <div className="absolute -top-1 -right-1 rounded-full bg-primary p-0.5 text-black">
-                  <Check size={12} />
+                  <HugeiconsIcon icon={Tick01Icon} size={12} />
                 </div>
               )}
             </button>
@@ -100,7 +101,7 @@ export default function AvatarCreator({
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-white transition-all hover:border-primary/50"
         onClick={randomize}
       >
-        <RefreshCw size={18} />
+        <HugeiconsIcon icon={Refresh01Icon} size={18} />
         <span>אווטאר אקראי חדש</span>
       </button>
     </div>

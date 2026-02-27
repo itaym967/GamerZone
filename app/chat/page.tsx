@@ -1,20 +1,21 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowRight,
-  Bot,
-  Check,
-  CheckCheck,
-  Flag,
-  MoreVertical,
-  Plus,
-  Search,
-  Send,
-  ShieldAlert,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+  Add01Icon,
+  ArrowRight01Icon,
+  BotIcon,
+  Delete02Icon,
+  Flag01Icon,
+  MoreVerticalIcon,
+  Search01Icon,
+  SentIcon,
+  Shield01Icon,
+  SparklesIcon,
+  Tick01Icon,
+  TickDouble01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -324,8 +325,9 @@ function ChatContent() {
                 placeholder="חפש שיחות..."
                 type="text"
               />
-              <Search
+              <HugeiconsIcon
                 className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500"
+                icon={Search01Icon}
                 size={16}
               />
             </div>
@@ -340,7 +342,11 @@ function ChatContent() {
               <div className="relative">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-black">
-                    <Bot className="text-primary" size={20} />
+                    <HugeiconsIcon
+                      className="text-primary"
+                      icon={BotIcon}
+                      size={20}
+                    />
                   </div>
                 </div>
                 <span className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 border-[#0e0e1b] bg-green-500" />
@@ -349,7 +355,11 @@ function ChatContent() {
                 <div className="mb-0.5 flex items-center justify-between">
                   <span className="flex items-center gap-1 truncate font-medium text-sm text-white">
                     GamerBot
-                    <Sparkles className="text-primary" size={12} />
+                    <HugeiconsIcon
+                      className="text-primary"
+                      icon={SparklesIcon}
+                      size={12}
+                    />
                   </span>
                 </div>
                 <p className="truncate text-gray-400 text-xs opacity-80">
@@ -414,7 +424,7 @@ function ChatContent() {
                   className="-mr-2 p-2 text-gray-400 hover:text-white lg:hidden"
                   onClick={() => setMobileView("list")}
                 >
-                  <ArrowRight size={20} />
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
                 </button>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary p-[1px]">
                   <OptimizedAvatar
@@ -447,10 +457,10 @@ function ChatContent() {
                   onClick={handleClearConversation}
                   title="מחק שיחה"
                 >
-                  <Trash2 size={18} />
+                  <HugeiconsIcon icon={Delete02Icon} size={18} />
                 </button>
                 <button className="rounded-lg p-2 text-white hover:bg-white/10">
-                  <MoreVertical size={18} />
+                  <HugeiconsIcon icon={MoreVerticalIcon} size={18} />
                 </button>
               </div>
             </header>
@@ -496,12 +506,17 @@ function ChatContent() {
                             {/* Read receipts - only for sent messages */}
                             {msg.sender_id === user?.id &&
                               (msg.is_read ? (
-                                <CheckCheck
+                                <HugeiconsIcon
                                   className="text-blue-400"
+                                  icon={TickDouble01Icon}
                                   size={14}
                                 />
                               ) : (
-                                <Check className="opacity-50" size={14} />
+                                <HugeiconsIcon
+                                  className="opacity-50"
+                                  icon={Tick01Icon}
+                                  size={14}
+                                />
                               ))}
                           </span>
                         </div>
@@ -514,7 +529,7 @@ function ChatContent() {
                             onClick={() => handleDeleteMessage(msg.id)}
                             title="מחק הודעה"
                           >
-                            <Trash2 size={12} />
+                            <HugeiconsIcon icon={Delete02Icon} size={12} />
                           </button>
                           {msg.sender_id !== user?.id && (
                             <button
@@ -528,7 +543,7 @@ function ChatContent() {
                               }
                               title="דווח על הודעה"
                             >
-                              <Flag size={12} />
+                              <HugeiconsIcon icon={Flag01Icon} size={12} />
                             </button>
                           )}
                         </div>
@@ -574,7 +589,7 @@ function ChatContent() {
           {isChatRestricted && activeChat && activeChat.id !== GAMERBOT_ID && (
             <div className="flex items-center justify-end gap-2 border-amber-500/20 border-t bg-amber-500/10 px-4 py-2 text-amber-400 text-sm">
               <span>הצ׳אט מוגבל לחברים בלבד - סינון תוכן מוגבר פעיל</span>
-              <ShieldAlert size={14} />
+              <HugeiconsIcon icon={Shield01Icon} size={14} />
             </div>
           )}
 
@@ -588,7 +603,11 @@ function ChatContent() {
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                 type="button"
               >
-                <Plus className="rotate-45" size={20} />
+                <HugeiconsIcon
+                  className="rotate-45"
+                  icon={Add01Icon}
+                  size={20}
+                />
               </button>
               <input
                 className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-sm text-white outline-none placeholder:text-gray-600 disabled:cursor-not-allowed"
@@ -615,12 +634,13 @@ function ChatContent() {
                 }
                 type="submit"
               >
-                <Send
+                <HugeiconsIcon
                   className={
                     input.trim() && !isLoading
                       ? "translate-x-0.5 -translate-y-0.5"
                       : ""
                   }
+                  icon={SentIcon}
                   size={18}
                 />
               </button>

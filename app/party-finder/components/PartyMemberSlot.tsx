@@ -1,6 +1,6 @@
 "use client";
-
-import { Crown, Plus } from "lucide-react";
+import { Add01Icon, CrownIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import OptimizedAvatar from "@/app/components/OptimizedAvatar";
 import type { Database } from "@/utils/supabase/types";
 
@@ -25,7 +25,7 @@ export default function PartyMemberSlot({
   if (isEmpty) {
     return (
       <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/10 border-dashed bg-white/5 transition-colors group-hover:border-white/20">
-        <Plus className="text-white/30" size={20} />
+        <HugeiconsIcon className="text-white/30" icon={Add01Icon} size={20} />
       </div>
     );
   }
@@ -45,7 +45,12 @@ export default function PartyMemberSlot({
       </div>
       {isLeader && (
         <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#0a0a0a] bg-yellow-500 shadow-lg">
-          <Crown className="text-black" fill="currentColor" size={12} />
+          <HugeiconsIcon
+            className="text-black"
+            fill="currentColor"
+            icon={CrownIcon}
+            size={12}
+          />
         </div>
       )}
       {member.is_ready && !isLeader && (

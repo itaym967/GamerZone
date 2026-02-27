@@ -1,20 +1,21 @@
 "use client";
 
 import {
-  Bell,
-  Gamepad2,
-  HeartHandshake,
-  Home,
-  LogIn,
-  LogOut,
-  Menu,
+  Cancel01Icon,
+  GameController02Icon,
+  HeartCheckIcon,
+  Home01Icon,
+  Login01Icon,
+  Logout01Icon,
+  Menu01Icon,
   MessageCircle,
-  Search,
-  ShieldAlert,
-  User,
-  Users,
-  X,
-} from "lucide-react";
+  Notification01Icon,
+  Search01Icon,
+  Shield01Icon,
+  UserGroupIcon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -32,23 +33,23 @@ interface MobileNavProps {
 }
 
 const bottomNavItems = [
-  { icon: Home, label: "בית", href: "/" },
-  { icon: Search, label: "גלה", href: "/explore" },
-  { icon: Gamepad2, label: "לוח חי", href: "/lfg", isLive: true },
+  { icon: Home01Icon, label: "בית", href: "/" },
+  { icon: Search01Icon, label: "גלה", href: "/explore" },
+  { icon: GameController02Icon, label: "לוח חי", href: "/lfg", isLive: true },
 ];
 
 const drawerNavItems = [
-  { icon: Users, label: "מוצא קבוצות", href: "/party-finder" },
-  { icon: HeartHandshake, label: "חברים", href: "/friends", authOnly: true },
+  { icon: UserGroupIcon, label: "מוצא קבוצות", href: "/party-finder" },
+  { icon: HeartCheckIcon, label: "חברים", href: "/friends", authOnly: true },
   {
-    icon: Bell,
+    icon: Notification01Icon,
     label: "התראות",
     href: "/notifications",
     authOnly: true,
     showBadge: true,
   },
   { icon: MessageCircle, label: "צ'אט", href: "/chat", authOnly: true },
-  { icon: User, label: "פרופיל", href: "/profile", authOnly: true },
+  { icon: UserIcon, label: "פרופיל", href: "/profile", authOnly: true },
 ];
 
 export default function MobileNav({
@@ -109,7 +110,7 @@ export default function MobileNav({
                 <div
                   className={`relative rounded-xl p-2 transition-all ${isActive ? "bg-primary/15" : ""}`}
                 >
-                  <item.icon size={22} />
+                  <HugeiconsIcon icon={item.icon} size={22} />
                   {item.isLive && (
                     <span className="absolute top-1 right-1 h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
                   )}
@@ -129,7 +130,11 @@ export default function MobileNav({
             <div
               className={`rounded-xl p-2 transition-all ${drawerOpen || isDrawerItemActive ? "bg-primary/15" : ""}`}
             >
-              {drawerOpen ? <X size={22} /> : <Menu size={22} />}
+              {drawerOpen ? (
+                <HugeiconsIcon icon={Cancel01Icon} size={22} />
+              ) : (
+                <HugeiconsIcon icon={Menu01Icon} size={22} />
+              )}
               {/* Show notification dot if there are unread notifications */}
               {!drawerOpen && unreadCount > 0 && (
                 <span className="absolute top-0.5 right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-blue-500 px-0.5 font-bold text-[9px] text-white shadow-[0_0_8px_rgba(59,130,246,0.6)]">
@@ -188,7 +193,7 @@ export default function MobileNav({
               href="/login"
               onClick={() => setDrawerOpen(false)}
             >
-              <LogIn size={20} />
+              <HugeiconsIcon icon={Login01Icon} size={20} />
               <span>התחברות</span>
             </Link>
           )}
@@ -206,7 +211,7 @@ export default function MobileNav({
                 onClick={() => setDrawerOpen(false)}
               >
                 <div className="relative">
-                  <item.icon size={20} />
+                  <HugeiconsIcon icon={item.icon} size={20} />
                   {item.showBadge && unreadCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-500 px-1 font-bold text-[10px] text-white shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                       {unreadCount > 9 ? "9+" : unreadCount}
@@ -228,7 +233,7 @@ export default function MobileNav({
               href="/admin"
               onClick={() => setDrawerOpen(false)}
             >
-              <ShieldAlert size={20} />
+              <HugeiconsIcon icon={Shield01Icon} size={20} />
               <span className="font-medium text-sm">ניהול</span>
             </Link>
           )}
@@ -248,7 +253,7 @@ export default function MobileNav({
               {isSigningOut ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
               ) : (
-                <LogOut size={18} />
+                <HugeiconsIcon icon={Logout01Icon} size={18} />
               )}
               <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
             </button>

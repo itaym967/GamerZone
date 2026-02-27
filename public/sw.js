@@ -1,8 +1,8 @@
 // Service Worker for GamerZone PWA
 // Version 2.0.0 - Full PWA audit: offline support, push improvements, background sync
 
-const CACHE_NAME = "gamerzone-v12";
-const RUNTIME_CACHE = "gamerzone-runtime-v12";
+const CACHE_NAME = "gamerzone-v13";
+const RUNTIME_CACHE = "gamerzone-runtime-v13";
 
 // Precache static assets + offline fallback page
 const PRECACHE_ASSETS = [
@@ -114,11 +114,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. Next.js Static Assets - Cache First
-  if (
-    url.pathname.startsWith("/_next/static/") ||
-    url.pathname.match(/\.(js|css|woff2?|png|jpg|jpeg|gif|ico|svg)$/)
-  ) {
+  // 3. Next.js build assets/chunks - DO NOT CACHE in SW
+  // Prevent stale chunk/module errors after deploys or icon-library migrations.
+  if (url.pathname.startsWith("/_next/static/")) {
+    return;
+  }
+
+  // 4. Static media assets - Cache First
+  if (url.pathname.match(/\.(woff2?|png|jpg|jpeg|gif|ico|svg)$/)) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
@@ -138,7 +141,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 4. Navigation Requests - NETWORK ONLY (never cache HTML pages)
+  // 5. Navigation Requests - NETWORK ONLY (never cache HTML pages)
   // HTML pages contain auth-dependent content and must always be fresh
   if (request.mode === "navigate") {
     event.respondWith(
@@ -170,7 +173,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 5. All other requests - Network only (no dangerous SWR fallback)
+  // 6. All other requests - Network only (no dangerous SWR fallback)
   // This prevents caching Next.js RSC payloads and dynamic data
 });
 

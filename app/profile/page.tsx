@@ -1,6 +1,12 @@
 "use client";
 
-import { BarChart3, Gamepad2, Settings, User } from "lucide-react";
+import {
+  BarChartIcon,
+  GameController02Icon,
+  Settings01Icon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { useState } from "react";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
@@ -11,11 +17,11 @@ import StatsTab from "./components/StatsTab";
 import { useProfileData } from "./hooks/useProfileData";
 import type { ProfileTab } from "./types";
 
-const TABS: { id: ProfileTab; label: string; icon: typeof User }[] = [
-  { id: "edit", label: "עריכת פרופיל", icon: User },
-  { id: "gamertags", label: "Gamertags", icon: Gamepad2 },
-  { id: "stats", label: "סטטיסטיקות", icon: BarChart3 },
-  { id: "account", label: "חשבון", icon: Settings },
+const TABS: { id: ProfileTab; label: string; icon: IconSvgElement }[] = [
+  { id: "edit", label: "עריכת פרופיל", icon: UserIcon },
+  { id: "gamertags", label: "Gamertags", icon: GameController02Icon },
+  { id: "stats", label: "סטטיסטיקות", icon: BarChartIcon },
+  { id: "account", label: "חשבון", icon: Settings01Icon },
 ];
 
 export default function ProfilePage() {
@@ -69,7 +75,7 @@ export default function ProfilePage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
             >
-              <tab.icon size={16} />
+              <HugeiconsIcon icon={tab.icon} size={16} />
               <span>{tab.label}</span>
               {tab.id === "edit" && hasUnsavedChanges && (
                 <span className="h-2 w-2 rounded-full bg-yellow-400" />

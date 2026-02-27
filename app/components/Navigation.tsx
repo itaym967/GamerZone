@@ -1,18 +1,19 @@
 "use client";
 
 import {
-  Bell,
-  Gamepad2,
-  HeartHandshake,
-  Home,
-  LogIn,
-  LogOut,
+  GameController02Icon,
+  HeartCheckIcon,
+  Home01Icon,
+  Login01Icon,
+  Logout01Icon,
   MessageCircle,
-  Search,
-  ShieldAlert,
-  User,
-  Users,
-} from "lucide-react";
+  Notification01Icon,
+  Search01Icon,
+  Shield01Icon,
+  UserGroupIcon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -24,17 +25,17 @@ import MobileNav from "./MobileNav";
 import OptimizedAvatar from "./OptimizedAvatar";
 
 const navItems = [
-  { icon: Home, label: "בית", href: "/" },
-  { icon: Search, label: "גלה שחקנים", href: "/explore" },
-  { icon: Users, label: "מוצא קבוצות", href: "/party-finder" },
-  { icon: Gamepad2, label: "לוח חי", href: "/lfg" },
+  { icon: Home01Icon, label: "בית", href: "/" },
+  { icon: Search01Icon, label: "גלה שחקנים", href: "/explore" },
+  { icon: UserGroupIcon, label: "מוצא קבוצות", href: "/party-finder" },
+  { icon: GameController02Icon, label: "לוח חי", href: "/lfg" },
 ];
 
 const authenticatedNavItems = [
-  { icon: HeartHandshake, label: "חברים", href: "/friends" },
-  { icon: Bell, label: "התראות", href: "/notifications" },
+  { icon: HeartCheckIcon, label: "חברים", href: "/friends" },
+  { icon: Notification01Icon, label: "התראות", href: "/notifications" },
   { icon: MessageCircle, label: "צ'אט", href: "/chat" },
-  { icon: User, label: "פרופיל", href: "/profile" },
+  { icon: UserIcon, label: "פרופיל", href: "/profile" },
 ];
 
 export default function Navigation() {
@@ -76,7 +77,7 @@ export default function Navigation() {
       ...navItems,
       ...(user ? authenticatedNavItems : []),
       ...(isAdmin
-        ? [{ icon: ShieldAlert, label: "ניהול", href: "/admin" }]
+        ? [{ icon: Shield01Icon, label: "ניהול", href: "/admin" }]
         : []),
     ],
     [user, isAdmin]
@@ -88,7 +89,7 @@ export default function Navigation() {
       <aside className="glass-panel fixed top-0 right-0 z-50 hidden h-screen w-64 flex-col border-white/5 border-l bg-[#050510] p-6 md:flex">
         <div className="mb-10 flex items-center gap-2 px-2">
           <div className="rounded-lg bg-primary p-2 text-black">
-            <Gamepad2 size={24} />
+            <HugeiconsIcon icon={GameController02Icon} size={24} />
           </div>
           <Logo />
         </div>
@@ -108,12 +109,13 @@ export default function Navigation() {
                 key={item.href}
               >
                 <div className="relative">
-                  <item.icon
+                  <HugeiconsIcon
                     className={
                       isActive
                         ? "text-primary"
                         : "transition-colors group-hover:text-primary"
                     }
+                    icon={item.icon}
                     size={20}
                   />
                   {isLiveBoard && (
@@ -150,14 +152,14 @@ export default function Navigation() {
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-yellow-400 transition-all hover:bg-yellow-400/10 hover:text-yellow-300"
                 onClick={() => subscribeToPush()}
               >
-                <Bell size={20} />
+                <HugeiconsIcon icon={Notification01Icon} size={20} />
                 <span>הפעל התראות</span>
               </button>
             ) : null
           ) : (
             // Render placeholder during SSR to match initial client render
             <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black opacity-50">
-              <LogIn size={20} />
+              <HugeiconsIcon icon={Login01Icon} size={20} />
               <span>התחברות</span>
             </div>
           )}
@@ -188,7 +190,7 @@ export default function Navigation() {
                   {isSigningOut ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
                   ) : (
-                    <LogOut size={18} />
+                    <HugeiconsIcon icon={Logout01Icon} size={18} />
                   )}
                   <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
                 </button>
@@ -198,7 +200,7 @@ export default function Navigation() {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
                 href="/login"
               >
-                <LogIn size={20} />
+                <HugeiconsIcon icon={Login01Icon} size={20} />
                 <span>התחברות</span>
               </Link>
             )

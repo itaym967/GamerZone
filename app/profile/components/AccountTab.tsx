@@ -1,6 +1,12 @@
 "use client";
-
-import { AlertTriangle, Key, LogOut, Mail, Settings } from "lucide-react";
+import {
+  Alert01Icon,
+  Key01Icon,
+  Logout01Icon,
+  Mail01Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -27,7 +33,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
     <div className="glass-panel space-y-6 rounded-2xl border border-white/5 p-6">
       <div className="mb-4 flex items-center gap-2">
         <div className="rounded-lg bg-white/10 p-2 text-gray-400">
-          <Settings size={24} />
+          <HugeiconsIcon icon={Settings01Icon} size={24} />
         </div>
         <h2 className="font-bold text-white text-xl">הגדרות חשבון</h2>
       </div>
@@ -35,7 +41,11 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
       {/* Email */}
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="flex items-center gap-3">
-          <Mail className="text-gray-400" size={18} />
+          <HugeiconsIcon
+            className="text-gray-400"
+            icon={Mail01Icon}
+            size={18}
+          />
           <div className="flex-1">
             <p className="mb-0.5 text-gray-500 text-xs">כתובת אימייל</p>
             <p className="font-mono text-sm text-white" dir="ltr">
@@ -48,7 +58,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
       {/* Password */}
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="flex items-center gap-3">
-          <Key className="text-gray-400" size={18} />
+          <HugeiconsIcon className="text-gray-400" icon={Key01Icon} size={18} />
           <div className="flex-1">
             <p className="mb-0.5 text-gray-500 text-xs">סיסמה</p>
             <p className="text-gray-400 text-sm">••••••••</p>
@@ -71,7 +81,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
         {isSigningOut ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400/30 border-t-gray-400" />
         ) : (
-          <LogOut size={18} />
+          <HugeiconsIcon icon={Logout01Icon} size={18} />
         )}
         <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
       </button>
@@ -79,7 +89,11 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
       {/* Danger Zone */}
       <div className="border-red-500/20 border-t pt-4">
         <div className="mb-3 flex items-center gap-2">
-          <AlertTriangle className="text-red-400" size={16} />
+          <HugeiconsIcon
+            className="text-red-400"
+            icon={Alert01Icon}
+            size={16}
+          />
           <h3 className="font-bold text-red-400 text-sm">אזור מסוכן</h3>
         </div>
         <p className="mb-3 text-gray-500 text-xs">

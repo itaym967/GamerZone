@@ -1,6 +1,6 @@
 "use client";
-
-import { Gamepad2 } from "lucide-react";
+import { GameController02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 
 /**
@@ -34,7 +34,7 @@ export default function SplashScreen() {
   return (
     <div className={`splash-screen ${visible ? "" : "hidden"}`}>
       <div className="splash-icon mb-6 rounded-2xl bg-primary p-5 text-black">
-        <Gamepad2 size={48} />
+        <HugeiconsIcon icon={GameController02Icon} size={48} />
       </div>
       <h1 className="mb-2 font-bold text-2xl text-white">GamerZone</h1>
       <p className="text-gray-400 text-sm">מצא את הסקוואד שלך</p>

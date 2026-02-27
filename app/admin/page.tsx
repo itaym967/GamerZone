@@ -1,6 +1,7 @@
 "use client";
 
-import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { SecurityCheckIcon, Shield01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import Navigation from "../components/Navigation";
 import BlacklistTab from "./components/BlacklistTab";
@@ -25,7 +26,7 @@ const TABS: {
     key: "safety",
     label: "בטיחות ילדים",
     color: "green",
-    icon: <ShieldCheck size={14} />,
+    icon: <HugeiconsIcon icon={SecurityCheckIcon} size={14} />,
   },
 ];
 
@@ -49,7 +50,11 @@ export default function AdminPage() {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="mb-2 flex items-center gap-3 font-bold text-3xl text-white">
-              <ShieldAlert className="text-red-500" size={32} />
+              <HugeiconsIcon
+                className="text-red-500"
+                icon={Shield01Icon}
+                size={32}
+              />
               <span>ניהול ומודרציה</span>
             </h1>
             <p className="text-gray-400">מערכת הגנה על השיחות ב-GamerZone</p>

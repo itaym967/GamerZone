@@ -1,6 +1,6 @@
 "use client";
-
-import { WifiOff } from "lucide-react";
+import { WifiOff01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 
 export default function OfflineIndicator() {
@@ -33,7 +33,7 @@ export default function OfflineIndicator() {
 
   return (
     <div className="safe-area-pt fixed top-0 right-0 left-0 z-[100] flex items-center justify-center gap-2 bg-yellow-500/90 px-4 py-2 font-medium text-black text-sm backdrop-blur-sm">
-      <WifiOff size={16} />
+      <HugeiconsIcon icon={WifiOff01Icon} size={16} />
       <span>אתה במצב לא מקוון - חלק מהתכנים עשויים להיות לא מעודכנים</span>
       <button
         className="mr-2 text-black/70 hover:text-black"

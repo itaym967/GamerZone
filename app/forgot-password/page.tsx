@@ -1,7 +1,12 @@
 "use client";
 
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Mail01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -67,7 +72,7 @@ export default function ForgotPasswordPage() {
           <div className="space-y-6">
             <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20 text-green-500">
-                <Mail size={24} />
+                <HugeiconsIcon icon={Mail01Icon} size={24} />
               </div>
               <p className="text-gray-300 text-sm">
                 בדוק את תיבת המייל שלך (וגם את הספאם). שם מחכה לך הקישור לאיפוס
@@ -90,8 +95,9 @@ export default function ForgotPasswordPage() {
                   type="email"
                   value={email}
                 />
-                <Mail
+                <HugeiconsIcon
                   className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
+                  icon={Mail01Icon}
                   size={18}
                 />
               </div>
@@ -107,7 +113,11 @@ export default function ForgotPasswordPage() {
               ) : (
                 <>
                   <span>שלח קישור לאיפוס</span>
-                  <ArrowRight className="rotate-180" size={18} />
+                  <HugeiconsIcon
+                    className="rotate-180"
+                    icon={ArrowRight01Icon}
+                    size={18}
+                  />
                 </>
               )}
             </button>
@@ -119,7 +129,11 @@ export default function ForgotPasswordPage() {
             className="flex items-center justify-center gap-2 text-gray-400 text-sm transition-colors hover:text-white"
             href="/login"
           >
-            <ArrowLeft className="rotate-180" size={16} />
+            <HugeiconsIcon
+              className="rotate-180"
+              icon={ArrowLeft01Icon}
+              size={16}
+            />
             <span>חזרה להתחברות</span>
           </Link>
         </div>

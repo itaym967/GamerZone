@@ -1,6 +1,7 @@
 "use client";
 
-import { ShieldCheck, X } from "lucide-react";
+import { Cancel01Icon, SecurityCheckIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -32,13 +33,13 @@ export default function SafetyBanner() {
             ? "חשבון מפוקח - חלק מהתכונות מוגבלות להגנתך"
             : "מצב בטוח פעיל - סינון תוכן מוגבר"}
         </span>
-        <ShieldCheck size={16} />
+        <HugeiconsIcon icon={SecurityCheckIcon} size={16} />
       </div>
       <button
         className="rounded-lg p-1 transition-colors hover:bg-white/10"
         onClick={() => setDismissed(true)}
       >
-        <X size={14} />
+        <HugeiconsIcon icon={Cancel01Icon} size={14} />
       </button>
     </div>
   );

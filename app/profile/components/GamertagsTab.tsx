@@ -1,6 +1,13 @@
 "use client";
-
-import { Check, Edit3, Gamepad2, Plus, Trash2, X } from "lucide-react";
+import {
+  Add01Icon,
+  Cancel01Icon,
+  Delete02Icon,
+  GameController02Icon,
+  PencilEdit01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import type { ProfileFormData } from "../types";
 import { PLATFORMS } from "../types";
@@ -75,7 +82,7 @@ export default function GamertagsTab({
     <div className="glass-panel space-y-6 rounded-2xl border border-white/5 p-6">
       <div className="mb-4 flex items-center gap-2">
         <div className="rounded-lg bg-secondary/10 p-2 text-secondary">
-          <Gamepad2 size={24} />
+          <HugeiconsIcon icon={GameController02Icon} size={24} />
         </div>
         <h2 className="font-bold text-white text-xl">Gamertags</h2>
         <span className="mr-auto text-gray-500 text-xs">
@@ -93,7 +100,7 @@ export default function GamertagsTab({
               disabled={!newTag.trim()}
               onClick={handleAdd}
             >
-              <Plus size={18} />
+              <HugeiconsIcon icon={Add01Icon} size={18} />
             </button>
             <input
               className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-sm text-white outline-none focus:border-primary/50"
@@ -123,7 +130,11 @@ export default function GamertagsTab({
       <div className="space-y-2">
         {formData.games.length === 0 ? (
           <div className="py-8 text-center text-gray-500">
-            <Gamepad2 className="mx-auto mb-2 opacity-50" size={32} />
+            <HugeiconsIcon
+              className="mx-auto mb-2 opacity-50"
+              icon={GameController02Icon}
+              size={32}
+            />
             <p className="text-sm">עדיין לא הוספת משחקים</p>
             <p className="mt-1 text-gray-600 text-xs">
               הוסף את ה-Gamertags שלך כדי שאחרים יוכלו למצוא אותך
@@ -163,13 +174,13 @@ export default function GamertagsTab({
                     className="rounded-lg bg-green-500/20 p-1.5 text-green-400 transition-colors hover:bg-green-500/30"
                     onClick={() => handleSaveEdit(platform)}
                   >
-                    <Check size={14} />
+                    <HugeiconsIcon icon={Tick01Icon} size={14} />
                   </button>
                   <button
                     className="rounded-lg bg-red-500/20 p-1.5 text-red-400 transition-colors hover:bg-red-500/30"
                     onClick={handleCancelEdit}
                   >
-                    <X size={14} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={14} />
                   </button>
                 </div>
               ) : (
@@ -188,7 +199,7 @@ export default function GamertagsTab({
                       onClick={() => handleStartEdit(platform)}
                       title="ערוך"
                     >
-                      <Edit3 size={14} />
+                      <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
                     </button>
                     <button
                       className={`rounded-lg p-1.5 transition-colors ${
@@ -201,7 +212,7 @@ export default function GamertagsTab({
                         confirmDelete === platform ? "לחץ שוב לאישור" : "מחק"
                       }
                     >
-                      <Trash2 size={14} />
+                      <HugeiconsIcon icon={Delete02Icon} size={14} />
                     </button>
                   </div>
                 </>

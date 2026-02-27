@@ -1,7 +1,14 @@
 "use client";
 
+import {
+  GameController02Icon,
+  GlobeIcon,
+  Mic01Icon,
+  Shield01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDistanceToNow } from "date-fns";
-import { Gamepad2, Globe, Mic, Shield, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Database } from "@/utils/supabase/types";
@@ -74,7 +81,7 @@ export default function PartyCard({
           </h3>
           <div className="flex items-center gap-2 text-white/40 text-xs">
             <span className="flex items-center gap-1">
-              <Users size={12} />
+              <HugeiconsIcon icon={UserGroupIcon} size={12} />
               {members.length}/{party.max_members}
             </span>
             <span>•</span>
@@ -87,7 +94,7 @@ export default function PartyCard({
         </div>
         {party.skill_level_required && (
           <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-500/20 bg-purple-500/20 px-2.5 py-1 font-semibold text-purple-400 text-xs">
-            <Shield size={12} />
+            <HugeiconsIcon icon={Shield01Icon} size={12} />
             {party.skill_level_required}
           </div>
         )}
@@ -95,7 +102,7 @@ export default function PartyCard({
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/20 px-2.5 py-1 font-semibold text-blue-400 text-sm">
-          <Gamepad2 size={14} />
+          <HugeiconsIcon icon={GameController02Icon} size={14} />
           {party.game}
         </span>
         <span className="rounded-full border border-cyan-500/20 bg-cyan-500/20 px-2.5 py-1 font-medium text-cyan-400 text-sm">
@@ -103,13 +110,13 @@ export default function PartyCard({
         </span>
         {party.mic_required && (
           <span className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/20 px-2.5 py-1 font-medium text-red-400 text-sm">
-            <Mic size={14} />
+            <HugeiconsIcon icon={Mic01Icon} size={14} />
             מיקרופון
           </span>
         )}
         {party.region && (
           <span className="flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/20 px-2.5 py-1 font-medium text-green-400 text-sm">
-            <Globe size={14} />
+            <HugeiconsIcon icon={GlobeIcon} size={14} />
             {party.region}
           </span>
         )}

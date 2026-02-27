@@ -1,7 +1,15 @@
 "use client";
 
+import {
+  Add01Icon,
+  BrainIcon,
+  Delete02Icon,
+  Loading02Icon,
+  Search01Icon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Brain, Loader2, Plus, Search, Sparkles, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { AIAnalysisResult, BlockedWord } from "../types";
@@ -177,7 +185,11 @@ export default function BlacklistTab({
       <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-500/10 to-blue-500/10 p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Brain className="text-purple-400" size={28} />
+            <HugeiconsIcon
+              className="text-purple-400"
+              icon={BrainIcon}
+              size={28}
+            />
             <div>
               <h3 className="font-bold text-lg text-white">
                 ניתוח רעלנות עם AI
@@ -194,12 +206,16 @@ export default function BlacklistTab({
           >
             {isAnalyzing ? (
               <>
-                <Loader2 className="animate-spin" size={18} />
+                <HugeiconsIcon
+                  className="animate-spin"
+                  icon={Loading02Icon}
+                  size={18}
+                />
                 <span>מנתח...</span>
               </>
             ) : (
               <>
-                <Sparkles size={18} />
+                <HugeiconsIcon icon={SparklesIcon} size={18} />
                 <span>נתח עם AI</span>
               </>
             )}
@@ -227,8 +243,9 @@ export default function BlacklistTab({
                       onClick={() => addSuggestedWord(word)}
                     >
                       <span className="text-sm text-white">{word}</span>
-                      <Plus
+                      <HugeiconsIcon
                         className="text-gray-500 group-hover:text-blue-400"
+                        icon={Add01Icon}
                         size={14}
                       />
                     </button>
@@ -245,7 +262,11 @@ export default function BlacklistTab({
         <div className="lg:col-span-1">
           <div className="sticky top-6 rounded-2xl border border-white/5 bg-[#0e0e1b] p-6">
             <h3 className="mb-4 flex items-center gap-2 font-bold text-lg text-white">
-              <Plus className="text-red-500" size={18} />
+              <HugeiconsIcon
+                className="text-red-500"
+                icon={Add01Icon}
+                size={18}
+              />
               הוספת מילה חוסמת
             </h3>
             <form className="space-y-4" onSubmit={addWord}>
@@ -279,8 +300,9 @@ export default function BlacklistTab({
         <div className="space-y-4 lg:col-span-2">
           {/* Search */}
           <div className="relative">
-            <Search
+            <HugeiconsIcon
               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500"
+              icon={Search01Icon}
               size={16}
             />
             <input
@@ -303,7 +325,7 @@ export default function BlacklistTab({
                   className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-500/20 group-hover:text-red-500"
                   onClick={() => removeWord(item.word)}
                 >
-                  <Trash2 size={16} />
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
                 </button>
               </div>
             ))}

@@ -1,4 +1,5 @@
-import { Zap } from "lucide-react";
+import { ZapIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 interface LogoProps {
   className?: string;
@@ -30,10 +31,10 @@ export default function Logo({ className = "", size = "md" }: LogoProps) {
       <div className="relative flex items-center text-primary">
         {/* The 'Z' represented by a lightning bolt */}
         <div className="relative mx-[1px] flex translate-y-[2px] transform items-center justify-center">
-          <Zap
+          <HugeiconsIcon
             className="transform fill-current transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(0,255,157,0.8)]"
+            icon={ZapIcon}
             size={icon * 1.1}
-            strokeWidth={3}
             style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.5))" }}
           />
           <div className="absolute inset-0 -z-10 rounded-full bg-primary/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />

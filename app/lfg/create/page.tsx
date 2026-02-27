@@ -1,6 +1,10 @@
 "use client";
-
-import { ChevronLeft, Gamepad2, Mic } from "lucide-react";
+import {
+  ArrowLeft01Icon,
+  GameController02Icon,
+  Mic01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -132,7 +136,7 @@ export default function CreateLFGPage() {
             className="-ml-2 rounded-full p-2 transition-colors hover:bg-white/10"
             href="/lfg"
           >
-            <ChevronLeft className="text-white" />
+            <HugeiconsIcon className="text-white" icon={ArrowLeft01Icon} />
           </Link>
           <h1 className="font-bold text-2xl text-white">פרסום מודעה חדשה</h1>
         </div>
@@ -141,7 +145,11 @@ export default function CreateLFGPage() {
           {/* Game Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 font-medium text-sm text-white/80">
-              <Gamepad2 className="text-purple-400" size={16} />
+              <HugeiconsIcon
+                className="text-purple-400"
+                icon={GameController02Icon}
+                size={16}
+              />
               בחר משחק
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -198,7 +206,11 @@ export default function CreateLFGPage() {
           {/* Mic Required */}
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <label className="flex items-center gap-2 font-medium text-sm text-white/80">
-              <Mic className="text-red-400" size={16} />
+              <HugeiconsIcon
+                className="text-red-400"
+                icon={Mic01Icon}
+                size={16}
+              />
               מיקרופון חובה
             </label>
             <input

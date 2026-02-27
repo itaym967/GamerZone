@@ -1,7 +1,15 @@
 "use client";
 
+import {
+  Delete02Icon,
+  FilterIcon,
+  LockIcon,
+  Search01Icon,
+  SquareUnlock01Icon,
+  UserCheck01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
-import { Filter, Lock, Search, Trash2, Unlock, UserCheck } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Profile } from "../types";
@@ -256,8 +264,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
       {/* Search & Filters */}
       <div className="flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
-          <Search
+          <HugeiconsIcon
             className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500"
+            icon={Search01Icon}
             size={16}
           />
           <input
@@ -269,7 +278,11 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="text-gray-500" size={14} />
+          <HugeiconsIcon
+            className="text-gray-500"
+            icon={FilterIcon}
+            size={14}
+          />
           {(["all", "user", "admin", "minor", "banned"] as RoleFilter[]).map(
             (f) => (
               <button
@@ -379,9 +392,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                         title={user.is_banned ? "שחרר הקפאה" : "הקפא משתמש"}
                       >
                         {user.is_banned ? (
-                          <Lock size={18} />
+                          <HugeiconsIcon icon={LockIcon} size={18} />
                         ) : (
-                          <Unlock size={18} />
+                          <HugeiconsIcon icon={SquareUnlock01Icon} size={18} />
                         )}
                       </button>
                       <button
@@ -389,7 +402,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                         onClick={() => handleDelete(user)}
                         title="מחק משתמש"
                       >
-                        <Trash2 size={18} />
+                        <HugeiconsIcon icon={Delete02Icon} size={18} />
                       </button>
                     </div>
                   )}
@@ -400,7 +413,11 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         </table>
         {filtered.length === 0 && (
           <div className="flex flex-col items-center gap-3 p-12 text-center text-gray-500">
-            <UserCheck className="opacity-50" size={32} />
+            <HugeiconsIcon
+              className="opacity-50"
+              icon={UserCheck01Icon}
+              size={32}
+            />
             <p>{searchQuery ? "לא נמצאו משתמשים" : "אין משתמשים להצגה"}</p>
           </div>
         )}

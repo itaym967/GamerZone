@@ -1,21 +1,22 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  Check,
-  Clock,
-  Copy,
-  Loader2,
-  MessageSquare,
-  Plus,
-  Shield,
-  Sparkles,
-  UserCheck,
-  UserPlus,
-  X,
-} from "lucide-react";
+  Add01Icon,
+  Cancel01Icon,
+  Clock01Icon,
+  Copy01Icon,
+  Loading02Icon,
+  Message01Icon,
+  Shield01Icon,
+  SparklesIcon,
+  Tick01Icon,
+  UserAdd01Icon,
+  UserCheck01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { haptic } from "@/utils/haptics";
 import { createClient } from "@/utils/supabase/client";
@@ -50,6 +51,19 @@ interface GamerCardProps {
   ) => void;
   tag: string; // e.g. @cyber_ninja
   username: string;
+}
+
+function determineStatus(data: any, userId: string) {
+  if (data.status === "approved") {
+    return "approved";
+  }
+  if (data.status === "rejected") {
+    return "rejected";
+  }
+  if (data.status === "pending") {
+    return data.sender_id === userId ? "pending_sent" : "pending_received";
+  }
+  return "initial";
 }
 
 export default function GamerCard({
@@ -95,11 +109,11 @@ export default function GamerCard({
 
   const supabase = createClient();
 
-  const fetchRealTags = async () => {
+  const fetchRealTags = useCallback(async () => {
     if (!id) {
       return;
     }
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("gamertags")
       .select("platform, tag")
       .eq("user_id", id);
@@ -111,7 +125,7 @@ export default function GamerCard({
       });
       setRevealedTags(realTags);
     }
-  };
+  }, [id, supabase]);
 
   // OPTIMIZATION: Only fetch initial status, no per-card realtime subscription
   // Parent components should manage realtime subscriptions for all cards
@@ -147,28 +161,7 @@ export default function GamerCard({
     };
 
     checkStatus();
-  }, [
-    currentUserId,
-    id,
-    initialSwapStatus,
-    determineStatus,
-    fetchRealTags,
-    supabase.from,
-  ]);
-
-  // Helper function to determine status from swap request data
-  const determineStatus = (data: any, userId: string) => {
-    if (data.status === "approved") {
-      return "approved";
-    }
-    if (data.status === "rejected") {
-      return "rejected";
-    }
-    if (data.status === "pending") {
-      return data.sender_id === userId ? "pending_sent" : "pending_received";
-    }
-    return "initial";
-  };
+  }, [currentUserId, id, initialSwapStatus, fetchRealTags, supabase]);
 
   const handleSendRequest = async () => {
     if (!currentUserId) {
@@ -423,9 +416,17 @@ export default function GamerCard({
                 title="שפר את הביו שלך עם AI"
               >
                 {isEnhancingBio ? (
-                  <Loader2 className="animate-spin text-black" size={14} />
+                  <HugeiconsIcon
+                    className="animate-spin text-black"
+                    icon={Loading02Icon}
+                    size={14}
+                  />
                 ) : (
-                  <Sparkles className="text-black" size={14} />
+                  <HugeiconsIcon
+                    className="text-black"
+                    icon={SparklesIcon}
+                    size={14}
+                  />
                 )}
               </motion.button>
             )}
@@ -459,10 +460,15 @@ export default function GamerCard({
                     {realTag}
                   </span>
                   {copiedTag === realTag ? (
-                    <Check className="text-green-400" size={14} />
+                    <HugeiconsIcon
+                      className="text-green-400"
+                      icon={Tick01Icon}
+                      size={14}
+                    />
                   ) : (
-                    <Copy
+                    <HugeiconsIcon
                       className="text-gray-500 transition-colors group-hover/tag:text-primary"
+                      icon={Copy01Icon}
                       size={14}
                     />
                   )}
@@ -508,9 +514,13 @@ export default function GamerCard({
             title={status === "rejected" ? "הבקשה הקודמת נדחתה" : ""}
           >
             {isLoading ? (
-              <Loader2 className="animate-spin" size={18} />
+              <HugeiconsIcon
+                className="animate-spin"
+                icon={Loading02Icon}
+                size={18}
+              />
             ) : (
-              <Plus size={18} />
+              <HugeiconsIcon icon={Add01Icon} size={18} />
             )}
             <span>{status === "rejected" ? "שלח שוב" : "החלף פרטים"}</span>
           </button>
@@ -519,7 +529,11 @@ export default function GamerCard({
             className="flex flex-1 cursor-wait items-center justify-center gap-2 rounded-xl bg-white/10 py-2 font-bold text-gray-400 transition-all duration-300"
             disabled
           >
-            <Loader2 className="animate-spin" size={18} />
+            <HugeiconsIcon
+              className="animate-spin"
+              icon={Loading02Icon}
+              size={18}
+            />
             <span>ממתין לאישור...</span>
           </button>
         ) : status === "pending_received" ? (
@@ -530,7 +544,7 @@ export default function GamerCard({
               onClick={() => handleApproveResponse(true)}
               title="אשר החלפה"
             >
-              <Check size={18} />
+              <HugeiconsIcon icon={Tick01Icon} size={18} />
             </button>
             <button
               className="flex items-center justify-center rounded-xl bg-red-500/20 px-3 py-2 font-bold text-red-400 transition-all hover:bg-red-500/30"
@@ -538,7 +552,7 @@ export default function GamerCard({
               onClick={() => handleApproveResponse(false)}
               title="דחה בקשה"
             >
-              <X size={18} />
+              <HugeiconsIcon icon={Cancel01Icon} size={18} />
             </button>
           </div> // Approved
         ) : (
@@ -546,7 +560,7 @@ export default function GamerCard({
             className="flex flex-1 cursor-default items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/20 py-2 font-bold text-emerald-400 transition-all duration-300"
             disabled
           >
-            <Shield size={18} />
+            <HugeiconsIcon icon={Shield01Icon} size={18} />
             <span>חברים</span>
           </button>
         )}
@@ -578,13 +592,13 @@ export default function GamerCard({
             }
           >
             {friendshipStatus === "accepted" ? (
-              <UserCheck size={18} />
+              <HugeiconsIcon icon={UserCheck01Icon} size={18} />
             ) : friendshipStatus === "pending_sent" ? (
-              <Clock size={18} />
+              <HugeiconsIcon icon={Clock01Icon} size={18} />
             ) : friendshipStatus === "pending_received" ? (
-              <UserCheck size={18} />
+              <HugeiconsIcon icon={UserCheck01Icon} size={18} />
             ) : (
-              <UserPlus size={18} />
+              <HugeiconsIcon icon={UserAdd01Icon} size={18} />
             )}
           </button>
         )}
@@ -593,7 +607,7 @@ export default function GamerCard({
           className={`rounded-xl p-2 transition-colors ${status === "approved" ? "bg-primary text-black hover:bg-primary/90" : "bg-white/5 text-white hover:bg-white/10"}`}
           href={`/chat?target=${id}`}
         >
-          <MessageSquare size={18} />
+          <HugeiconsIcon icon={Message01Icon} size={18} />
         </Link>
       </div>
     </motion.div>

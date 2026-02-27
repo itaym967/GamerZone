@@ -1,16 +1,17 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  Check,
-  Clock,
+  Cancel01Icon,
+  Clock01Icon,
   MessageCircle,
-  Search,
-  UserMinus,
-  UserPlus,
-  Users,
-  X,
-} from "lucide-react";
+  Search01Icon,
+  Tick01Icon,
+  UserAdd01Icon,
+  UserGroupIcon,
+  UserMinus01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -77,14 +78,14 @@ function FriendCard({
               href={`/chat?target=${friend?.id}`}
               title="שלח הודעה"
             >
-              <MessageCircle size={18} />
+              <HugeiconsIcon icon={MessageCircle} size={18} />
             </Link>
             <button
               className="rounded-xl p-2 text-white/40 opacity-0 transition-colors hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
               onClick={() => onUnfriend?.(item.id)}
               title="הסר חבר"
             >
-              <UserMinus size={18} />
+              <HugeiconsIcon icon={UserMinus01Icon} size={18} />
             </button>
           </>
         )}
@@ -96,14 +97,14 @@ function FriendCard({
               onClick={() => onAccept?.(item.id)}
               title="אשר"
             >
-              <Check size={18} />
+              <HugeiconsIcon icon={Tick01Icon} size={18} />
             </button>
             <button
               className="rounded-xl bg-red-500/10 p-2 text-red-400 transition-colors hover:bg-red-500/20"
               onClick={() => onReject?.(item.id)}
               title="דחה"
             >
-              <X size={18} />
+              <HugeiconsIcon icon={Cancel01Icon} size={18} />
             </button>
           </>
         )}
@@ -188,22 +189,31 @@ export default function FriendsPage() {
 
   const onlineCount = friends.filter((f) => f.friend?.is_online).length;
 
-  const tabs: { key: Tab; label: string; count: number; icon: typeof Users }[] =
-    [
-      { key: "friends", label: "חברים", count: friends.length, icon: Users },
-      {
-        key: "pending",
-        label: "בקשות",
-        count: pendingReceived.length,
-        icon: Clock,
-      },
-      {
-        key: "sent",
-        label: "נשלחו",
-        count: pendingSent.length,
-        icon: UserPlus,
-      },
-    ];
+  const tabs: {
+    key: Tab;
+    label: string;
+    count: number;
+    icon: typeof UserGroupIcon;
+  }[] = [
+    {
+      key: "friends",
+      label: "חברים",
+      count: friends.length,
+      icon: UserGroupIcon,
+    },
+    {
+      key: "pending",
+      label: "בקשות",
+      count: pendingReceived.length,
+      icon: Clock01Icon,
+    },
+    {
+      key: "sent",
+      label: "נשלחו",
+      count: pendingSent.length,
+      icon: UserAdd01Icon,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#050510] pb-24 md:pr-64 md:pb-0">
@@ -215,7 +225,11 @@ export default function FriendsPage() {
           <div className="mb-2 flex items-center justify-between">
             <h1 className="flex items-center gap-3 font-bold text-3xl text-white">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600">
-                <Users className="text-white" size={20} />
+                <HugeiconsIcon
+                  className="text-white"
+                  icon={UserGroupIcon}
+                  size={20}
+                />
               </div>
               <span>חברים</span>
             </h1>
@@ -241,7 +255,7 @@ export default function FriendsPage() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
             >
-              <tab.icon size={16} />
+              <HugeiconsIcon icon={tab.icon} size={16} />
               {tab.label}
               {tab.count > 0 && (
                 <span
@@ -270,8 +284,9 @@ export default function FriendsPage() {
               type="text"
               value={searchTerm}
             />
-            <Search
+            <HugeiconsIcon
               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400"
+              icon={Search01Icon}
               size={18}
             />
           </div>
@@ -291,11 +306,23 @@ export default function FriendsPage() {
           <div className="py-20 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
               {activeTab === "friends" ? (
-                <Users className="text-white/30" size={32} />
+                <HugeiconsIcon
+                  className="text-white/30"
+                  icon={UserGroupIcon}
+                  size={32}
+                />
               ) : activeTab === "pending" ? (
-                <Clock className="text-white/30" size={32} />
+                <HugeiconsIcon
+                  className="text-white/30"
+                  icon={Clock01Icon}
+                  size={32}
+                />
               ) : (
-                <UserPlus className="text-white/30" size={32} />
+                <HugeiconsIcon
+                  className="text-white/30"
+                  icon={UserAdd01Icon}
+                  size={32}
+                />
               )}
             </div>
             <h3 className="font-semibold text-lg text-white">
@@ -317,7 +344,7 @@ export default function FriendsPage() {
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-black text-sm transition-all hover:bg-primary/90"
                 href="/explore"
               >
-                <Search size={16} />
+                <HugeiconsIcon icon={Search01Icon} size={16} />
                 גלה שחקנים
               </Link>
             )}

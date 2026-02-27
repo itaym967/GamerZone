@@ -1,6 +1,10 @@
 "use client";
-
-import { Filter, Search, Users } from "lucide-react";
+import {
+  FilterIcon,
+  Search01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -89,7 +93,11 @@ export default function ExplorePage() {
       <main className="mx-auto max-w-7xl p-6">
         <header className="mb-8">
           <h1 className="mb-2 flex items-center gap-3 font-bold text-3xl text-white">
-            <Search className="text-primary" size={32} />
+            <HugeiconsIcon
+              className="text-primary"
+              icon={Search01Icon}
+              size={32}
+            />
             <span>גלה שחקנים</span>
           </h1>
           <p className="text-gray-400">מצא את השותפים המושלמים למשחק הבא שלך</p>
@@ -105,8 +113,9 @@ export default function ExplorePage() {
               type="text"
               value={searchTerm}
             />
-            <Search
+            <HugeiconsIcon
               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400"
+              icon={Search01Icon}
               size={20}
             />
           </div>
@@ -137,7 +146,7 @@ export default function ExplorePage() {
                 }`}
                 onClick={() => setFriendsOnly(!friendsOnly)}
               >
-                <Users size={16} />
+                <HugeiconsIcon icon={UserGroupIcon} size={16} />
                 <span className="whitespace-nowrap">חברים בלבד</span>
               </button>
             )}
@@ -159,8 +168,9 @@ export default function ExplorePage() {
                   </option>
                 ))}
               </select>
-              <Filter
+              <HugeiconsIcon
                 className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+                icon={FilterIcon}
                 size={16}
               />
             </div>
@@ -192,7 +202,11 @@ export default function ExplorePage() {
         {!loading && filteredGamers.length === 0 && (
           <div className="py-20 text-center opacity-50">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-              <Search className="text-white" size={40} />
+              <HugeiconsIcon
+                className="text-white"
+                icon={Search01Icon}
+                size={40}
+              />
             </div>
             <h3 className="mb-2 font-bold text-white text-xl">
               לא נמצאו תוצאות

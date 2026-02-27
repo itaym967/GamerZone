@@ -1,6 +1,11 @@
 "use client";
-
-import { Download, Plus, Share, X } from "lucide-react";
+import {
+  Add01Icon,
+  Cancel01Icon,
+  Download01Icon,
+  Share01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -107,12 +112,16 @@ export default function PWAInstallPrompt() {
           className="touch-compact absolute top-3 left-3 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
           onClick={handleDismiss}
         >
-          <X size={16} />
+          <HugeiconsIcon icon={Cancel01Icon} size={16} />
         </button>
 
         <div className="flex items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-            <Download className="text-primary" size={24} />
+            <HugeiconsIcon
+              className="text-primary"
+              icon={Download01Icon}
+              size={24}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="mb-1 font-bold text-sm text-white">
@@ -130,7 +139,11 @@ export default function PWAInstallPrompt() {
                     1
                   </span>
                   <span>לחץ על</span>
-                  <Share className="shrink-0 text-blue-400" size={14} />
+                  <HugeiconsIcon
+                    className="shrink-0 text-blue-400"
+                    icon={Share01Icon}
+                    size={14}
+                  />
                   <span>בתפריט הדפדפן</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300 text-xs">
@@ -138,7 +151,11 @@ export default function PWAInstallPrompt() {
                     2
                   </span>
                   <span>בחר</span>
-                  <Plus className="shrink-0 text-blue-400" size={14} />
+                  <HugeiconsIcon
+                    className="shrink-0 text-blue-400"
+                    icon={Add01Icon}
+                    size={14}
+                  />
                   <span>&quot;הוסף למסך הבית&quot;</span>
                 </div>
               </div>
@@ -148,7 +165,7 @@ export default function PWAInstallPrompt() {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-bold text-black text-sm transition-all hover:bg-primary/90"
                 onClick={handleInstall}
               >
-                <Download size={16} />
+                <HugeiconsIcon icon={Download01Icon} size={16} />
                 התקן עכשיו
               </button>
             )}

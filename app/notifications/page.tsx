@@ -1,18 +1,19 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertTriangle,
-  Bell,
-  CheckCheck,
-  CheckCircle,
-  ExternalLink,
-  Gamepad2,
-  Info,
+  Alert01Icon,
+  CheckmarkCircle01Icon,
+  Delete02Icon,
+  GameController02Icon,
+  InformationCircleIcon,
+  LinkSquare01Icon,
   MessageCircle,
-  Trash2,
-  Users,
-} from "lucide-react";
+  Notification01Icon,
+  TickDouble01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -22,25 +23,41 @@ import Navigation from "../components/Navigation";
 
 const TYPE_CONFIG: Record<
   string,
-  { icon: typeof Bell; color: string; bg: string }
+  { icon: typeof Notification01Icon; color: string; bg: string }
 > = {
-  info: { icon: Info, color: "text-blue-400", bg: "bg-blue-500/10" },
+  info: {
+    icon: InformationCircleIcon,
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+  },
   success: {
-    icon: CheckCircle,
+    icon: CheckmarkCircle01Icon,
     color: "text-green-400",
     bg: "bg-green-500/10",
   },
-  error: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10" },
+  error: { icon: Alert01Icon, color: "text-red-400", bg: "bg-red-500/10" },
   warning: {
-    icon: AlertTriangle,
+    icon: Alert01Icon,
     color: "text-yellow-400",
     bg: "bg-yellow-500/10",
   },
-  party_kick: { icon: Users, color: "text-orange-400", bg: "bg-orange-500/10" },
-  party_join: { icon: Users, color: "text-purple-400", bg: "bg-purple-500/10" },
-  party_close: { icon: Users, color: "text-gray-400", bg: "bg-gray-500/10" },
+  party_kick: {
+    icon: UserGroupIcon,
+    color: "text-orange-400",
+    bg: "bg-orange-500/10",
+  },
+  party_join: {
+    icon: UserGroupIcon,
+    color: "text-purple-400",
+    bg: "bg-purple-500/10",
+  },
+  party_close: {
+    icon: UserGroupIcon,
+    color: "text-gray-400",
+    bg: "bg-gray-500/10",
+  },
   swap_request: {
-    icon: Gamepad2,
+    icon: GameController02Icon,
     color: "text-cyan-400",
     bg: "bg-cyan-500/10",
   },
@@ -88,7 +105,6 @@ function NotificationItem({
   onDelete: (id: string) => void;
 }) {
   const config = getTypeConfig(notification.type);
-  const Icon = config.icon;
 
   const content = (
     <motion.div
@@ -111,7 +127,7 @@ function NotificationItem({
       <div
         className={`h-10 w-10 shrink-0 rounded-xl ${config.bg} flex items-center justify-center`}
       >
-        <Icon className={config.color} size={20} />
+        <HugeiconsIcon className={config.color} icon={config.icon} size={20} />
       </div>
 
       {/* Content */}
@@ -139,7 +155,7 @@ function NotificationItem({
             }}
             title="סמן כנקרא"
           >
-            <CheckCheck size={16} />
+            <HugeiconsIcon icon={TickDouble01Icon} size={16} />
           </button>
         )}
         <button
@@ -151,14 +167,14 @@ function NotificationItem({
           }}
           title="מחק"
         >
-          <Trash2 size={16} />
+          <HugeiconsIcon icon={Delete02Icon} size={16} />
         </button>
       </div>
 
       {/* Link indicator */}
       {notification.action_url && (
         <div className="shrink-0 self-center text-white/20">
-          <ExternalLink size={14} />
+          <HugeiconsIcon icon={LinkSquare01Icon} size={14} />
         </div>
       )}
     </motion.div>
@@ -215,7 +231,11 @@ export default function NotificationsPage() {
           <div className="mb-2 flex items-center justify-between">
             <h1 className="flex items-center gap-3 font-bold text-3xl text-white">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
-                <Bell className="text-white" size={20} />
+                <HugeiconsIcon
+                  className="text-white"
+                  icon={Notification01Icon}
+                  size={20}
+                />
               </div>
               <span>התראות</span>
               {unreadCount > 0 && (
@@ -230,7 +250,7 @@ export default function NotificationsPage() {
                 className="flex items-center gap-1.5 font-medium text-blue-400 text-sm transition-colors hover:text-blue-300"
                 onClick={handleMarkAllRead}
               >
-                <CheckCheck size={16} />
+                <HugeiconsIcon icon={TickDouble01Icon} size={16} />
                 סמן הכל כנקרא
               </button>
             )}
@@ -275,7 +295,11 @@ export default function NotificationsPage() {
         ) : filteredNotifications.length === 0 ? (
           <div className="py-20 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-              <Bell className="text-white/30" size={32} />
+              <HugeiconsIcon
+                className="text-white/30"
+                icon={Notification01Icon}
+                size={32}
+              />
             </div>
             <h3 className="font-semibold text-lg text-white">
               {filter === "unread" ? "אין התראות חדשות" : "אין התראות"}

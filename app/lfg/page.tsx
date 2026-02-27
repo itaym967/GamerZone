@@ -1,6 +1,6 @@
 "use client";
-
-import { Plus, Search } from "lucide-react";
+import { Add01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -151,7 +151,7 @@ export default function LFGPage() {
             <h1 className="font-bold text-2xl text-white">לוח חיפוש שחקנים</h1>
             <Link href="/lfg/create">
               <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95">
-                <Plus size={18} />
+                <HugeiconsIcon icon={Add01Icon} size={18} />
                 <span className="hidden sm:inline">פרסם מודעה</span>
                 <span className="sm:hidden">פרסם</span>
               </button>
@@ -190,7 +190,11 @@ export default function LFGPage() {
         ) : posts.length === 0 ? (
           <div className="py-20 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-              <Search className="text-white/40" size={32} />
+              <HugeiconsIcon
+                className="text-white/40"
+                icon={Search01Icon}
+                size={32}
+              />
             </div>
             <h3 className="font-semibold text-lg text-white">
               אין מודעות פעילות
