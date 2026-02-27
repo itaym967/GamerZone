@@ -2,19 +2,25 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
+const keyToBase64 = (key: ArrayBuffer | null) => {
+  if (!key) {
+    return null;
+  }
+  const bytes = new Uint8Array(key);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
 export function usePushNotifications() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(
     null
   );
   const supabase = useMemo(() => createClient(), []);
 
-  useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      checkExistingSubscription();
-    }
-  }, [checkExistingSubscription]);
-
-  async function checkExistingSubscription() {
+  const checkExistingSubscription = useCallback(async () => {
     try {
       // Use .ready instead of .register() to avoid double-registration
       // which can trigger SW update loops. Registration is handled by
@@ -25,7 +31,13 @@ export function usePushNotifications() {
     } catch (error) {
       console.error("Push subscription check failed:", error);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      checkExistingSubscription();
+    }
+  }, [checkExistingSubscription]);
 
   const saveSubscription = useCallback(
     async (sub: PushSubscription) => {
@@ -36,22 +48,19 @@ export function usePushNotifications() {
         return;
       }
 
+      const p256dh = keyToBase64(sub.getKey("p256dh"));
+      const auth = keyToBase64(sub.getKey("auth"));
+      if (!(p256dh && auth)) {
+        console.error("Missing push subscription keys");
+        return;
+      }
+
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
           user_id: user.id,
           endpoint: sub.endpoint,
-          p256dh: btoa(
-            String.fromCharCode.apply(
-              null,
-              new Uint8Array(sub.getKey("p256dh")!) as any
-            )
-          ),
-          auth: btoa(
-            String.fromCharCode.apply(
-              null,
-              new Uint8Array(sub.getKey("auth")!) as any
-            )
-          ),
+          p256dh,
+          auth,
         },
         { onConflict: "endpoint" }
       );

@@ -21,11 +21,36 @@ interface UsersTabProps {
 
 type RoleFilter = "all" | "user" | "admin" | "minor" | "banned";
 
+const ROLE_FILTER_LABELS: Record<RoleFilter, string> = {
+  all: "הכל",
+  user: "משתמשים",
+  admin: "מנהלים",
+  minor: "קטינים",
+  banned: "מוקפאים",
+};
+
+const getFreezeNotificationMessage = (isBanning: boolean, reason: string) => {
+  if (!isBanning) {
+    return "ההקפאה הוסרה מחשבונך. ברוך שובך!";
+  }
+  if (reason) {
+    return `החשבון הוקפא עקב: ${reason}`;
+  }
+  return "חשבונך הוקפא על ידי מנהל המערכת.";
+};
+
 export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [freezeTarget, setFreezeTarget] = useState<Profile | null>(null);
+  const [freezeReason, setFreezeReason] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
+  const [roleChangeTarget, setRoleChangeTarget] = useState<{
+    newRole: string;
+    user: Profile;
+  } | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -98,20 +123,15 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
     };
   }, [supabase]);
 
-  const handleFreeze = async (user: Profile) => {
-    const isBanning = !user.is_banned;
-    let reason: string | null = null;
-    if (isBanning) {
-      reason = prompt("הכנס סיבת הקפאה (אופציונלי):");
-      if (reason === null) {
-        return;
-      }
-    }
-
+  const applyFreezeChange = async (
+    user: Profile,
+    isBanning: boolean,
+    reason: string
+  ) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .update({ is_banned: isBanning, ban_reason: reason })
+        .update({ is_banned: isBanning, ban_reason: reason || null })
         .eq("id", user.id)
         .select()
         .single();
@@ -140,11 +160,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
       }
 
       const title = isBanning ? "חשבונך הוקפא" : "חשבונך שוחרר";
-      const message = isBanning
-        ? reason
-          ? `החשבון הוקפא עקב: ${reason}`
-          : "חשבונך הוקפא על ידי מנהל המערכת."
-        : "ההקפאה הוסרה מחשבונך. ברוך שובך!";
+      const message = getFreezeNotificationMessage(isBanning, reason);
 
       await supabase.from("notifications").insert({
         user_id: user.id,
@@ -165,23 +181,18 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         details: { target_user: user.username, reason },
         admin_id: currentUser,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "נא לנסות שוב";
       console.error("Operation failed:", error);
       toast.error("שגיאה בביצוע הפעולה", {
-        description: error.message || "נא לנסות שוב",
+        description: errorMessage,
       });
       fetchUsers();
     }
   };
 
-  const handleDelete = async (user: Profile) => {
-    if (
-      !confirm(
-        `האם אתה בטוח שברצונך למחוק את המשתמש ${user.username}? פעולה זו אינה הפיכה.`
-      )
-    ) {
-      return;
-    }
+  const confirmDelete = async (user: Profile) => {
     try {
       const { error } = await supabase.rpc("delete_user_as_admin", {
         target_user_id: user.id,
@@ -202,10 +213,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
     }
   };
 
-  const handleRoleChange = async (user: Profile, newRole: string) => {
-    if (!confirm(`שנה תפקיד של ${user.username} ל-${newRole}?`)) {
-      return;
-    }
+  const confirmRoleChange = async (user: Profile, newRole: string) => {
     try {
       const { error } = await supabase
         .from("profiles")
@@ -231,6 +239,22 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
       toast.error("שגיאה בשינוי תפקיד");
       console.error(error);
     }
+  };
+
+  const onFreezeClick = (user: Profile) => {
+    setFreezeTarget(user);
+    setFreezeReason("");
+  };
+
+  const onDeleteClick = (user: Profile) => {
+    setDeleteTarget(user);
+  };
+
+  const onRoleChangeAttempt = (user: Profile, newRole: string) => {
+    if ((user.role || "user") === newRole) {
+      return;
+    }
+    setRoleChangeTarget({ user, newRole });
   };
 
   const filtered = users.filter((u) => {
@@ -293,16 +317,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                 }`}
                 key={f}
                 onClick={() => setRoleFilter(f)}
+                type="button"
               >
-                {f === "all"
-                  ? "הכל"
-                  : f === "user"
-                    ? "משתמשים"
-                    : f === "admin"
-                      ? "מנהלים"
-                      : f === "minor"
-                        ? "קטינים"
-                        : "מוקפאים"}
+                {ROLE_FILTER_LABELS[f]}
               </button>
             )
           )}
@@ -354,7 +371,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                         : "border-blue-500/30 text-blue-400"
                     }`}
                     disabled={user.id === currentUser}
-                    onChange={(e) => handleRoleChange(user, e.target.value)}
+                    onChange={(e) => onRoleChangeAttempt(user, e.target.value)}
                     value={user.role || "user"}
                   >
                     <option className="bg-card" value="user">
@@ -374,7 +391,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                   </div>
                 </td>
                 <td
-                  className="max-w-[9.375rem] truncate p-4 text-fluid-sm text-gray-400"
+                  className="max-w-37.5 truncate p-4 text-fluid-sm text-gray-400"
                   title={user.ban_reason || undefined}
                 >
                   {user.ban_reason || "-"}
@@ -388,8 +405,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                             ? "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20"
                             : "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
                         }`}
-                        onClick={() => handleFreeze(user)}
+                        onClick={() => onFreezeClick(user)}
                         title={user.is_banned ? "שחרר הקפאה" : "הקפא משתמש"}
+                        type="button"
                       >
                         {user.is_banned ? (
                           <HugeiconsIcon icon={LockIcon} size={18} />
@@ -399,8 +417,9 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
                       </button>
                       <button
                         className="rounded-lg bg-red-500/10 p-2 text-red-400 transition-colors hover:bg-red-500/20"
-                        onClick={() => handleDelete(user)}
+                        onClick={() => onDeleteClick(user)}
                         title="מחק משתמש"
+                        type="button"
                       >
                         <HugeiconsIcon icon={Delete02Icon} size={18} />
                       </button>
@@ -422,6 +441,116 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           </div>
         )}
       </div>
+
+      {freezeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-5">
+            <h3 className="mb-2 font-bold text-fluid-lg text-white">
+              {freezeTarget.is_banned ? "שחרור משתמש" : "הקפאת משתמש"}
+            </h3>
+            <p className="mb-4 text-fluid-sm text-gray-300">
+              {freezeTarget.is_banned
+                ? `לשחרר את ${freezeTarget.username} מהקפאה?`
+                : `להקפיא את ${freezeTarget.username}?`}
+            </p>
+            {!freezeTarget.is_banned && (
+              <input
+                className="mb-4 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-right text-white outline-hidden"
+                onChange={(e) => setFreezeReason(e.target.value)}
+                placeholder="סיבת הקפאה (אופציונלי)"
+                type="text"
+                value={freezeReason}
+              />
+            )}
+            <div className="flex gap-2">
+              <button
+                className="flex-1 rounded-lg bg-white/10 px-3 py-2 font-bold text-white hover:bg-white/20"
+                onClick={() => setFreezeTarget(null)}
+                type="button"
+              >
+                ביטול
+              </button>
+              <button
+                className="flex-1 rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-500"
+                onClick={async () => {
+                  const user = freezeTarget;
+                  setFreezeTarget(null);
+                  await applyFreezeChange(user, !user.is_banned, freezeReason);
+                }}
+                type="button"
+              >
+                אישור
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-5">
+            <h3 className="mb-2 font-bold text-fluid-lg text-white">
+              מחיקת משתמש
+            </h3>
+            <p className="mb-4 text-fluid-sm text-gray-300">
+              {`למחוק את ${deleteTarget.username}? פעולה זו אינה הפיכה.`}
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="flex-1 rounded-lg bg-white/10 px-3 py-2 font-bold text-white hover:bg-white/20"
+                onClick={() => setDeleteTarget(null)}
+                type="button"
+              >
+                ביטול
+              </button>
+              <button
+                className="flex-1 rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-500"
+                onClick={async () => {
+                  const user = deleteTarget;
+                  setDeleteTarget(null);
+                  await confirmDelete(user);
+                }}
+                type="button"
+              >
+                מחק
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {roleChangeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-5">
+            <h3 className="mb-2 font-bold text-fluid-lg text-white">
+              שינוי תפקיד
+            </h3>
+            <p className="mb-4 text-fluid-sm text-gray-300">
+              {`לשנות את התפקיד של ${roleChangeTarget.user.username} ל-${roleChangeTarget.newRole}?`}
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="flex-1 rounded-lg bg-white/10 px-3 py-2 font-bold text-white hover:bg-white/20"
+                onClick={() => setRoleChangeTarget(null)}
+                type="button"
+              >
+                ביטול
+              </button>
+              <button
+                className="flex-1 rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-500"
+                onClick={async () => {
+                  const change = roleChangeTarget;
+                  setRoleChangeTarget(null);
+                  await confirmRoleChange(change.user, change.newRole);
+                }}
+                type="button"
+              >
+                אישור
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

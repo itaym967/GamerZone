@@ -2,12 +2,23 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
 let _adminClient: SupabaseClient | null = null;
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$/;
+
+function getRequiredEnv(
+  name: "NEXT_PUBLIC_SUPABASE_URL" | "SUPABASE_SERVICE_ROLE_KEY"
+) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
 
 function getSupabaseAdmin(): SupabaseClient {
   if (!_adminClient) {
     _adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
+      getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")
     );
   }
   return _adminClient;
@@ -114,8 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate email format
-    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$/;
-    if (!emailRegex.test(parentEmail)) {
+    if (!EMAIL_REGEX.test(parentEmail)) {
       return NextResponse.json(
         { error: "כתובת אימייל לא תקינה" },
         { status: 400 }

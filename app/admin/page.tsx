@@ -4,12 +4,12 @@ import { SecurityCheckIcon, Shield01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import Navigation from "../components/Navigation";
-import BlacklistTab from "./components/BlacklistTab";
-import LogsTab from "./components/LogsTab";
-import ManagementTab from "./components/ManagementTab";
-import SafetyTab from "./components/SafetyTab";
-import UsersTab from "./components/UsersTab";
-import { useAdminAuth } from "./hooks/useAdminAuth";
+import BlacklistTab from "./components/blacklist-tab";
+import LogsTab from "./components/logs-tab";
+import ManagementTab from "./components/management-tab";
+import SafetyTab from "./components/safety-tab";
+import UsersTab from "./components/users-tab";
+import { useAdminAuth } from "./hooks/use-admin-auth";
 import type { AdminTab } from "./types";
 
 const TABS: {

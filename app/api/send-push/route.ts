@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import webpush from "web-push";
 import { createClient } from "@/lib/supabase/server";
 
+interface PushSubscriptionRow {
+  auth: string;
+  endpoint: string;
+  id: string;
+  p256dh: string;
+}
+
+interface PushError extends Error {
+  statusCode?: number;
+}
+
 // Remove top-level setVapidDetails configuration to prevent build-time errors
 
 export async function POST(request: Request) {
@@ -28,10 +39,12 @@ export async function POST(request: Request) {
         vapidPublicKey,
         vapidPrivateKey
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const details =
+        err instanceof Error ? err.message : "Unknown VAPID error";
       console.error("Failed to set VAPID details:", err);
       return NextResponse.json(
-        { error: "Invalid VAPID configuration", details: err.message },
+        { error: "Invalid VAPID configuration", details },
         { status: 500 }
       );
     }
@@ -63,51 +76,59 @@ export async function POST(request: Request) {
     console.log(`Found ${subscriptions.length} subscription(s)`);
 
     // 2. Send push to all endpoints
-    const notifications = subscriptions.map((sub: any) => {
-      const subscriptionObject = {
-        endpoint: sub.endpoint,
-        keys: {
-          p256dh: sub.p256dh,
-          auth: sub.auth,
-        },
-      };
+    const notifications = (subscriptions as PushSubscriptionRow[]).map(
+      (sub) => {
+        const subscriptionObject = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+          },
+        };
 
-      const payload = JSON.stringify({
-        title,
-        body: message,
-        url,
-      });
-
-      return webpush
-        .sendNotification(subscriptionObject, payload)
-        .then(() => {
-          console.log(
-            "Push sent successfully to:",
-            `${sub.endpoint.substring(0, 50)}...`
-          );
-        })
-        .catch((error: any) => {
-          console.error("Error sending push:", error);
-          if (error.statusCode === 404 || error.statusCode === 410) {
-            console.log("Subscription expired, deleting:", sub.id);
-            return supabase
-              .from("push_subscriptions")
-              .delete()
-              .eq("id", sub.id);
-          }
+        const payload = JSON.stringify({
+          title,
+          body: message,
+          url,
         });
-    });
+
+        return webpush
+          .sendNotification(subscriptionObject, payload)
+          .then(() => {
+            console.log(
+              "Push sent successfully to:",
+              `${sub.endpoint.substring(0, 50)}...`
+            );
+          })
+          .catch((error: unknown) => {
+            const pushError = error as PushError;
+            console.error("Error sending push:", error);
+            if (pushError.statusCode === 404 || pushError.statusCode === 410) {
+              console.log("Subscription expired, deleting:", sub.id);
+              return supabase
+                .from("push_subscriptions")
+                .delete()
+                .eq("id", sub.id);
+            }
+          });
+      }
+    );
 
     await Promise.all(notifications);
 
     return NextResponse.json({ success: true, sent: subscriptions.length });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const details = error instanceof Error ? error.message : "Unknown error";
+    const stack =
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.stack
+        : undefined;
     console.error("Unexpected error in send-push:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        details,
+        stack,
       },
       { status: 500 }
     );

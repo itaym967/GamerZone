@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/Logo";
 
+const RESET_EMAIL_INPUT_ID = "forgot-password-email";
+
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -34,9 +36,11 @@ export default function ForgotPasswordPage() {
 
       setIsSent(true);
       toast.success("המייל נשלח בהצלחה!");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
       toast.error("שגיאה בשליחת המייל", {
-        description: error.message,
+        description,
       });
     } finally {
       setIsLoading(false);
@@ -47,8 +51,8 @@ export default function ForgotPasswordPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Animated Background */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
-      <div className="absolute top-[-20%] right-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
+      <div className="absolute top-[-20%] right-[-10%] h-150 w-150 animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-150 w-150 animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
 
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
@@ -85,12 +89,16 @@ export default function ForgotPasswordPage() {
         ) : (
           <form className="space-y-6" onSubmit={handleReset}>
             <div className="space-y-1 text-right">
-              <label className="font-medium text-fluid-sm text-gray-400">
+              <label
+                className="font-medium text-fluid-sm text-gray-400"
+                htmlFor={RESET_EMAIL_INPUT_ID}
+              >
                 אימייל
               </label>
               <div className="relative">
                 <input
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                  id={RESET_EMAIL_INPUT_ID}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="gamer@example.com"
                   required

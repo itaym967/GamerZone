@@ -41,8 +41,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
 
     setLoading(true);
     try {
-      // 1. Check if chat exists
-      const { data: existingChats, error: fetchError } = await supabase
+      const { error: fetchError } = await supabase
         .from("chat_participants")
         .select("chat_id")
         .eq("user_id", currentUserId);
@@ -139,6 +138,7 @@ export default function LFGCard({ post, currentUserId }: LFGCardProps) {
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 font-semibold text-white transition-all hover:bg-white/20 active:scale-[0.98] group-hover:bg-blue-600 group-hover:text-white"
           disabled={loading}
           onClick={handleConnect}
+          type="button"
         >
           <HugeiconsIcon icon={MessageCircle} size={18} />
           {loading ? "מתחבר..." : "התחבר"}

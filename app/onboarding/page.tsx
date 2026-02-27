@@ -22,6 +22,7 @@ import AvatarCreator from "../components/AvatarCreator";
 import Logo from "../components/Logo";
 
 export default function OnboardingPage() {
+  const BIO_INPUT_ID = "onboarding-bio";
   const router = useRouter();
   const supabase = createClient();
   const [step, setStep] = useState(0);
@@ -160,9 +161,11 @@ export default function OnboardingPage() {
       toast.success("ברוכים הבאים ");
       router.push("/");
       router.refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
       console.error("Onboarding: Catch error", error);
-      toast.error("שגיאה בשמירת הפרופיל", { description: error.message });
+      toast.error("שגיאה בשמירת הפרופיל", { description });
     } finally {
       setIsLoading(false);
     }
@@ -174,8 +177,8 @@ export default function OnboardingPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Background Effects */}
-      <div className="absolute top-[-20%] right-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-primary/20 blur-[7.5rem]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/20 blur-[7.5rem]" />
+      <div className="absolute top-[-20%] right-[-10%] h-125 w-125 rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-125 w-125 rounded-full bg-secondary/20 blur-[7.5rem]" />
 
       <div className="relative z-10 w-full max-w-2xl">
         <div className="mb-10 text-center">
@@ -207,7 +210,7 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <div className="min-h-[31.25rem] rounded-3xl border border-white/10 bg-card p-8 shadow-2xl backdrop-blur-xl">
+        <div className="min-h-125 rounded-3xl border border-white/10 bg-card p-8 shadow-2xl backdrop-blur-xl">
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div
@@ -290,6 +293,7 @@ export default function OnboardingPage() {
                   <button
                     className="flex items-center gap-2 rounded-xl bg-primary px-12 py-4 font-bold text-black shadow-lg shadow-primary/20 transition-all hover:bg-primary/80"
                     onClick={nextStep}
+                    type="button"
                   >
                     <span>בוא נתחיל!</span>
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
@@ -320,12 +324,14 @@ export default function OnboardingPage() {
                   <button
                     className="px-6 py-3 font-medium text-gray-400 transition-colors hover:text-white"
                     onClick={prevStep}
+                    type="button"
                   >
                     חזרה
                   </button>
                   <button
                     className="flex items-center gap-2 rounded-xl bg-white px-8 py-3 font-bold text-black transition-colors hover:bg-gray-200"
                     onClick={nextStep}
+                    type="button"
                   >
                     <span>המשך</span>
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
@@ -348,11 +354,15 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-right font-medium text-fluid-sm text-gray-400">
+                  <label
+                    className="mb-2 block text-right font-medium text-fluid-sm text-gray-400"
+                    htmlFor={BIO_INPUT_ID}
+                  >
                     הביו שלך
                   </label>
                   <textarea
                     className="h-32 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-4 text-right text-white outline-hidden focus:border-primary/50"
+                    id={BIO_INPUT_ID}
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="ספר קצת על סגנון המשחק שלך, באילו שעות אתה משחק, ומה אתה מחפש..."
                     value={bio}
@@ -366,6 +376,7 @@ export default function OnboardingPage() {
                   <button
                     className="flex items-center gap-2 rounded-xl bg-white px-8 py-3 font-bold text-black transition-colors hover:bg-gray-200"
                     onClick={nextStep}
+                    type="button"
                   >
                     <span>המשך</span>
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
@@ -397,6 +408,7 @@ export default function OnboardingPage() {
                       className="rounded-xl bg-primary p-3 text-black transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={!newTag}
                       onClick={handleAddGamertag}
+                      type="button"
                     >
                       <HugeiconsIcon icon={Add01Icon} size={20} />
                     </button>
@@ -407,7 +419,7 @@ export default function OnboardingPage() {
                       type="text"
                       value={newTag}
                     />
-                    <div className="relative min-w-[7.5rem]">
+                    <div className="relative min-w-30">
                       <select
                         className="h-full w-full appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-white outline-hidden focus:border-primary/50"
                         onChange={(e) => setNewPlatform(e.target.value)}
@@ -424,15 +436,16 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Tags List */}
-                <div className="custom-scrollbar max-h-[12.5rem] space-y-2 overflow-y-auto pr-2">
-                  {gamertags.map((g, i) => (
+                <div className="custom-scrollbar max-h-50 space-y-2 overflow-y-auto pr-2">
+                  {gamertags.map((g) => (
                     <div
                       className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 p-3"
-                      key={i}
+                      key={`${g.platform}-${g.tag}`}
                     >
                       <button
                         className="text-gray-500 transition-colors hover:text-red-500"
                         onClick={() => removeGamertag(g.platform)}
+                        type="button"
                       >
                         <HugeiconsIcon icon={Delete02Icon} size={16} />
                       </button>
@@ -457,6 +470,7 @@ export default function OnboardingPage() {
                   <button
                     className="px-6 py-3 font-medium text-gray-400 transition-colors hover:text-white"
                     onClick={prevStep}
+                    type="button"
                   >
                     חזרה
                   </button>
@@ -464,6 +478,7 @@ export default function OnboardingPage() {
                     className="flex items-center gap-2 rounded-xl bg-white px-8 py-3 font-bold text-black transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={gamertags.length === 0}
                     onClick={nextStep}
+                    type="button"
                   >
                     <span>המשך</span>
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
@@ -497,6 +512,7 @@ export default function OnboardingPage() {
                   <button
                     className="px-6 py-3 font-medium text-gray-400 transition-colors hover:text-white"
                     onClick={prevStep}
+                    type="button"
                   >
                     חזרה
                   </button>
@@ -504,6 +520,7 @@ export default function OnboardingPage() {
                     className="flex items-center gap-2 rounded-xl bg-primary px-12 py-3 font-bold text-black shadow-lg shadow-primary/20 transition-all hover:bg-primary/80"
                     disabled={isLoading}
                     onClick={handleComplete}
+                    type="button"
                   >
                     {isLoading ? (
                       <span className="animate-spin text-fluid-lg">⏳</span>

@@ -15,12 +15,61 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { type FriendWithProfile, useFriendship } from "@/hooks/useFriendship";
+import { useAuth } from "@/context/auth-context";
+import { type FriendWithProfile, useFriendship } from "@/hooks/use-friendship";
 import Navigation from "../components/Navigation";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 
 type Tab = "friends" | "pending" | "sent";
+
+interface EmptyStateContent {
+  description: string;
+  icon: typeof UserGroupIcon;
+  title: string;
+}
+
+const EMPTY_STATE_BY_TAB: Record<Tab, EmptyStateContent> = {
+  friends: {
+    description: "גלה שחקנים בעמוד הגילוי ושלח להם בקשת חברות!",
+    icon: UserGroupIcon,
+    title: "אין חברים עדיין",
+  },
+  pending: {
+    description: "כשמישהו ישלח לך בקשת חברות, היא תופיע כאן.",
+    icon: Clock01Icon,
+    title: "אין בקשות ממתינות",
+  },
+  sent: {
+    description: "בקשות שתשלח יופיעו כאן עד שיאושרו.",
+    icon: UserAdd01Icon,
+    title: "לא שלחת בקשות",
+  },
+};
+
+function getCurrentList(
+  activeTab: Tab,
+  friends: FriendWithProfile[],
+  pendingReceived: FriendWithProfile[],
+  pendingSent: FriendWithProfile[]
+) {
+  if (activeTab === "friends") {
+    return friends;
+  }
+  if (activeTab === "pending") {
+    return pendingReceived;
+  }
+  return pendingSent;
+}
+
+function getTabBadgeClass(isActiveTab: boolean, isPendingWithItems: boolean) {
+  if (isActiveTab) {
+    return "bg-black/20 text-black";
+  }
+  if (isPendingWithItems) {
+    return "bg-blue-500 text-white";
+  }
+  return "bg-white/10 text-white/60";
+}
 
 function FriendCard({
   item,
@@ -142,48 +191,40 @@ export default function FriendsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("friends");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAccept = async (id: string) => {
-    const { error } = await acceptRequest(id);
+  const runFriendAction = async (
+    action: () => Promise<{ error: string | null }>,
+    successMessage: string
+  ) => {
+    const { error } = await action();
     if (error) {
       toast.error(error);
-    } else {
-      toast.success("בקשת החברות אושרה!");
+      return;
     }
+    toast.success(successMessage);
+  };
+
+  const handleAccept = async (id: string) => {
+    await runFriendAction(() => acceptRequest(id), "בקשת החברות אושרה!");
   };
 
   const handleReject = async (id: string) => {
-    const { error } = await rejectRequest(id);
-    if (error) {
-      toast.error(error);
-    } else {
-      toast.success("הבקשה נדחתה");
-    }
+    await runFriendAction(() => rejectRequest(id), "הבקשה נדחתה");
   };
 
   const handleUnfriend = async (id: string) => {
-    const { error } = await unfriend(id);
-    if (error) {
-      toast.error(error);
-    } else {
-      toast.success("החבר הוסר");
-    }
+    await runFriendAction(() => unfriend(id), "החבר הוסר");
   };
 
   const handleCancel = async (id: string) => {
-    const { error } = await cancelRequest(id);
-    if (error) {
-      toast.error(error);
-    } else {
-      toast.success("הבקשה בוטלה");
-    }
+    await runFriendAction(() => cancelRequest(id), "הבקשה בוטלה");
   };
 
-  const currentList =
-    activeTab === "friends"
-      ? friends
-      : activeTab === "pending"
-        ? pendingReceived
-        : pendingSent;
+  const currentList = getCurrentList(
+    activeTab,
+    friends,
+    pendingReceived,
+    pendingSent
+  );
 
   const filteredList = searchTerm
     ? currentList.filter((f) =>
@@ -192,6 +233,7 @@ export default function FriendsPage() {
     : currentList;
 
   const onlineCount = friends.filter((f) => f.friend?.is_online).length;
+  const emptyState = EMPTY_STATE_BY_TAB[activeTab];
 
   const tabs: {
     key: Tab;
@@ -218,6 +260,62 @@ export default function FriendsPage() {
       icon: UserAdd01Icon,
     },
   ];
+
+  let content: React.ReactNode;
+  if (loading) {
+    content = (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div className="h-20 animate-pulse rounded-2xl bg-white/5" key={i} />
+        ))}
+      </div>
+    );
+  } else if (filteredList.length === 0) {
+    content = (
+      <div className="py-20 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+          <HugeiconsIcon
+            className="text-white/30"
+            icon={emptyState.icon}
+            size={32}
+          />
+        </div>
+        <h3 className="font-semibold text-fluid-lg text-white">
+          {emptyState.title}
+        </h3>
+        <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
+          {emptyState.description}
+        </p>
+        {activeTab === "friends" && (
+          <Link
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-black text-fluid-sm transition-all hover:bg-primary/90"
+            href="/explore"
+          >
+            <HugeiconsIcon icon={Search01Icon} size={16} />
+            גלה שחקנים
+          </Link>
+        )}
+      </div>
+    );
+  } else {
+    content = (
+      <AnimatePresence mode="popLayout">
+        <div className="space-y-3">
+          {filteredList.map((item) => (
+            <FriendCard
+              item={item}
+              key={item.id}
+              onAccept={handleAccept}
+              onCancel={handleCancel}
+              onReject={handleReject}
+              onUnfriend={handleUnfriend}
+              type={activeTab}
+            />
+          ))}
+        </div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
@@ -266,13 +364,10 @@ export default function FriendsPage() {
               {tab.label}
               {tab.count > 0 && (
                 <span
-                  className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 font-bold text-fluid-xs ${
-                    activeTab === tab.key
-                      ? "bg-black/20 text-black"
-                      : tab.key === "pending" && tab.count > 0
-                        ? "bg-blue-500 text-white"
-                        : "bg-white/10 text-white/60"
-                  }`}
+                  className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-bold text-fluid-xs ${getTabBadgeClass(
+                    activeTab === tab.key,
+                    tab.key === "pending" && tab.count > 0
+                  )}`}
                 >
                   {tab.count}
                 </span>
@@ -300,79 +395,7 @@ export default function FriendsPage() {
         )}
 
         {/* List */}
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                className="h-20 animate-pulse rounded-2xl bg-white/5"
-                key={i}
-              />
-            ))}
-          </div>
-        ) : filteredList.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-              {activeTab === "friends" ? (
-                <HugeiconsIcon
-                  className="text-white/30"
-                  icon={UserGroupIcon}
-                  size={32}
-                />
-              ) : activeTab === "pending" ? (
-                <HugeiconsIcon
-                  className="text-white/30"
-                  icon={Clock01Icon}
-                  size={32}
-                />
-              ) : (
-                <HugeiconsIcon
-                  className="text-white/30"
-                  icon={UserAdd01Icon}
-                  size={32}
-                />
-              )}
-            </div>
-            <h3 className="font-semibold text-fluid-lg text-white">
-              {activeTab === "friends"
-                ? "אין חברים עדיין"
-                : activeTab === "pending"
-                  ? "אין בקשות ממתינות"
-                  : "לא שלחת בקשות"}
-            </h3>
-            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
-              {activeTab === "friends"
-                ? "גלה שחקנים בעמוד הגילוי ושלח להם בקשת חברות!"
-                : activeTab === "pending"
-                  ? "כשמישהו ישלח לך בקשת חברות, היא תופיע כאן."
-                  : "בקשות שתשלח יופיעו כאן עד שיאושרו."}
-            </p>
-            {activeTab === "friends" && (
-              <Link
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-black text-fluid-sm transition-all hover:bg-primary/90"
-                href="/explore"
-              >
-                <HugeiconsIcon icon={Search01Icon} size={16} />
-                גלה שחקנים
-              </Link>
-            )}
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="space-y-3">
-              {filteredList.map((item) => (
-                <FriendCard
-                  item={item}
-                  key={item.id}
-                  onAccept={handleAccept}
-                  onCancel={handleCancel}
-                  onReject={handleReject}
-                  onUnfriend={handleUnfriend}
-                  type={activeTab}
-                />
-              ))}
-            </div>
-          </AnimatePresence>
-        )}
+        {content}
       </main>
     </div>
   );

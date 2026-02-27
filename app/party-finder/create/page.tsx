@@ -80,6 +80,9 @@ const GAME_MODES: { [key: string]: string[] } = {
 const SKILL_LEVELS = ["מתחיל", "ממוצע", "מתקדם", "מומחה"];
 
 export default function CreatePartyPage() {
+  const MODE_INPUT_ID = "party-create-mode";
+  const TITLE_INPUT_ID = "party-create-title";
+  const MIC_REQUIRED_ID = "party-create-mic-required";
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -153,9 +156,11 @@ export default function CreatePartyPage() {
 
       toast.success("הקבוצה נוצרה בהצלחה!");
       router.push(`/party-finder/${party.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "שגיאה ביצירת הקבוצה";
       console.error(error);
-      toast.error(error.message || "שגיאה ביצירת הקבוצה");
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -180,14 +185,14 @@ export default function CreatePartyPage() {
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
+            <p className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
               <HugeiconsIcon
                 className="text-purple-400"
                 icon={GameController02Icon}
                 size={16}
               />
               בחר משחק
-            </label>
+            </p>
             <div className="grid grid-cols-2 gap-2">
               {GAMES.map((game) => (
                 <button
@@ -207,7 +212,10 @@ export default function CreatePartyPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="font-medium text-fluid-sm text-white/80">
+            <label
+              className="font-medium text-fluid-sm text-white/80"
+              htmlFor={MODE_INPUT_ID}
+            >
               מצב משחק
             </label>
             {formData.game && (
@@ -231,6 +239,7 @@ export default function CreatePartyPage() {
             <input
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!formData.game}
+              id={MODE_INPUT_ID}
               maxLength={30}
               onChange={(e) =>
                 setFormData({ ...formData, mode: e.target.value })
@@ -247,11 +256,15 @@ export default function CreatePartyPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="font-medium text-fluid-sm text-white/80">
+            <label
+              className="font-medium text-fluid-sm text-white/80"
+              htmlFor={TITLE_INPUT_ID}
+            >
               שם הקבוצה
             </label>
             <input
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden"
+              id={TITLE_INPUT_ID}
               maxLength={50}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
@@ -267,14 +280,14 @@ export default function CreatePartyPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
+            <p className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
               <HugeiconsIcon
                 className="text-cyan-400"
                 icon={UserGroupIcon}
                 size={16}
               />
               מספר חברים מקסימלי
-            </label>
+            </p>
             <div className="flex gap-2">
               {[2, 3, 4, 5, 6].map((num) => (
                 <button
@@ -294,14 +307,14 @@ export default function CreatePartyPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
+            <p className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
               <HugeiconsIcon
                 className="text-purple-400"
                 icon={Shield01Icon}
                 size={16}
               />
               רמת מיומנות נדרשת (אופציונלי)
-            </label>
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 className={`rounded-full border px-3 py-1.5 font-medium text-fluid-xs transition-all ${
@@ -336,7 +349,10 @@ export default function CreatePartyPage() {
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
+            <label
+              className="flex items-center gap-2 font-medium text-fluid-sm text-white/80"
+              htmlFor={MIC_REQUIRED_ID}
+            >
               <HugeiconsIcon
                 className="text-red-400"
                 icon={Mic01Icon}
@@ -347,6 +363,7 @@ export default function CreatePartyPage() {
             <input
               checked={formData.mic_required}
               className="h-5 w-5 rounded-xs accent-blue-600"
+              id={MIC_REQUIRED_ID}
               onChange={(e) =>
                 setFormData({ ...formData, mic_required: e.target.checked })
               }

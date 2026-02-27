@@ -11,9 +11,12 @@ export function useBackGesture() {
   const router = useRouter();
 
   useEffect(() => {
+    const standaloneNavigator = window.navigator as Navigator & {
+      standalone?: boolean;
+    };
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
+      standaloneNavigator.standalone === true;
 
     if (!isStandalone) {
       return;

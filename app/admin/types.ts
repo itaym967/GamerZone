@@ -11,7 +11,7 @@ export interface AdminLog {
   action: string;
   admin_id: string | null;
   created_at: string;
-  details: any;
+  details: unknown;
   id: string;
 }
 

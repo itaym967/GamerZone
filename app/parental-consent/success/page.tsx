@@ -15,8 +15,8 @@ function SuccessContent() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
-      <div className="absolute top-[-20%] right-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-green-500/10 blur-[7.5rem]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[31.25rem] w-[31.25rem] rounded-full bg-primary/10 blur-[7.5rem]" />
+      <div className="absolute top-[-20%] right-[-10%] h-125 w-125 rounded-full bg-green-500/10 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-125 w-125 rounded-full bg-primary/10 blur-[7.5rem]" />
 
       <div className="relative z-10 w-full max-w-md text-center">
         <Logo className="mb-8 justify-center" size="lg" />

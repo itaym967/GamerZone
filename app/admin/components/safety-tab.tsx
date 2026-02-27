@@ -22,6 +22,13 @@ interface SafetyTabProps {
   supabase: SupabaseClient;
 }
 
+interface ReportUpdateInput {
+  admin_notes: string | null;
+  resolved_at?: string;
+  resolved_by?: string | null;
+  status: "reviewing" | "resolved" | "dismissed";
+}
+
 const REPORT_TYPE_LABELS: Record<string, string> = {
   harassment: "הטרדה",
   inappropriate_content: "תוכן לא הולם",
@@ -46,6 +53,26 @@ type ReportStatusFilter =
   | "reviewing"
   | "resolved"
   | "dismissed";
+
+const REPORT_STATUS_FILTER_LABELS: Record<ReportStatusFilter, string> = {
+  all: "הכל",
+  pending: "ממתין",
+  reviewing: "בבדיקה",
+  resolved: "טופל",
+  dismissed: "נדחה",
+};
+
+const getReportStatusLabel = (
+  status: "reviewing" | "resolved" | "dismissed"
+) => {
+  if (status === "resolved") {
+    return "טופל";
+  }
+  if (status === "dismissed") {
+    return "נדחה";
+  }
+  return "בבדיקה";
+};
 
 export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   const [reports, setReports] = useState<ContentReport[]>([]);
@@ -91,7 +118,10 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   ) => {
     try {
       const now = new Date().toISOString();
-      const update: any = { status, admin_notes: adminNotes || null };
+      const update: ReportUpdateInput = {
+        status,
+        admin_notes: adminNotes || null,
+      };
       if (status === "resolved" || status === "dismissed") {
         update.resolved_by = currentUser;
         update.resolved_at = now;
@@ -105,12 +135,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
         throw error;
       }
 
-      const statusLabel =
-        status === "resolved"
-          ? "טופל"
-          : status === "dismissed"
-            ? "נדחה"
-            : "בבדיקה";
+      const statusLabel = getReportStatusLabel(status);
       toast.success(`הדיווח סומן כ${statusLabel}`);
 
       await supabase.from("admin_logs").insert({
@@ -251,16 +276,9 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                 }`}
                 key={f}
                 onClick={() => setReportFilter(f)}
+                type="button"
               >
-                {f === "all"
-                  ? "הכל"
-                  : f === "pending"
-                    ? "ממתין"
-                    : f === "reviewing"
-                      ? "בבדיקה"
-                      : f === "resolved"
-                        ? "טופל"
-                        : "נדחה"}
+                {REPORT_STATUS_FILTER_LABELS[f]}
               </button>
             ))}
           </div>
@@ -317,6 +335,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                                 onClick={() =>
                                   updateReportStatus(report.id, "reviewing")
                                 }
+                                type="button"
                               >
                                 בבדיקה
                               </button>
@@ -326,6 +345,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                               onClick={() =>
                                 updateReportStatus(report.id, "resolved")
                               }
+                              type="button"
                             >
                               טופל
                             </button>
@@ -334,6 +354,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                               onClick={() =>
                                 updateReportStatus(report.id, "dismissed")
                               }
+                              type="button"
                             >
                               דחה
                             </button>
@@ -343,6 +364,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                                 setActiveReportId(null);
                                 setAdminNotes("");
                               }}
+                              type="button"
                             >
                               <HugeiconsIcon icon={Cancel01Icon} size={12} />
                             </button>
@@ -352,6 +374,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                         <button
                           className="rounded-lg bg-amber-500/10 px-3 py-1.5 font-bold text-amber-400 text-fluid-xs transition-colors hover:bg-amber-500/20"
                           onClick={() => setActiveReportId(report.id)}
+                          type="button"
                         >
                           טפל בדיווח
                         </button>

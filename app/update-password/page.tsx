@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/Logo";
 
+const NEW_PASSWORD_ID = "update-password-new";
+const CONFIRM_PASSWORD_ID = "update-password-confirm";
+
 export default function UpdatePasswordPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,9 +46,11 @@ export default function UpdatePasswordPage() {
       toast.success("הסיסמה עודכנה בהצלחה!");
       router.push("/");
       router.refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "אירעה שגיאה בלתי צפויה";
       toast.error("שגיאה בעדכון הסיסמה", {
-        description: error.message,
+        description,
       });
     } finally {
       setIsLoading(false);
@@ -56,8 +61,8 @@ export default function UpdatePasswordPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       {/* Animated Background */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
-      <div className="absolute top-[-20%] right-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
-      <div className="absolute bottom-[-20%] left-[-10%] h-[37.5rem] w-[37.5rem] animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
+      <div className="absolute top-[-20%] right-[-10%] h-150 w-150 animate-pulse rounded-full bg-primary/20 blur-[7.5rem]" />
+      <div className="absolute bottom-[-20%] left-[-10%] h-150 w-150 animate-pulse rounded-full bg-secondary/20 blur-[7.5rem] delay-75" />
 
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
@@ -78,12 +83,16 @@ export default function UpdatePasswordPage() {
         <form className="space-y-6" onSubmit={handleUpdate}>
           <div className="space-y-4">
             <div className="space-y-1 text-right">
-              <label className="font-medium text-fluid-sm text-gray-400">
+              <label
+                className="font-medium text-fluid-sm text-gray-400"
+                htmlFor={NEW_PASSWORD_ID}
+              >
                 סיסמה חדשה
               </label>
               <div className="relative">
                 <input
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                  id={NEW_PASSWORD_ID}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
@@ -99,12 +108,16 @@ export default function UpdatePasswordPage() {
             </div>
 
             <div className="space-y-1 text-right">
-              <label className="font-medium text-fluid-sm text-gray-400">
+              <label
+                className="font-medium text-fluid-sm text-gray-400"
+                htmlFor={CONFIRM_PASSWORD_ID}
+              >
                 אימות סיסמה
               </label>
               <div className="relative">
                 <input
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-right text-white outline-hidden transition-colors placeholder:text-gray-600 focus:border-primary/50"
+                  id={CONFIRM_PASSWORD_ID}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   required

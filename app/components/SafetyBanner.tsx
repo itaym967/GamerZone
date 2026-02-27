@@ -3,7 +3,7 @@
 import { Cancel01Icon, SecurityCheckIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 
 /**
  * Safety banner displayed for minor accounts.

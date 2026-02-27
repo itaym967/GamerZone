@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeyboardVisibility } from "@/hooks/useKeyboardVisibility";
+import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 
 /**
  * Invisible component that manages virtual keyboard detection.

@@ -19,8 +19,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { type Contact, type Message, useChat } from "@/hooks/useChat";
+import { useAuth } from "@/context/auth-context";
+import { type Contact, type Message, useChat } from "@/hooks/use-chat";
 import { createClient } from "@/lib/supabase/client";
 import { haptic } from "@/utils/haptics";
 import { filterContent } from "@/utils/kid-safety";
@@ -50,6 +50,90 @@ function getLocalBotReply(message: string): string {
   return "כרגע הבוט עובד במצב בסיסי מקומי ללא DeepSeek. כתוב משחק ספציפי ואחזיר לך טיפים ממוקדים.";
 }
 
+function getContentFilterLevel(accountType?: string) {
+  if (accountType === "supervised") {
+    return "strict";
+  }
+  if (accountType === "minor") {
+    return "moderate";
+  }
+  return "standard";
+}
+
+function getFilterWarningMessage(reasons: string[]) {
+  if (reasons.includes("personal_info")) {
+    return "מידע אישי הוסר מההודעה להגנתך";
+  }
+  if (reasons.includes("url_removed")) {
+    return "קישורים הוסרו מההודעה";
+  }
+  if (reasons.length > 0) {
+    return "הודעתך סוננה עקב שפה לא נאותה";
+  }
+  return null;
+}
+
+function getSendButtonTitle(
+  hasUser: boolean,
+  hasActiveChat: boolean,
+  isLoading: boolean
+) {
+  if (!hasUser) {
+    return "אנא התחבר";
+  }
+  if (!hasActiveChat) {
+    return "בחר שיחה";
+  }
+  if (isLoading) {
+    return "טוען...";
+  }
+  return "שלח הודעה";
+}
+
+function getTypingDotClasses(isConnected: boolean) {
+  return `h-1.5 w-1.5 animate-bounce rounded-full ${
+    isConnected ? "bg-primary" : "bg-gray-500"
+  }`;
+}
+
+async function sendGamerBotMessage(params: {
+  input: string;
+  userId?: string;
+  setInput: (value: string) => void;
+  setBotMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  setIsBotTyping: (value: boolean) => void;
+}) {
+  const { input, userId, setInput, setBotMessages, setIsBotTyping } = params;
+  const userMessage = input.trim();
+  setInput("");
+
+  const userMsg: Message = {
+    id: `user-${Date.now()}`,
+    sender_id: userId || "guest",
+    receiver_id: "gamerbot-ai",
+    content: userMessage,
+    created_at: new Date().toISOString(),
+    is_read: true,
+  };
+  setBotMessages((prev) => [...prev, userMsg]);
+  setIsBotTyping(true);
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 300);
+  });
+
+  const botMsg: Message = {
+    id: `bot-${Date.now()}`,
+    sender_id: "gamerbot-ai",
+    receiver_id: userId || "guest",
+    content: getLocalBotReply(userMessage),
+    created_at: new Date().toISOString(),
+    is_read: true,
+  };
+  setBotMessages((prev) => [...prev, botMsg]);
+  setIsBotTyping(false);
+}
+
 function ChatContent() {
   const searchParams = useSearchParams();
   const targetId = searchParams.get("target");
@@ -74,13 +158,7 @@ function ChatContent() {
     messageId: null,
     userId: null,
   });
-  const _isMinorAccount = profile?.is_minor;
-  const contentFilterLevel =
-    profile?.account_type === "supervised"
-      ? "strict"
-      : profile?.account_type === "minor"
-        ? "moderate"
-        : ("standard" as const);
+  const contentFilterLevel = getContentFilterLevel(profile?.account_type);
   const isChatRestricted = profile?.chat_restricted;
 
   // GamerBot special contact
@@ -194,7 +272,6 @@ function ChatContent() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation checks
     if (!input.trim()) {
       toast.error("לא ניתן לשלוח הודעה ריקה");
       return;
@@ -205,39 +282,14 @@ function ChatContent() {
       return;
     }
 
-    // GamerBot special handling
     if (activeChat.id === GAMERBOT_ID) {
-      const userMessage = input.trim();
-      setInput("");
-
-      // Add user message to chat
-      const userMsg: Message = {
-        id: `user-${Date.now()}`,
-        sender_id: user?.id || "guest",
-        receiver_id: GAMERBOT_ID,
-        content: userMessage,
-        created_at: new Date().toISOString(),
-        is_read: true,
-      };
-      setBotMessages((prev) => [...prev, userMsg]);
-
-      // Show bot typing
-      setIsBotTyping(true);
-
-      await new Promise((resolve) => {
-        setTimeout(resolve, 300);
+      await sendGamerBotMessage({
+        input,
+        userId: user?.id,
+        setInput,
+        setBotMessages,
+        setIsBotTyping,
       });
-
-      const botMsg: Message = {
-        id: `bot-${Date.now()}`,
-        sender_id: GAMERBOT_ID,
-        receiver_id: user?.id || "guest",
-        content: getLocalBotReply(userMessage),
-        created_at: new Date().toISOString(),
-        is_read: true,
-      };
-      setBotMessages((prev) => [...prev, botMsg]);
-      setIsBotTyping(false);
       return;
     }
 
@@ -251,29 +303,19 @@ function ChatContent() {
       return;
     }
 
-    let finalContent = input;
-
-    // Enhanced content filter using kid-safety module
     const filterResult = filterContent(input, blockedWords, contentFilterLevel);
-    finalContent = filterResult.filtered;
+    const messageToSend = filterResult.filtered;
 
     if (filterResult.wasFiltered) {
-      const reasons = filterResult.reasons;
-      if (reasons.includes("personal_info")) {
-        toast.warning("מידע אישי הוסר מההודעה להגנתך");
-      } else if (reasons.includes("url_removed")) {
-        toast.warning("קישורים הוסרו מההודעה");
-      } else {
-        toast.warning("הודעתך סוננה עקב שפה לא נאותה");
+      const warningMessage = getFilterWarningMessage(filterResult.reasons);
+      if (warningMessage) {
+        toast.warning(warningMessage);
       }
     }
 
-    // Clear input immediately for better UX
-    const messageToSend = finalContent;
     setInput("");
     haptic("light");
 
-    // Send message
     await sendMessage(messageToSend, activeChat.id);
   };
 
@@ -281,13 +323,16 @@ function ChatContent() {
     if (!activeChat) {
       return;
     }
-
-    const confirmed = window.confirm(
-      "האם אתה בטוח שברצונך למחוק את כל השיחה? פעולה זו אינה ניתנת לביטול."
-    );
-    if (confirmed) {
-      await clearConversation(activeChat.id);
-    }
+    toast.warning("למחוק את כל השיחה?", {
+      description: "הפעולה אינה ניתנת לביטול.",
+      action: {
+        label: "מחק",
+        onClick: async () => {
+          await clearConversation(activeChat.id);
+        },
+      },
+      cancel: "ביטול",
+    });
   };
 
   const handleDeleteMessage = async (messageId: string) => {
@@ -334,6 +379,7 @@ function ChatContent() {
             <button
               className={`flex w-full items-center gap-3 rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 to-secondary/5 p-3 transition-all hover:from-primary/10 hover:to-secondary/10 ${activeChat?.id === GAMERBOT_ID ? "ring-2 ring-primary" : ""}`}
               onClick={() => handleSelectContact(gamerbotContact)}
+              type="button"
             >
               <div className="relative">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary p-px">
@@ -370,6 +416,7 @@ function ChatContent() {
                 className={`flex w-full items-center gap-3 rounded-xl p-3 transition-all ${activeChat?.id === contact.id ? "bg-white/10" : "hover:bg-white/5"}`}
                 key={contact.id}
                 onClick={() => handleSelectContact(contact)}
+                type="button"
               >
                 <div className="relative">
                   <div className="h-10 w-10 rounded-full bg-linear-to-br from-primary to-secondary p-px">
@@ -385,7 +432,7 @@ function ChatContent() {
                   )}
                   {/* Unread badge */}
                   {contact.unread_count && contact.unread_count > 0 && (
-                    <span className="absolute -top-1 -left-1 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-red-500 px-1 font-bold text-fluid-xs text-white">
+                    <span className="absolute -top-1 -left-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 font-bold text-fluid-xs text-white">
                       {contact.unread_count > 99 ? "99+" : contact.unread_count}
                     </span>
                   )}
@@ -419,6 +466,7 @@ function ChatContent() {
                 <button
                   className="-mr-2 p-2 text-gray-400 hover:text-white lg:hidden"
                   onClick={() => setMobileView("list")}
+                  type="button"
                 >
                   <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
                 </button>
@@ -452,10 +500,14 @@ function ChatContent() {
                   className="rounded-lg p-2 text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
                   onClick={handleClearConversation}
                   title="מחק שיחה"
+                  type="button"
                 >
                   <HugeiconsIcon icon={Delete02Icon} size={18} />
                 </button>
-                <button className="rounded-lg p-2 text-white hover:bg-white/10">
+                <button
+                  className="rounded-lg p-2 text-white hover:bg-white/10"
+                  type="button"
+                >
                   <HugeiconsIcon icon={MoreVerticalIcon} size={18} />
                 </button>
               </div>
@@ -524,6 +576,7 @@ function ChatContent() {
                             className="rounded-full bg-red-500/90 p-1.5 text-white shadow-lg hover:bg-red-600"
                             onClick={() => handleDeleteMessage(msg.id)}
                             title="מחק הודעה"
+                            type="button"
                           >
                             <HugeiconsIcon icon={Delete02Icon} size={12} />
                           </button>
@@ -538,6 +591,7 @@ function ChatContent() {
                                 })
                               }
                               title="דווח על הודעה"
+                              type="button"
                             >
                               <HugeiconsIcon icon={Flag01Icon} size={12} />
                             </button>
@@ -561,20 +615,12 @@ function ChatContent() {
                     }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.3s] ${
-                        isBotTyping ? "bg-primary" : "bg-gray-500"
-                      }`}
+                      className={`${getTypingDotClasses(isBotTyping)} [animation-delay:-0.3s]`}
                     />
                     <span
-                      className={`h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.15s] ${
-                        isBotTyping ? "bg-primary" : "bg-gray-500"
-                      }`}
+                      className={`${getTypingDotClasses(isBotTyping)} [animation-delay:-0.15s]`}
                     />
-                    <span
-                      className={`h-1.5 w-1.5 animate-bounce rounded-full ${
-                        isBotTyping ? "bg-primary" : "bg-gray-500"
-                      }`}
-                    />
+                    <span className={getTypingDotClasses(isBotTyping)} />
                   </div>
                 </motion.div>
               )}
@@ -619,15 +665,11 @@ function ChatContent() {
               <button
                 className="rounded-lg bg-primary p-2 text-black transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!(input.trim() && activeChat && user) || isLoading}
-                title={
-                  user
-                    ? activeChat
-                      ? isLoading
-                        ? "טוען..."
-                        : "שלח הודעה"
-                      : "בחר שיחה"
-                    : "אנא התחבר"
-                }
+                title={getSendButtonTitle(
+                  Boolean(user),
+                  Boolean(activeChat),
+                  isLoading
+                )}
                 type="submit"
               >
                 <HugeiconsIcon

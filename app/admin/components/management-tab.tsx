@@ -53,6 +53,15 @@ interface ManagementTabProps {
   supabase: SupabaseClient;
 }
 
+interface RealtimeSubscriptionCountResult {
+  count: number;
+}
+
+interface SlowQueryMetricsResult {
+  avg_time: number;
+  slow_count: number;
+}
+
 export default function ManagementTab({ supabase }: ManagementTabProps) {
   const [dbMetrics, setDbMetrics] = useState<DBMetrics>(DEFAULT_METRICS);
   const [loading, setLoading] = useState(true);
@@ -62,19 +71,19 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
     try {
       const { data: rtData, error: rtErr } = await supabase
         .rpc("get_realtime_subscription_count")
-        .single();
+        .single<RealtimeSubscriptionCountResult>();
       const { data: sqData, error: sqErr } = await supabase
         .rpc("get_slow_query_metrics")
-        .single();
+        .single<SlowQueryMetricsResult>();
 
       if (rtErr || sqErr) {
         throw new Error("RPC call failed");
       }
 
       setDbMetrics({
-        realtimeSubscriptions: (rtData as any)?.count || 0,
-        slowQueryCount: (sqData as any)?.slow_count || 0,
-        avgQueryTime: (sqData as any)?.avg_time || 0,
+        realtimeSubscriptions: rtData?.count || 0,
+        slowQueryCount: sqData?.slow_count || 0,
+        avgQueryTime: sqData?.avg_time || 0,
         optimizationStatus: {
           lfgPage: true,
           chatHook: true,
@@ -251,6 +260,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition-all hover:bg-blue-500"
             onClick={fetchMetrics}
+            type="button"
           >
             <HugeiconsIcon icon={Activity01Icon} size={18} />
             רענן נתונים
@@ -258,6 +268,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 font-bold text-white transition-all hover:bg-purple-500"
             onClick={() => window.open("/SLOW_QUERY_ANALYSIS.md", "_blank")}
+            type="button"
           >
             <HugeiconsIcon icon={DatabaseIcon} size={18} />
             צפה בניתוח מלא

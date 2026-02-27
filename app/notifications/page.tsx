@@ -17,8 +17,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { type Notification, useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/context/auth-context";
+import { type Notification, useNotifications } from "@/hooks/use-notifications";
 import Navigation from "../components/Navigation";
 
 const TYPE_CONFIG: Record<
@@ -223,6 +223,54 @@ export default function NotificationsPage() {
     toast.success("ההתראה נמחקה");
   };
 
+  const emptyTitle = filter === "unread" ? "אין התראות חדשות" : "אין התראות";
+  const emptyDescription =
+    filter === "unread"
+      ? "כל ההתראות שלך נקראו!"
+      : "כשיהיו עדכונים חדשים, הם יופיעו כאן.";
+
+  let notificationsContent: React.ReactNode;
+  if (loading) {
+    notificationsContent = (
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div className="h-24 animate-pulse rounded-2xl bg-white/5" key={i} />
+        ))}
+      </div>
+    );
+  } else if (filteredNotifications.length === 0) {
+    notificationsContent = (
+      <div className="py-20 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+          <HugeiconsIcon
+            className="text-white/30"
+            icon={Notification01Icon}
+            size={32}
+          />
+        </div>
+        <h3 className="font-semibold text-fluid-lg text-white">{emptyTitle}</h3>
+        <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
+          {emptyDescription}
+        </p>
+      </div>
+    );
+  } else {
+    notificationsContent = (
+      <AnimatePresence mode="popLayout">
+        <div className="space-y-3">
+          {filteredNotifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              onDelete={handleDelete}
+              onMarkRead={markAsRead}
+            />
+          ))}
+        </div>
+      </AnimatePresence>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
       <Navigation />
@@ -290,47 +338,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                className="h-24 animate-pulse rounded-2xl bg-white/5"
-                key={i}
-              />
-            ))}
-          </div>
-        ) : filteredNotifications.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-              <HugeiconsIcon
-                className="text-white/30"
-                icon={Notification01Icon}
-                size={32}
-              />
-            </div>
-            <h3 className="font-semibold text-fluid-lg text-white">
-              {filter === "unread" ? "אין התראות חדשות" : "אין התראות"}
-            </h3>
-            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
-              {filter === "unread"
-                ? "כל ההתראות שלך נקראו!"
-                : "כשיהיו עדכונים חדשים, הם יופיעו כאן."}
-            </p>
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="space-y-3">
-              {filteredNotifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onDelete={handleDelete}
-                  onMarkRead={markAsRead}
-                />
-              ))}
-            </div>
-          </AnimatePresence>
-        )}
+        {notificationsContent}
       </main>
     </div>
   );

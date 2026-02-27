@@ -12,7 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 
 interface Message {
   content: string;

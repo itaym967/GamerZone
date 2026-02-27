@@ -7,10 +7,10 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { useDashboardData } from "@/hooks/useDashboardData";
-import { useFriendship } from "@/hooks/useFriendship";
-import { useSwapStatus } from "@/hooks/useSwapStatus";
+import { useAuth } from "@/context/auth-context";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useFriendship } from "@/hooks/use-friendship";
+import { useSwapStatus } from "@/hooks/use-swap-status";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
 
@@ -156,7 +156,7 @@ export default function ExplorePage() {
             )}
 
             {/* Game Select */}
-            <div className="relative min-w-[10rem]">
+            <div className="relative min-w-40">
               <select
                 className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-hidden transition-colors hover:bg-white/5 focus:border-primary/50"
                 onChange={(e) => setActiveGame(e.target.value)}

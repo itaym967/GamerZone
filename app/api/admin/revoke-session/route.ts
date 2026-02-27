@@ -44,12 +44,13 @@ export async function POST(request: Request) {
       success: true,
       message: "User session revoked",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const details = error instanceof Error ? error.message : "Unknown error";
     console.error("Unexpected error in revoke-session:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error.message,
+        details,
       },
       { status: 500 }
     );

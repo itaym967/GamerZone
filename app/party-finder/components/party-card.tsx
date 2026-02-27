@@ -12,7 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Database } from "@/lib/database.types";
-import PartyMemberSlot from "./PartyMemberSlot";
+import PartyMemberSlot from "./party-member-slot";
 
 type Party = Database["public"]["Tables"]["parties"]["Row"];
 type PartyMember = Database["public"]["Tables"]["party_members"]["Row"] & {
@@ -39,6 +39,16 @@ export default function PartyCard({
   const isMember = members.some((m) => m.user_id === currentUserId);
   const isFull = party.status === "full" || members.length >= party.max_members;
   const emptySlots = Math.max(0, party.max_members - members.length);
+  let joinButtonText = "הצטרף לקבוצה";
+  if (loading) {
+    joinButtonText = "מצטרף...";
+  } else if (isFull) {
+    joinButtonText = "קבוצה מלאה";
+  }
+  const emptySlotKeys = Array.from(
+    { length: emptySlots },
+    (_, slotNumber) => `${party.id}-empty-${members.length + slotNumber + 1}`
+  );
 
   const handleJoinClick = async () => {
     if (!currentUserId) {
@@ -62,18 +72,11 @@ export default function PartyCard({
     }
   };
 
-  const handleCardClick = () => {
-    router.push(`/party-finder/${party.id}`);
-  };
-
   const leaderMember = members.find((m) => m.role === "leader");
   const regularMembers = members.filter((m) => m.role !== "leader");
 
   return (
-    <div
-      className="group cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:border-white/20"
-      onClick={handleCardClick}
-    >
+    <div className="group rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:border-white/20">
       <div className="mb-3 flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <h3 className="mb-1 truncate font-bold text-fluid-lg text-white">
@@ -145,8 +148,8 @@ export default function PartyCard({
             }}
           />
         ))}
-        {Array.from({ length: emptySlots }).map((_, i) => (
-          <PartyMemberSlot isEmpty key={`empty-${i}`} />
+        {emptySlotKeys.map((slotKey) => (
+          <PartyMemberSlot isEmpty key={slotKey} />
         ))}
       </div>
 
@@ -162,8 +165,9 @@ export default function PartyCard({
             e.stopPropagation();
             handleJoinClick();
           }}
+          type="button"
         >
-          {loading ? "מצטרף..." : isFull ? "קבוצה מלאה" : "הצטרף לקבוצה"}
+          {joinButtonText}
         </button>
       )}
       {(isMember || isLeader) && (

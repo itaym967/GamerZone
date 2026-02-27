@@ -22,6 +22,57 @@ interface SwapStatusMap {
   [userId: string]: SwapStatus;
 }
 
+interface SwapRequestRow {
+  receiver_id: string;
+  sender_id: string;
+  status: string;
+}
+
+interface SwapRealtimePayload {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  new?: SwapRequestRow | null;
+  old?: SwapRequestRow | null;
+}
+
+interface RealtimeEventPayload {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  new: { [key: string]: unknown };
+  old: { [key: string]: unknown };
+}
+
+const toSwapRequestRow = (
+  value: { [key: string]: unknown } | null | undefined
+) => {
+  if (!value) {
+    return null;
+  }
+  const senderId = value.sender_id;
+  const receiverId = value.receiver_id;
+  const status = value.status;
+  if (
+    typeof senderId !== "string" ||
+    typeof receiverId !== "string" ||
+    typeof status !== "string"
+  ) {
+    return null;
+  }
+  return {
+    sender_id: senderId,
+    receiver_id: receiverId,
+    status,
+  } satisfies SwapRequestRow;
+};
+
+const toSwapRealtimePayload = (
+  payload: RealtimeEventPayload
+): SwapRealtimePayload => {
+  return {
+    eventType: payload.eventType,
+    new: toSwapRequestRow(payload.new),
+    old: toSwapRequestRow(payload.old),
+  };
+};
+
 export function useSwapStatus(currentUserId: string | null) {
   const [swapStatuses, setSwapStatuses] = useState<SwapStatusMap>({});
   const supabase = useMemo(() => createClient(), []);
@@ -30,7 +81,7 @@ export function useSwapStatus(currentUserId: string | null) {
 
   // Handle realtime updates
   const handleRealtimeUpdate = useCallback(
-    (payload: any) => {
+    (payload: SwapRealtimePayload) => {
       if (!currentUserId) {
         return;
       }
@@ -79,7 +130,7 @@ export function useSwapStatus(currentUserId: string | null) {
 
         const statusMap: SwapStatusMap = {};
 
-        data?.forEach((request: any) => {
+        for (const request of data || []) {
           const otherUserId =
             request.sender_id === currentUserId
               ? request.receiver_id
@@ -88,7 +139,7 @@ export function useSwapStatus(currentUserId: string | null) {
           if (userIds.includes(otherUserId)) {
             statusMap[otherUserId] = determineStatus(request, currentUserId);
           }
-        });
+        }
 
         setSwapStatuses((prev) => ({ ...prev, ...statusMap }));
       } catch (error) {
@@ -119,7 +170,9 @@ export function useSwapStatus(currentUserId: string | null) {
         },
         (payload) => {
           console.log("📨 Swap status update (as sender):", payload);
-          handleRealtimeUpdate(payload);
+          handleRealtimeUpdate(
+            toSwapRealtimePayload(payload as RealtimeEventPayload)
+          );
         }
       )
       .on(
@@ -133,7 +186,9 @@ export function useSwapStatus(currentUserId: string | null) {
         },
         (payload) => {
           console.log("📨 Swap status update (as receiver):", payload);
-          handleRealtimeUpdate(payload);
+          handleRealtimeUpdate(
+            toSwapRealtimePayload(payload as RealtimeEventPayload)
+          );
         }
       )
       .subscribe((status) => {
@@ -197,7 +252,10 @@ export function useSwapStatus(currentUserId: string | null) {
 }
 
 // Helper function to determine status from swap request data
-function determineStatus(data: any, currentUserId: string): SwapStatus {
+function determineStatus(
+  data: SwapRequestRow,
+  currentUserId: string
+): SwapStatus {
   if (data.status === "approved") {
     return "approved";
   }

@@ -8,6 +8,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import Navigation from "@/app/components/Navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -75,6 +76,11 @@ const GAME_MODES: { [key: string]: string[] } = {
 };
 
 export default function CreateLFGPage() {
+  const MODE_LABEL_ID = "lfg-create-mode";
+  const MODE_INPUT_ID = "lfg-create-mode-input";
+  const MIC_REQUIRED_ID = "lfg-create-mic-required";
+  const DESCRIPTION_LABEL_ID = "lfg-create-description";
+  const DESCRIPTION_INPUT_ID = "lfg-create-description-input";
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -100,17 +106,14 @@ export default function CreateLFGPage() {
         throw new Error("Not authenticated");
       }
 
-      const { error } = await supabase
-        .from("lfg_posts")
-        // @ts-expect-error - Types mismatch with generated Database but runtime is correct
-        .insert({
-          user_id: user.id,
-          game: formData.game,
-          mode: formData.mode,
-          description: formData.description,
-          mic_required: formData.mic_required,
-          region: formData.region,
-        });
+      const { error } = await supabase.from("lfg_posts").insert({
+        user_id: user.id,
+        game: formData.game,
+        mode: formData.mode,
+        description: formData.description,
+        mic_required: formData.mic_required,
+        region: formData.region,
+      });
 
       if (error) {
         throw error;
@@ -120,7 +123,7 @@ export default function CreateLFGPage() {
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("שגיאה בפרסום המודעה");
+      toast.error("שגיאה בפרסום המודעה");
     } finally {
       setLoading(false);
     }
@@ -146,31 +149,37 @@ export default function CreateLFGPage() {
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Game Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
-              <HugeiconsIcon
-                className="text-purple-400"
-                icon={GameController02Icon}
-                size={16}
-              />
-              בחר משחק
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {GAMES.map((game) => (
-                <button
-                  className={`rounded-xl border p-3 text-left font-medium text-fluid-sm transition-all ${formData.game === game ? "border-blue-500 bg-blue-600 text-white shadow-blue-500/20 shadow-lg" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
-                  key={game}
-                  onClick={() => setFormData({ ...formData, game })}
-                  type="button"
-                >
-                  {game}
-                </button>
-              ))}
-            </div>
+            <fieldset className="space-y-2">
+              <legend className="mb-2 flex items-center gap-2 font-medium text-fluid-sm text-white/80">
+                <HugeiconsIcon
+                  className="text-purple-400"
+                  icon={GameController02Icon}
+                  size={16}
+                />
+                בחר משחק
+              </legend>
+              <div className="grid grid-cols-2 gap-2">
+                {GAMES.map((game) => (
+                  <button
+                    className={`rounded-xl border p-3 text-left font-medium text-fluid-sm transition-all ${formData.game === game ? "border-blue-500 bg-blue-600 text-white shadow-blue-500/20 shadow-lg" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
+                    key={game}
+                    onClick={() => setFormData({ ...formData, game })}
+                    type="button"
+                  >
+                    {game}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
           </div>
 
           {/* Mode Input */}
           <div className="space-y-2">
-            <label className="font-medium text-fluid-sm text-white/80">
+            <label
+              className="font-medium text-fluid-sm text-white/80"
+              htmlFor={MODE_INPUT_ID}
+              id={MODE_LABEL_ID}
+            >
               מצב משחק
             </label>
             {formData.game && (
@@ -190,6 +199,7 @@ export default function CreateLFGPage() {
             <input
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!formData.game}
+              id={MODE_INPUT_ID}
               maxLength={30}
               onChange={(e) =>
                 setFormData({ ...formData, mode: e.target.value })
@@ -207,7 +217,10 @@ export default function CreateLFGPage() {
 
           {/* Mic Required */}
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <label className="flex items-center gap-2 font-medium text-fluid-sm text-white/80">
+            <label
+              className="flex items-center gap-2 font-medium text-fluid-sm text-white/80"
+              htmlFor={MIC_REQUIRED_ID}
+            >
               <HugeiconsIcon
                 className="text-red-400"
                 icon={Mic01Icon}
@@ -218,6 +231,7 @@ export default function CreateLFGPage() {
             <input
               checked={formData.mic_required}
               className="h-5 w-5 rounded-xs accent-blue-600"
+              id={MIC_REQUIRED_ID}
               onChange={(e) =>
                 setFormData({ ...formData, mic_required: e.target.checked })
               }
@@ -227,11 +241,16 @@ export default function CreateLFGPage() {
 
           {/* Description */}
           <div className="space-y-2">
-            <label className="font-medium text-fluid-sm text-white/80">
+            <label
+              className="font-medium text-fluid-sm text-white/80"
+              htmlFor={DESCRIPTION_INPUT_ID}
+              id={DESCRIPTION_LABEL_ID}
+            >
               תיאור
             </label>
             <textarea
               className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right text-white transition-colors focus:border-blue-500 focus:outline-hidden"
+              id={DESCRIPTION_INPUT_ID}
               maxLength={140}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })

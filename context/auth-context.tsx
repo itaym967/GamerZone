@@ -1,5 +1,11 @@
 "use client";
 
+import type {
+  AuthChangeEvent,
+  RealtimeChannel,
+  Session,
+  User,
+} from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -37,13 +43,17 @@ interface AuthContextType {
   profile: Profile | null;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
-  user: any | null;
+  user: User | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const PROFILE_CACHE_KEY = "gamerzone_profile_cache";
 const PROFILE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const logStorageError = (scope: string, error: unknown) => {
+  console.warn(`AuthContext: ${scope} cache error`, error);
+};
 
 function getCachedProfile(): { profile: Profile; timestamp: number } | null {
   if (typeof window === "undefined") {
@@ -57,7 +67,9 @@ function getCachedProfile(): { profile: Profile; timestamp: number } | null {
         return parsed;
       }
     }
-  } catch {}
+  } catch (error: unknown) {
+    logStorageError("read", error);
+  }
   return null;
 }
 
@@ -73,7 +85,9 @@ function setCachedProfile(profile: Profile) {
         timestamp: Date.now(),
       })
     );
-  } catch {}
+  } catch (error: unknown) {
+    logStorageError("write", error);
+  }
 }
 
 function clearCachedProfile() {
@@ -82,17 +96,26 @@ function clearCachedProfile() {
   }
   try {
     sessionStorage.removeItem(PROFILE_CACHE_KEY);
-  } catch {}
+  } catch (error: unknown) {
+    logStorageError("clear", error);
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
-  const profileChannelRef = useRef<any>(null);
+  const profileChannelRef = useRef<RealtimeChannel | null>(null);
+
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setProfile(null);
+    setIsAdmin(false);
+    clearCachedProfile();
+  }, []);
 
   const fetchProfile = useCallback(
     async (userId: string, useCache = true) => {
@@ -228,12 +251,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
           clearCachedProfile();
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("AuthContext: Error checking session", error);
         // Clear session on any error to prevent loops
-        setUser(null);
-        setProfile(null);
-        clearCachedProfile();
+        clearAuthState();
       } finally {
         clearTimeout(timeoutId);
         if (mounted) {
@@ -244,44 +265,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const handleAuthStateChange = async (
+      event: AuthChangeEvent,
+      session: Session | null
+    ) => {
       if (!mounted) {
         return;
       }
 
-      if (event === "SIGNED_IN" && session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id, false);
-        if (mounted) {
-          setIsLoading(false);
+      switch (event) {
+        case "SIGNED_IN": {
+          if (session?.user) {
+            setUser(session.user);
+            await fetchProfile(session.user.id, false);
+          }
+          break;
         }
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-        setProfile(null);
-        setIsAdmin(false);
-        if (mounted) {
-          setIsLoading(false);
+        case "SIGNED_OUT": {
+          clearAuthState();
+          router.refresh();
+          break;
         }
-        router.refresh();
-      } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        setUser(session.user);
-        if (mounted) {
-          setIsLoading(false);
+        case "TOKEN_REFRESHED":
+        case "USER_UPDATED": {
+          if (session?.user) {
+            setUser(session.user);
+          }
+          break;
         }
-      } else if (event === "USER_UPDATED" && session?.user) {
-        setUser(session.user);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      } else {
-        // For INITIAL_SESSION and other events
-        if (mounted) {
-          setIsLoading(false);
+        default: {
+          break;
         }
       }
-    });
+
+      setIsLoading(false);
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
       mounted = false;
@@ -293,7 +315,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         supabase.removeChannel(profileChannelRef.current);
       }
     };
-  }, [supabase, fetchProfile, router]);
+  }, [supabase, fetchProfile, router, clearAuthState]);
 
   const signOut = useCallback(async () => {
     try {

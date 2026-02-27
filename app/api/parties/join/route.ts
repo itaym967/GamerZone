@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+interface PartyMember {
+  user_id: string;
+}
+
 export async function POST(request: Request) {
   try {
     const { partyId } = await request.json();
@@ -48,8 +52,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Party is full" }, { status: 400 });
     }
 
-    const isAlreadyMember = party.party_members?.some(
-      (m: any) => m.user_id === user.id
+    const members = (party.party_members || []) as PartyMember[];
+    const isAlreadyMember = members.some(
+      (member) => member.user_id === user.id
     );
     if (isAlreadyMember) {
       return NextResponse.json(

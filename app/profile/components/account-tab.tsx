@@ -9,7 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 
 interface AccountTabProps {
   userEmail: string | null;
@@ -77,6 +77,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 py-3 text-gray-400 transition-all hover:bg-white/5 hover:text-white disabled:opacity-50"
         disabled={isSigningOut}
         onClick={handleSignOut}
+        type="button"
       >
         {isSigningOut ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400/30 border-t-gray-400" />
@@ -103,6 +104,7 @@ export default function AccountTab({ userEmail }: AccountTabProps) {
           className="w-full cursor-not-allowed rounded-xl border border-red-500/20 py-2.5 text-fluid-sm text-red-400/50"
           disabled
           title="פיצ'ר זה יהיה זמין בקרוב"
+          type="button"
         >
           מחק חשבון (בקרוב)
         </button>

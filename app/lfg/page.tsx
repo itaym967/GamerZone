@@ -3,16 +3,20 @@ import { Add01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
 import Navigation from "../components/Navigation";
-import LFGCard from "./components/LFGCard";
+import LFGCard from "./components/lfg-card";
 
 type PostWithProfile = Database["public"]["Tables"]["lfg_posts"]["Row"] & {
   profiles: Database["public"]["Tables"]["profiles"]["Row"] | null;
 };
+interface LfgInsertPayload {
+  game: string | null;
+  id: string;
+}
 
 const GAMES = [
   "Fortnite",
@@ -33,7 +37,7 @@ export default function LFGPage() {
   const supabase = createClient();
   const _router = useRouter();
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setLoading(true);
     let query = supabase
       .from("lfg_posts")
@@ -61,7 +65,7 @@ export default function LFGPage() {
       setPosts(data as PostWithProfile[]);
     }
     setLoading(false);
-  };
+  }, [selectedGame, supabase]);
 
   useEffect(() => {
     fetchPosts();
@@ -81,8 +85,9 @@ export default function LFGPage() {
             filter: selectedGame ? `game=eq.${selectedGame}` : undefined,
           },
           async (payload) => {
+            const newPost = payload.new as LfgInsertPayload;
             // Double-check game filter (defense in depth)
-            if (!selectedGame || (payload.new as any).game === selectedGame) {
+            if (!selectedGame || newPost.game === selectedGame) {
               // Fetch the full post with profile to prepend
               const { data, error } = await supabase
                 .from("lfg_posts")
@@ -95,7 +100,7 @@ export default function LFGPage() {
                             is_banned
                             )
                         `)
-                .eq("id", (payload.new as any).id)
+                .eq("id", newPost.id)
                 .single();
 
               if (data && !error) {
@@ -110,13 +115,7 @@ export default function LFGPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [
-    selectedGame,
-    fetchPosts,
-    supabase.from,
-    supabase.channel,
-    supabase.removeChannel,
-  ]);
+  }, [selectedGame, fetchPosts, supabase]);
 
   // Pause subscription when tab is hidden to reduce database load
   useEffect(() => {
@@ -134,11 +133,44 @@ export default function LFGPage() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [
-    // Re-fetch when tab becomes visible
-    fetchPosts, // Remove all channels when tab is hidden
-    supabase.removeAllChannels,
-  ]);
+  }, [fetchPosts, supabase]);
+
+  let feedContent: React.ReactNode;
+  if (loading) {
+    feedContent = (
+      <div className="auto-grid animate-pulse">
+        {[1, 2, 3, 4].map((i) => (
+          <div className="h-40 rounded-2xl bg-white/5" key={i} />
+        ))}
+      </div>
+    );
+  } else if (posts.length === 0) {
+    feedContent = (
+      <div className="py-20 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+          <HugeiconsIcon
+            className="text-white/40"
+            icon={Search01Icon}
+            size={32}
+          />
+        </div>
+        <h3 className="font-semibold text-fluid-lg text-white">
+          אין מודעות פעילות
+        </h3>
+        <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
+          היה הראשון לחפש קבוצה בקטגוריה זו!
+        </p>
+      </div>
+    );
+  } else {
+    feedContent = (
+      <div className="auto-grid">
+        {posts.map((post) => (
+          <LFGCard currentUserId={user?.id || null} key={post.id} post={post} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 md:pr-64 md:pb-0">
@@ -185,41 +217,7 @@ export default function LFGPage() {
       </div>
 
       {/* Feed */}
-      <div className="max-w-4xl pt-6 content-shell">
-        {loading ? (
-          <div className="auto-grid animate-pulse">
-            {[1, 2, 3, 4].map((i) => (
-              <div className="h-40 rounded-2xl bg-white/5" key={i} />
-            ))}
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-              <HugeiconsIcon
-                className="text-white/40"
-                icon={Search01Icon}
-                size={32}
-              />
-            </div>
-            <h3 className="font-semibold text-fluid-lg text-white">
-              אין מודעות פעילות
-            </h3>
-            <p className="mx-auto mt-1 max-w-xs text-fluid-sm text-white/40">
-              היה הראשון לחפש קבוצה בקטגוריה זו!
-            </p>
-          </div>
-        ) : (
-          <div className="auto-grid">
-            {posts.map((post) => (
-              <LFGCard
-                currentUserId={user?.id || null}
-                key={post.id}
-                post={post}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      <div className="max-w-4xl pt-6 content-shell">{feedContent}</div>
     </div>
   );
 }

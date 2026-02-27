@@ -3,9 +3,38 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileFormData, ProfileStats } from "../types";
+
+interface HiddenTagRow {
+  platform: string | null;
+  tag: string | null;
+}
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "אירעה שגיאה בלתי צפויה";
+};
+
+const throwIfError = (error: unknown) => {
+  if (error) {
+    throw error;
+  }
+};
+
+const buildHiddenTagsMap = (tags: HiddenTagRow[]) => {
+  const hiddenTagsMap: { [key: string]: string } = {};
+  for (const tag of tags) {
+    if (!(tag.platform && tag.tag)) {
+      continue;
+    }
+    hiddenTagsMap[tag.platform] = tag.tag;
+  }
+  return hiddenTagsMap;
+};
 
 export function useProfileData() {
   const router = useRouter();
@@ -96,20 +125,15 @@ export function useProfileData() {
             .eq("status", "accepted"),
         ]);
 
-        if (profileRes.error) {
-          throw profileRes.error;
-        }
-        if (tagsRes.error) {
-          throw tagsRes.error;
-        }
+        throwIfError(profileRes.error);
+        throwIfError(tagsRes.error);
 
         const profile = profileRes.data;
-        const tags = tagsRes.data || [];
-
-        const hiddenTagsMap: { [key: string]: string } = {};
-        tags.forEach((t: any) => {
-          hiddenTagsMap[t.platform] = t.tag;
-        });
+        if (!profile) {
+          throw new Error("Profile not found");
+        }
+        const tags = (tagsRes.data || []) as HiddenTagRow[];
+        const hiddenTagsMap = buildHiddenTagsMap(tags);
         const gamesList = Object.keys(hiddenTagsMap);
 
         const newFormData: ProfileFormData = {
@@ -204,8 +228,8 @@ export function useProfileData() {
       });
 
       await refreshProfile();
-    } catch (error: any) {
-      toast.error("שגיאה בשמירה", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("שגיאה בשמירה", { description: getErrorMessage(error) });
     } finally {
       setIsSaving(false);
     }
@@ -247,8 +271,10 @@ export function useProfileData() {
 
         setStats((prev) => ({ ...prev, gamesCount: prev.gamesCount + 1 }));
         toast.success(`${platform} נוסף בהצלחה!`);
-      } catch (error: any) {
-        toast.error("שגיאה בהוספת המשחק", { description: error.message });
+      } catch (error: unknown) {
+        toast.error("שגיאה בהוספת המשחק", {
+          description: getErrorMessage(error),
+        });
       }
     },
     [userId, formData.hiddenTags, supabase]
@@ -298,8 +324,10 @@ export function useProfileData() {
           gamesCount: Math.max(0, prev.gamesCount - 1),
         }));
         toast.success(`${platform} הוסר בהצלחה`);
-      } catch (error: any) {
-        toast.error("שגיאה בהסרת המשחק", { description: error.message });
+      } catch (error: unknown) {
+        toast.error("שגיאה בהסרת המשחק", {
+          description: getErrorMessage(error),
+        });
       }
     },
     [userId, supabase]

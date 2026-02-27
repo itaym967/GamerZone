@@ -5,6 +5,7 @@ import {
   GameController02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Image from "next/image";
 import type { ProfileFormData } from "../types";
 import { AVATARS } from "../types";
 
@@ -27,6 +28,9 @@ export default function ProfileEditTab({
   onSetAvatarSeed,
   onSave,
 }: ProfileEditTabProps) {
+  const USERNAME_INPUT_ID = "profile-username";
+  const TAG_INPUT_ID = "profile-tag";
+  const BIO_INPUT_ID = "profile-bio";
   const usernameError =
     formData.username.length > 0 && formData.username.length < 3;
   const bioLength = formData.bio.length;
@@ -50,7 +54,10 @@ export default function ProfileEditTab({
       <div className="space-y-4">
         {/* Username */}
         <div>
-          <label className="mb-1 block text-fluid-sm text-gray-400">
+          <label
+            className="mb-1 block text-fluid-sm text-gray-400"
+            htmlFor={USERNAME_INPUT_ID}
+          >
             כינוי (Username)
           </label>
           <input
@@ -59,6 +66,7 @@ export default function ProfileEditTab({
                 ? "border-red-500/50 focus:border-red-500"
                 : "border-white/10 focus:border-primary/50"
             }`}
+            id={USERNAME_INPUT_ID}
             maxLength={20}
             onChange={(e) =>
               onUpdateFormData({
@@ -78,12 +86,16 @@ export default function ProfileEditTab({
 
         {/* Tag (read-only) */}
         <div>
-          <label className="mb-1 block text-fluid-sm text-gray-400">
+          <label
+            className="mb-1 block text-fluid-sm text-gray-400"
+            htmlFor={TAG_INPUT_ID}
+          >
             תיוג (@Tag)
           </label>
           <input
             className="dir-ltr w-full cursor-not-allowed rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-gray-400 outline-hidden"
             dir="ltr"
+            id={TAG_INPUT_ID}
             readOnly
             type="text"
             value={formData.tag}
@@ -92,9 +104,7 @@ export default function ProfileEditTab({
 
         {/* Avatar Picker */}
         <div>
-          <label className="mb-1 block text-fluid-sm text-gray-400">
-            בחר דמות
-          </label>
+          <p className="mb-1 block text-fluid-sm text-gray-400">בחר דמות</p>
           <div className="grid grid-cols-3 gap-2">
             {AVATARS.map((avatar) => (
               <button
@@ -105,11 +115,14 @@ export default function ProfileEditTab({
                 }`}
                 key={avatar.id}
                 onClick={() => onSetAvatarSeed(avatar.id)}
+                type="button"
               >
-                <img
+                <Image
                   alt={avatar.name}
                   className="h-full w-full object-cover"
+                  height={96}
                   src={avatar.id}
+                  width={96}
                 />
               </button>
             ))}
@@ -119,7 +132,10 @@ export default function ProfileEditTab({
         {/* Bio */}
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <label className="block text-fluid-sm text-gray-400">
+            <label
+              className="block text-fluid-sm text-gray-400"
+              htmlFor={BIO_INPUT_ID}
+            >
               על עצמי (Bio)
             </label>
             <span
@@ -134,6 +150,7 @@ export default function ProfileEditTab({
                 ? "border-red-500/50 focus:border-red-500"
                 : "border-white/10 focus:border-primary/50"
             }`}
+            id={BIO_INPUT_ID}
             maxLength={200}
             onChange={(e) => onUpdateFormData({ bio: e.target.value })}
             rows={3}
@@ -148,6 +165,7 @@ export default function ProfileEditTab({
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSaving || usernameError || bioOverLimit}
           onClick={onSave}
+          type="button"
         >
           {isSaving ? (
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { useDashboardData } from "@/hooks/useDashboardData";
-import { useFriendship } from "@/hooks/useFriendship";
-import { useSwapStatus } from "@/hooks/useSwapStatus";
+import { useAuth } from "@/context/auth-context";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useFriendship } from "@/hooks/use-friendship";
+import { useSwapStatus } from "@/hooks/use-swap-status";
 import GamerCard from "./components/GamerCard";
 import Navigation from "./components/Navigation";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";

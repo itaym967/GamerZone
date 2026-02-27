@@ -1,6 +1,84 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+interface PartyMember {
+  id: string;
+  joined_at: string;
+  role: string;
+  user_id: string;
+}
+
+interface PartyWithMembers {
+  id: string;
+  party_members: PartyMember[] | null;
+}
+
+const getOldestMember = (members: PartyMember[]) => {
+  const sortedMembers = [...members].sort(
+    (left, right) =>
+      new Date(left.joined_at).getTime() - new Date(right.joined_at).getTime()
+  );
+  return sortedMembers[0];
+};
+
+const transferLeadership = async (
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  partyId: string,
+  newLeader: PartyMember
+) => {
+  const { error: updateError } = await supabase
+    .from("party_members")
+    .update({ role: "leader" })
+    .eq("id", newLeader.id);
+
+  if (updateError) {
+    console.error("Error transferring leadership:", updateError);
+  }
+
+  const { error: partyUpdateError } = await supabase
+    .from("parties")
+    .update({ leader_id: newLeader.user_id })
+    .eq("id", partyId);
+
+  if (partyUpdateError) {
+    console.error("Error updating party leader:", partyUpdateError);
+  }
+
+  const { error: notificationError } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: newLeader.user_id,
+      title: "הפכת למנהיג הקבוצה",
+      message: "המנהיג הקודם עזב והנהגת הקבוצה הועברה אליך",
+      type: "party_leader",
+      action_url: "/party-finder",
+    });
+
+  if (notificationError) {
+    console.error("Error creating notification:", notificationError);
+  }
+};
+
+const closeParty = async (
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  partyId: string
+) => {
+  const { error: deleteError } = await supabase
+    .from("parties")
+    .delete()
+    .eq("id", partyId);
+
+  if (deleteError) {
+    console.error("Error deleting party:", deleteError);
+    return NextResponse.json(
+      { error: "Failed to delete party" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ success: true, partyClosed: true });
+};
+
 export async function POST(request: Request) {
   try {
     const { partyId } = await request.json();
@@ -32,9 +110,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Party not found" }, { status: 404 });
     }
 
-    const memberRecord = party.party_members?.find(
-      (m: any) => m.user_id === user.id
-    );
+    const partyWithMembers = party as PartyWithMembers;
+    const members = partyWithMembers.party_members || [];
+    const memberRecord = members.find((member) => member.user_id === user.id);
     if (!memberRecord) {
       return NextResponse.json(
         { error: "Not a member of this party" },
@@ -43,61 +121,17 @@ export async function POST(request: Request) {
     }
 
     if (memberRecord.role === "leader") {
-      const otherMembers =
-        party.party_members?.filter((m: any) => m.user_id !== user.id) || [];
+      const otherMembers = members.filter(
+        (member) => member.user_id !== user.id
+      );
 
       if (otherMembers.length > 0) {
-        const newLeader = otherMembers.sort(
-          (a: any, b: any) =>
-            new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-        )[0];
-
-        const { error: updateError } = await supabase
-          .from("party_members")
-          .update({ role: "leader" })
-          .eq("id", newLeader.id);
-
-        if (updateError) {
-          console.error("Error transferring leadership:", updateError);
-        }
-
-        const { error: partyUpdateError } = await supabase
-          .from("parties")
-          .update({ leader_id: newLeader.user_id })
-          .eq("id", partyId);
-
-        if (partyUpdateError) {
-          console.error("Error updating party leader:", partyUpdateError);
-        }
-
-        const { error: notificationError } = await supabase
-          .from("notifications")
-          .insert({
-            user_id: newLeader.user_id,
-            title: "הפכת למנהיג הקבוצה",
-            message: "המנהיג הקודם עזב והנהגת הקבוצה הועברה אליך",
-            type: "party_leader",
-            action_url: "/party-finder",
-          });
-
-        if (notificationError) {
-          console.error("Error creating notification:", notificationError);
+        const newLeader = getOldestMember(otherMembers);
+        if (newLeader) {
+          await transferLeadership(supabase, partyId, newLeader);
         }
       } else {
-        const { error: deleteError } = await supabase
-          .from("parties")
-          .delete()
-          .eq("id", partyId);
-
-        if (deleteError) {
-          console.error("Error deleting party:", deleteError);
-          return NextResponse.json(
-            { error: "Failed to delete party" },
-            { status: 500 }
-          );
-        }
-
-        return NextResponse.json({ success: true, partyClosed: true });
+        return closeParty(supabase, partyId);
       }
     }
 

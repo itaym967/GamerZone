@@ -10,11 +10,11 @@ import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { useState } from "react";
 import GamerCard from "../components/GamerCard";
 import Navigation from "../components/Navigation";
-import AccountTab from "./components/AccountTab";
-import GamertagsTab from "./components/GamertagsTab";
-import ProfileEditTab from "./components/ProfileEditTab";
-import StatsTab from "./components/StatsTab";
-import { useProfileData } from "./hooks/useProfileData";
+import AccountTab from "./components/account-tab";
+import GamertagsTab from "./components/gamertags-tab";
+import ProfileEditTab from "./components/profile-edit-tab";
+import StatsTab from "./components/stats-tab";
+import { useProfileData } from "./hooks/use-profile-data";
 import type { ProfileTab } from "./types";
 
 const TABS: { id: ProfileTab; label: string; icon: IconSvgElement }[] = [

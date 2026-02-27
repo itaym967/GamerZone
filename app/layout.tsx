@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import { Toaster } from "sonner";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/auth-context";
 import FloatingGamerBot from "./components/FloatingGamerBot";
 import KeyboardHandler from "./components/KeyboardHandler";
 import OfflineIndicator from "./components/OfflineIndicator";

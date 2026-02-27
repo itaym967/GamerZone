@@ -17,17 +17,34 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import Navigation from "@/app/components/Navigation";
 import OptimizedAvatar from "@/app/components/OptimizedAvatar";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth-context";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
 
 type Party = Database["public"]["Tables"]["parties"]["Row"];
 type PartyMember = Database["public"]["Tables"]["party_members"]["Row"] & {
   profile: Database["public"]["Tables"]["profiles"]["Row"] | null;
+};
+type PartyWithMembers = Party & {
+  party_members: PartyMember[] | null;
+};
+
+const mapPartyMembers = (partyMembers: PartyMember[] | null | undefined) => {
+  return (partyMembers || []).map((partyMember) => ({
+    ...partyMember,
+    profile: partyMember.profile,
+  }));
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
 };
 
 export default function PartyDetailsPage() {
@@ -44,7 +61,7 @@ export default function PartyDetailsPage() {
   const isLeader = user?.id === party?.leader_id;
   const isMember = members.some((m) => m.user_id === user?.id);
 
-  const fetchPartyDetails = async () => {
+  const fetchPartyDetails = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("parties")
@@ -71,15 +88,11 @@ export default function PartyDetailsPage() {
       return;
     }
 
-    setParty(data);
-    setMembers(
-      (data.party_members || []).map((pm: any) => ({
-        ...pm,
-        profile: pm.profile,
-      }))
-    );
+    const partyWithMembers = data as PartyWithMembers;
+    setParty(partyWithMembers);
+    setMembers(mapPartyMembers(partyWithMembers.party_members));
     setLoading(false);
-  };
+  }, [partyId, router, supabase]);
 
   useEffect(() => {
     fetchPartyDetails();
@@ -120,13 +133,7 @@ export default function PartyDetailsPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [
-    partyId,
-    fetchPartyDetails,
-    router.push,
-    supabase.channel,
-    supabase.removeChannel,
-  ]);
+  }, [partyId, fetchPartyDetails, router, supabase]);
 
   const handleLeaveParty = async () => {
     if (!user) {
@@ -149,9 +156,9 @@ export default function PartyDetailsPage() {
 
       toast.success("עזבת את הקבוצה");
       router.push("/party-finder");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error leaving party:", error);
-      toast.error(error.message || "שגיאה ביציאה מהקבוצה");
+      toast.error(getErrorMessage(error, "שגיאה ביציאה מהקבוצה"));
     } finally {
       setActionLoading(false);
     }
@@ -177,20 +184,16 @@ export default function PartyDetailsPage() {
       }
 
       toast.success("החבר הוצא מהקבוצה");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error kicking member:", error);
-      toast.error(error.message || "שגיאה בהוצאת החבר");
+      toast.error(getErrorMessage(error, "שגיאה בהוצאת החבר"));
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleCloseParty = async () => {
+  const closeParty = useCallback(async () => {
     if (!isLeader) {
-      return;
-    }
-
-    if (!confirm("האם אתה בטוח שברצונך לסגור את הקבוצה?")) {
       return;
     }
 
@@ -210,12 +213,28 @@ export default function PartyDetailsPage() {
 
       toast.success("הקבוצה נסגרה");
       router.push("/party-finder");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error closing party:", error);
-      toast.error(error.message || "שגיאה בסגירת הקבוצה");
+      toast.error(getErrorMessage(error, "שגיאה בסגירת הקבוצה"));
     } finally {
       setActionLoading(false);
     }
+  }, [isLeader, partyId, router]);
+
+  const handleCloseParty = () => {
+    if (!isLeader) {
+      return;
+    }
+    toast.warning("לסגור את הקבוצה?", {
+      description: "לא יהיה ניתן להחזיר אותה למצב פעיל.",
+      action: {
+        label: "סגור קבוצה",
+        onClick: async () => {
+          await closeParty();
+        },
+      },
+      cancel: "ביטול",
+    });
   };
 
   const handleStartGame = async () => {
@@ -238,7 +257,7 @@ export default function PartyDetailsPage() {
       }
 
       toast.success("המשחק התחיל!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error starting game:", error);
       toast.error("שגיאה בהתחלת המשחק");
     } finally {

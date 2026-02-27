@@ -103,9 +103,9 @@ export function containsPersonalInfo(text: string): boolean {
  */
 export function filterPersonalInfo(text: string): string {
   let filtered = text;
-  PERSONAL_INFO_PATTERNS.forEach((pattern) => {
+  for (const pattern of PERSONAL_INFO_PATTERNS) {
     filtered = filtered.replace(pattern, (match) => "*".repeat(match.length));
-  });
+  }
   return filtered;
 }
 
@@ -122,13 +122,13 @@ export function filterContent(
 
   // Always filter blocked words
   const lowerText = text.toLowerCase();
-  blockedWords.forEach((word) => {
+  for (const word of blockedWords) {
     if (lowerText.includes(word.toLowerCase())) {
       const regex = new RegExp(word, "gi");
       filtered = filtered.replace(regex, "*".repeat(word.length));
       reasons.push("blocked_word");
     }
-  });
+  }
 
   // For strict and moderate: filter personal info
   if (

@@ -13,6 +13,10 @@ const CACHE_KEY_PREFIX = "gamerzone_dashboard_cache";
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 const OFFLINE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes for offline mode
 
+const logDashboardCacheError = (scope: string, error: unknown) => {
+  console.warn(`Dashboard cache ${scope} error`, error);
+};
+
 function getCacheKey(userId: string | null): string {
   return userId ? `${CACHE_KEY_PREFIX}_${userId}` : `${CACHE_KEY_PREFIX}_guest`;
 }
@@ -33,6 +37,95 @@ interface CacheData {
   timestamp: number;
 }
 
+interface GamerTagRow {
+  is_hidden: boolean | null;
+  platform: string | null;
+}
+
+interface ProfileRow {
+  avatar_url: string | null;
+  bio: string | null;
+  gamertags: GamerTagRow[] | null;
+  id: string;
+  is_online: boolean;
+  username: string | null;
+}
+
+const mapProfileToGamer = (profile: ProfileRow): Gamer => {
+  const hiddenTagsMap: { [key: string]: string } = {};
+  const gamesList: string[] = [];
+  for (const tag of profile.gamertags || []) {
+    if (!tag.platform) {
+      continue;
+    }
+    gamesList.push(tag.platform);
+    if (tag.is_hidden) {
+      hiddenTagsMap[tag.platform] = "********";
+    }
+  }
+
+  return {
+    id: profile.id,
+    username: profile.username || "Unknown",
+    tag: `@${(profile.username || "user").toLowerCase()}`,
+    games: gamesList,
+    bio: profile.bio || "",
+    online: profile.is_online,
+    hiddenTags: hiddenTagsMap,
+    avatarSeed: profile.avatar_url ?? undefined,
+  };
+};
+
+const filterOutCurrentUser = (
+  gamers: Gamer[],
+  currentUserId: string | null
+) => {
+  if (!currentUserId) {
+    return gamers;
+  }
+  return gamers.filter((g) => g.id !== currentUserId);
+};
+
+const isBackgroundRefreshNeeded = (timestamp: number) => {
+  return Date.now() - timestamp > 60 * 1000;
+};
+
+const applyCachedDashboardState = (
+  cached: CacheData,
+  currentUserId: string | null,
+  setGamers: (value: Gamer[]) => void,
+  setCurrentUsername: (value: string | null) => void
+) => {
+  setGamers(filterOutCurrentUser(cached.gamers, currentUserId));
+  const currentUserGamer = cached.gamers.find(
+    (gamer) => gamer.id === currentUserId
+  );
+  if (currentUserGamer) {
+    setCurrentUsername(currentUserGamer.username);
+  }
+};
+
+const getDashboardProfiles = async (
+  supabase: ReturnType<typeof createClient>
+) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(`
+                    id,
+                    username,
+                    bio,
+                    avatar_url,
+                    is_online,
+                    gamertags (
+                        platform,
+                        is_hidden
+                    )
+                `)
+    .order("username", { ascending: true });
+
+  return { data: data as ProfileRow[] | null, error };
+};
+
 function getCachedData(userId: string | null): CacheData | null {
   if (typeof window === "undefined") {
     return null;
@@ -47,7 +140,9 @@ function getCachedData(userId: string | null): CacheData | null {
         return parsed;
       }
     }
-  } catch {}
+  } catch (error: unknown) {
+    logDashboardCacheError("read", error);
+  }
   return null;
 }
 
@@ -63,7 +158,9 @@ function setCachedData(gamers: Gamer[], userId: string | null) {
         timestamp: Date.now(),
       })
     );
-  } catch {}
+  } catch (error: unknown) {
+    logDashboardCacheError("write", error);
+  }
 }
 
 export function useDashboardData(
@@ -102,6 +199,58 @@ export function useDashboardData(
     };
   }, []);
 
+  const readCachedGamers = useCallback(
+    (forceRefresh: boolean) => {
+      if (forceRefresh) {
+        return { usedCache: false, needsBackgroundRefresh: false };
+      }
+
+      const cached = getCachedData(currentUserId);
+      if (!cached) {
+        return { usedCache: false, needsBackgroundRefresh: false };
+      }
+
+      applyCachedDashboardState(
+        cached,
+        currentUserId,
+        setGamers,
+        setCurrentUsername
+      );
+      setLoading(false);
+
+      return {
+        usedCache: true,
+        needsBackgroundRefresh: isBackgroundRefreshNeeded(cached.timestamp),
+      };
+    },
+    [currentUserId]
+  );
+
+  const loadGamersFromDatabase = useCallback(async () => {
+    const { data: profiles, error } = await getDashboardProfiles(supabase);
+
+    if (error) {
+      console.error("Dashboard: Error fetching data", error);
+      setLoading(false);
+      return;
+    }
+
+    if (!profiles) {
+      return;
+    }
+
+    const currentUserProfile = profiles.find((p) => p.id === currentUserId);
+    if (currentUserProfile) {
+      setCurrentUsername(currentUserProfile.username);
+    }
+
+    const formattedGamers: Gamer[] = profiles.map((profile) =>
+      mapProfileToGamer(profile)
+    );
+    setCachedData(formattedGamers, currentUserId);
+    setGamers(filterOutCurrentUser(formattedGamers, currentUserId));
+  }, [currentUserId, supabase]);
+
   const fetchGamers = useCallback(
     async (forceRefresh = false) => {
       if (authLoading) {
@@ -114,112 +263,27 @@ export function useDashboardData(
       }
       isFetchingRef.current = true;
 
-      // Try cache first unless forcing refresh
-      if (!forceRefresh) {
-        const cached = getCachedData(currentUserId);
-        if (cached) {
-          const filteredGamers = currentUserId
-            ? cached.gamers.filter((g) => g.id !== currentUserId)
-            : cached.gamers;
-          setGamers(filteredGamers);
-          setLoading(false);
-
-          // Find current user's username from cache if available
-          const currentUserGamer = cached.gamers.find(
-            (g) => g.id === currentUserId
-          );
-          if (currentUserGamer) {
-            setCurrentUsername(currentUserGamer.username);
-          }
-
-          // Background refresh if cache is older than 1 minute (but don't set loading)
-          if (
-            Date.now() - cached.timestamp > 60 * 1000 &&
-            !isFetchingRef.current
-          ) {
-            isFetchingRef.current = true;
-            fetchGamers(true).finally(() => {
-              isFetchingRef.current = false;
-            });
-          }
-          return;
+      const cacheState = readCachedGamers(forceRefresh);
+      if (cacheState.usedCache) {
+        isFetchingRef.current = false;
+        if (cacheState.needsBackgroundRefresh) {
+          fetchGamers(true).catch((error: unknown) => {
+            console.error("Dashboard background refresh failed", error);
+          });
         }
+        return;
       }
 
       try {
-        // Fetch profiles with their gamertags
-        const { data: profiles, error } = await supabase
-          .from("profiles")
-          .select(`
-                    id,
-                    username,
-                    bio,
-                    avatar_url,
-                    is_online,
-                    gamertags (
-                        platform,
-                        is_hidden
-                    )
-                `)
-          .order("username", { ascending: true });
-
-        if (error) {
-          console.error("Dashboard: Error fetching data", error);
-          setLoading(false);
-          return;
-        }
-
-        if (profiles) {
-          // Find current user's profile
-          const currentUserProfile = profiles.find(
-            (p) => p.id === currentUserId
-          );
-          if (currentUserProfile) {
-            setCurrentUsername(currentUserProfile.username);
-          }
-
-          const formattedGamers: Gamer[] = profiles.map((profile: any) => {
-            const tags = profile.gamertags || [];
-            const hiddenTagsMap: { [key: string]: string } = {};
-            const gamesList: string[] = [];
-
-            tags.forEach((t: any) => {
-              gamesList.push(t.platform);
-              if (t.is_hidden) {
-                hiddenTagsMap[t.platform] = "********";
-              }
-            });
-
-            return {
-              id: profile.id,
-              username: profile.username || "Unknown",
-              tag: `@${(profile.username || "user").toLowerCase()}`,
-              games: gamesList,
-              bio: profile.bio || "",
-              online: profile.is_online,
-              hiddenTags: hiddenTagsMap,
-              avatarSeed: profile.avatar_url,
-            };
-          });
-
-          // Cache all gamers scoped to current user
-          setCachedData(formattedGamers, currentUserId);
-
-          // Filter out current user for display
-          const filteredGamers = currentUserId
-            ? formattedGamers.filter((g) => g.id !== currentUserId)
-            : formattedGamers;
-
-          setGamers(filteredGamers);
-        }
-      } catch (err: any) {
+        await loadGamersFromDatabase();
+      } catch (err: unknown) {
         console.error("Error processing dashboard:", err);
       } finally {
         setLoading(false);
         isFetchingRef.current = false;
       }
     },
-    [authLoading, currentUserId, supabase]
+    [authLoading, loadGamersFromDatabase, readCachedGamers]
   );
 
   useEffect(() => {

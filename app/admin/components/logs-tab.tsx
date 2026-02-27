@@ -52,6 +52,14 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 
 type ActionFilter = "all" | "words" | "users" | "reports" | "ai";
 
+const FILTER_LABELS: Record<ActionFilter, string> = {
+  all: "הכל",
+  words: "מילים",
+  users: "משתמשים",
+  reports: "דיווחים",
+  ai: "AI",
+};
+
 export default function LogsTab({ supabase }: LogsTabProps) {
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,16 +159,9 @@ export default function LogsTab({ supabase }: LogsTabProps) {
                 }`}
                 key={f}
                 onClick={() => setActionFilter(f)}
+                type="button"
               >
-                {f === "all"
-                  ? "הכל"
-                  : f === "words"
-                    ? "מילים"
-                    : f === "users"
-                      ? "משתמשים"
-                      : f === "reports"
-                        ? "דיווחים"
-                        : "AI"}
+                {FILTER_LABELS[f]}
               </button>
             )
           )}
@@ -168,6 +169,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
             className="rounded-lg bg-white/5 p-2 text-gray-400 transition-all hover:bg-white/10 hover:text-white"
             onClick={fetchLogs}
             title="רענן"
+            type="button"
           >
             <HugeiconsIcon icon={Refresh01Icon} size={14} />
           </button>
@@ -204,7 +206,7 @@ export default function LogsTab({ supabase }: LogsTabProps) {
                     </span>
                   </td>
                   <td
-                    className="max-w-[18.75rem] truncate p-4 opacity-80"
+                    className="max-w-75 truncate p-4 opacity-80"
                     title={JSON.stringify(log.details)}
                   >
                     {formatDetails(log.details)}
@@ -230,35 +232,52 @@ export default function LogsTab({ supabase }: LogsTabProps) {
 /**
  * Format log details into a readable Hebrew string.
  */
-function formatDetails(details: any): string {
+function getDetailValue(details: Record<string, unknown>, key: string): string {
+  const value = details[key];
+  return typeof value === "string" ? value : "";
+}
+
+function formatDetails(details: unknown): string {
   if (!details) {
     return "-";
   }
   if (typeof details === "string") {
     return details;
   }
+  if (typeof details !== "object") {
+    return JSON.stringify(details);
+  }
+  const detailsRecord = details as Record<string, unknown>;
 
   const parts: string[] = [];
-  if (details.word) {
-    parts.push(`מילה: ${details.word}`);
+  const word = getDetailValue(detailsRecord, "word");
+  if (word) {
+    parts.push(`מילה: ${word}`);
   }
-  if (details.target_user) {
-    parts.push(`משתמש: ${details.target_user}`);
+  const targetUser = getDetailValue(detailsRecord, "target_user");
+  if (targetUser) {
+    parts.push(`משתמש: ${targetUser}`);
   }
-  if (details.target_username) {
-    parts.push(`משתמש: ${details.target_username}`);
+  const targetUsername = getDetailValue(detailsRecord, "target_username");
+  if (targetUsername) {
+    parts.push(`משתמש: ${targetUsername}`);
   }
-  if (details.reason) {
-    parts.push(`סיבה: ${details.reason}`);
+  const reason = getDetailValue(detailsRecord, "reason");
+  if (reason) {
+    parts.push(`סיבה: ${reason}`);
   }
-  if (details.old_role) {
-    parts.push(`מ-${details.old_role} ל-${details.new_role}`);
+  const oldRole = getDetailValue(detailsRecord, "old_role");
+  const newRole = getDetailValue(detailsRecord, "new_role");
+  if (oldRole && newRole) {
+    parts.push(`מ-${oldRole} ל-${newRole}`);
   }
-  if (details.wordCount) {
-    parts.push(`${details.wordCount} מילים`);
+  const wordCount = detailsRecord.wordCount;
+  if (typeof wordCount === "number") {
+    parts.push(`${wordCount} מילים`);
   }
-  if (details.report_type) {
-    parts.push(`סוג: ${details.report_type}`);
+  const reportType = getDetailValue(detailsRecord, "report_type");
+  if (reportType) {
+    parts.push(`סוג: ${reportType}`);
   }
 
   return parts.length > 0 ? parts.join(" | ") : JSON.stringify(details);

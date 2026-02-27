@@ -101,6 +101,7 @@ export default function GamertagsTab({
               className="rounded-xl bg-primary p-2.5 text-black transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!newTag.trim()}
               onClick={handleAdd}
+              type="button"
             >
               <HugeiconsIcon icon={Add01Icon} size={18} />
             </button>
@@ -114,7 +115,7 @@ export default function GamertagsTab({
               value={newTag}
             />
             <select
-              className="min-w-[7.5rem] appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
+              className="min-w-30 appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
               onChange={(e) => setNewPlatform(e.target.value)}
               value={newPlatform}
             >
@@ -149,7 +150,7 @@ export default function GamertagsTab({
               key={platform}
             >
               {/* Platform Name */}
-              <span className="min-w-[6.25rem] text-right font-bold text-fluid-sm text-primary">
+              <span className="min-w-25 text-right font-bold text-fluid-sm text-primary">
                 {platform}
               </span>
 
@@ -175,12 +176,14 @@ export default function GamertagsTab({
                   <button
                     className="rounded-lg bg-green-500/20 p-1.5 text-green-400 transition-colors hover:bg-green-500/30"
                     onClick={() => handleSaveEdit(platform)}
+                    type="button"
                   >
                     <HugeiconsIcon icon={Tick01Icon} size={14} />
                   </button>
                   <button
                     className="rounded-lg bg-red-500/20 p-1.5 text-red-400 transition-colors hover:bg-red-500/30"
                     onClick={handleCancelEdit}
+                    type="button"
                   >
                     <HugeiconsIcon icon={Cancel01Icon} size={14} />
                   </button>
@@ -200,6 +203,7 @@ export default function GamertagsTab({
                       className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                       onClick={() => handleStartEdit(platform)}
                       title="ערוך"
+                      type="button"
                     >
                       <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
                     </button>
@@ -213,6 +217,7 @@ export default function GamertagsTab({
                       title={
                         confirmDelete === platform ? "לחץ שוב לאישור" : "מחק"
                       }
+                      type="button"
                     >
                       <HugeiconsIcon icon={Delete02Icon} size={14} />
                     </button>

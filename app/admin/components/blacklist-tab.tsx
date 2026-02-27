@@ -108,7 +108,7 @@ export default function BlacklistTab({
     }
   };
 
-  const analyzeWithAI = async () => {
+  const analyzeWithAI = () => {
     toast.info("ניתוח רעלנות עם AI הוסר מהמערכת.");
   };
 
@@ -171,6 +171,7 @@ export default function BlacklistTab({
             className="flex items-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 px-6 py-3 font-bold text-white transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isAnalyzing || blockedWords.length === 0}
             onClick={analyzeWithAI}
+            type="button"
           >
             {isAnalyzing ? (
               <>
@@ -206,11 +207,12 @@ export default function BlacklistTab({
                   המלצות למילים נוספות:
                 </h4>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-                  {analysisResult.suggestions.map((word, idx) => (
+                  {analysisResult.suggestions.map((word) => (
                     <button
                       className="group flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-2 transition-all hover:border-blue-500/50 hover:bg-white/10"
-                      key={idx}
+                      key={word}
                       onClick={() => addSuggestedWord(word)}
+                      type="button"
                     >
                       <span className="text-fluid-sm text-white">{word}</span>
                       <HugeiconsIcon
@@ -241,11 +243,15 @@ export default function BlacklistTab({
             </h3>
             <form className="space-y-4" onSubmit={addWord}>
               <div>
-                <label className="mb-1 block text-fluid-sm text-gray-400">
+                <label
+                  className="mb-1 block text-fluid-sm text-gray-400"
+                  htmlFor="blocked-word-input"
+                >
                   המילה לחסימה
                 </label>
                 <input
                   className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-white outline-hidden focus:border-red-500/50"
+                  id="blocked-word-input"
                   onChange={(e) => setNewWord(e.target.value)}
                   placeholder="למשל: noob"
                   type="text"
@@ -294,6 +300,7 @@ export default function BlacklistTab({
                 <button
                   className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-500/20 group-hover:text-red-500"
                   onClick={() => removeWord(item.word)}
+                  type="button"
                 >
                   <HugeiconsIcon icon={Delete02Icon} size={16} />
                 </button>

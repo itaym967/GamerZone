@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+interface PartyMember {
+  user_id: string;
+}
+
 export async function POST(request: Request) {
   try {
     const { partyId } = await request.json();
@@ -39,10 +43,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const memberIds =
-      party.party_members
-        ?.filter((m: any) => m.user_id !== user.id)
-        .map((m: any) => m.user_id) || [];
+    const members = (party.party_members || []) as PartyMember[];
+    const memberIds = members
+      .filter((member) => member.user_id !== user.id)
+      .map((member) => member.user_id);
 
     if (memberIds.length > 0) {
       const notifications = memberIds.map((memberId: string) => ({

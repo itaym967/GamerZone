@@ -24,6 +24,151 @@ export interface Contact {
   username: string;
 }
 
+interface SentContactMessageRow {
+  content: string;
+  created_at: string;
+  receiver_id: string;
+}
+
+interface ReceivedContactMessageRow {
+  content: string;
+  created_at: string;
+  sender_id: string;
+}
+
+interface ContactProfileRow {
+  avatar_url: string | null;
+  id: string;
+  is_online: boolean | null;
+  username: string | null;
+}
+
+interface UnreadSenderRow {
+  sender_id: string;
+}
+
+interface ContactMapEntry {
+  lastMsg: string;
+  time: string;
+}
+
+const formatContactTime = (timestamp: string | undefined) => {
+  if (!timestamp) {
+    return undefined;
+  }
+  return new Date(timestamp).toLocaleTimeString("he-IL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const buildContactMap = (
+  sentMessages: SentContactMessageRow[],
+  receivedMessages: ReceivedContactMessageRow[]
+) => {
+  const contactMap = new Map<string, ContactMapEntry>();
+
+  for (const message of sentMessages) {
+    const existing = contactMap.get(message.receiver_id);
+    if (!existing || new Date(message.created_at) > new Date(existing.time)) {
+      contactMap.set(message.receiver_id, {
+        lastMsg: `You: ${message.content}`,
+        time: message.created_at,
+      });
+    }
+  }
+
+  for (const message of receivedMessages) {
+    const existing = contactMap.get(message.sender_id);
+    if (!existing || new Date(message.created_at) > new Date(existing.time)) {
+      contactMap.set(message.sender_id, {
+        lastMsg: message.content,
+        time: message.created_at,
+      });
+    }
+  }
+
+  return contactMap;
+};
+
+const buildUnreadCountMap = (rows: UnreadSenderRow[]) => {
+  const unreadCounts = new Map<string, number>();
+  for (const row of rows) {
+    unreadCounts.set(row.sender_id, (unreadCounts.get(row.sender_id) || 0) + 1);
+  }
+  return unreadCounts;
+};
+
+const mapProfilesToContacts = (
+  profiles: ContactProfileRow[],
+  contactMap: Map<string, ContactMapEntry>,
+  unreadCounts: Map<string, number>
+) => {
+  return profiles.map((profile) => ({
+    id: profile.id,
+    username: profile.username || "Unknown",
+    avatar_url: profile.avatar_url,
+    last_msg: contactMap.get(profile.id)?.lastMsg,
+    last_msg_time: formatContactTime(contactMap.get(profile.id)?.time),
+    online: profile.is_online,
+    unread_count: unreadCounts.get(profile.id) || 0,
+  }));
+};
+
+const getSendMessageValidationError = (
+  currentUserId: string | undefined,
+  content: string,
+  receiverId: string
+) => {
+  if (!currentUserId) {
+    return "אנא התחבר כדי לשלוח הודעות";
+  }
+  if (!content.trim()) {
+    return "לא ניתן לשלוח הודעה ריקה";
+  }
+  if (!receiverId) {
+    return "שגיאה: לא נבחר נמען";
+  }
+  return null;
+};
+
+const isAuthError = (code: string | null, message: string) => {
+  return code === "PGRST301" || message.includes("JWT");
+};
+
+const isPermissionError = (code: string | null, message: string) => {
+  return code === "42501" || message.includes("permission");
+};
+
+const sendPushNotification = (
+  receiverId: string,
+  currentUserId: string,
+  content: string
+) => {
+  if (receiverId === currentUserId) {
+    return;
+  }
+  fetch("/api/send-push", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: receiverId,
+      title: "הודעה חדשה",
+      message: content,
+      url: `/chat?target=${currentUserId}`,
+    }),
+  })
+    .then((res) => {
+      if (!res.ok) {
+        console.warn("Push notification failed (non-critical):", res.status);
+      }
+    })
+    .catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn("Push notification unavailable (non-critical):", message);
+    });
+};
+
 export function useChat(
   currentUserId: string | undefined,
   activeChatId: string | null | undefined,
@@ -60,96 +205,69 @@ export function useChat(
     if (!currentUserId) {
       return;
     }
+    const userId = currentUserId;
 
     async function fetchContacts() {
-      // Get all messages where I am sender or receiver
-      const { data: sent, error: sentError } = await supabase
-        .from("messages")
-        .select("receiver_id, content, created_at")
-        .eq("sender_id", currentUserId!)
-        .order("created_at", { ascending: false });
+      const [sentResult, receivedResult] = await Promise.all([
+        supabase
+          .from("messages")
+          .select("receiver_id, content, created_at")
+          .eq("sender_id", userId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("messages")
+          .select("sender_id, content, created_at")
+          .eq("receiver_id", userId)
+          .order("created_at", { ascending: false }),
+      ]);
 
-      const { data: received, error: receivedError } = await supabase
-        .from("messages")
-        .select("sender_id, content, created_at")
-        .eq("receiver_id", currentUserId!)
-        .order("created_at", { ascending: false });
+      const { data: sent, error: sentError } = sentResult;
+      const { data: received, error: receivedError } = receivedResult;
 
       if (sentError || receivedError) {
         console.error("Error fetching contacts", sentError, receivedError);
         return;
       }
 
-      // Aggregate unique IDs and latest message
-      const contactMap = new Map<string, { lastMsg: string; time: string }>();
-
-      sent?.forEach((m) => {
-        if (!contactMap.has(m.receiver_id)) {
-          contactMap.set(m.receiver_id, {
-            lastMsg: `You: ${m.content}`,
-            time: m.created_at,
-          });
-        }
-      });
-
-      received?.forEach((m) => {
-        if (!contactMap.has(m.sender_id)) {
-          const existing = contactMap.get(m.sender_id);
-          if (!existing || new Date(m.created_at) > new Date(existing.time)) {
-            contactMap.set(m.sender_id, {
-              lastMsg: m.content,
-              time: m.created_at,
-            });
-          }
-        }
-      });
+      const contactMap = buildContactMap(
+        (sent || []) as SentContactMessageRow[],
+        (received || []) as ReceivedContactMessageRow[]
+      );
 
       const contactIds = Array.from(contactMap.keys());
       if (contactIds.length === 0) {
+        setContacts([]);
         return;
       }
 
-      // Fetch Profile Details
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, is_online")
-        .in("id", contactIds);
+      const [profilesResult, unreadResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, username, avatar_url, is_online")
+          .in("id", contactIds),
+        supabase
+          .from("messages")
+          .select("sender_id")
+          .eq("receiver_id", userId)
+          .eq("is_read", false)
+          .in("sender_id", contactIds),
+      ]);
 
-      // Fetch unread counts for each contact
-      const { data: unreadMessages } = await supabase
-        .from("messages")
-        .select("sender_id")
-        .eq("receiver_id", currentUserId!)
-        .eq("is_read", false)
-        .in("sender_id", contactIds);
+      const profiles = (profilesResult.data || []) as ContactProfileRow[];
+      const unreadMessages = (unreadResult.data || []) as UnreadSenderRow[];
+      const unreadCounts = buildUnreadCountMap(unreadMessages);
 
-      // Count unread messages per sender
-      const unreadCounts = new Map<string, number>();
-      unreadMessages?.forEach((msg) => {
-        unreadCounts.set(
-          msg.sender_id,
-          (unreadCounts.get(msg.sender_id) || 0) + 1
+      if (profiles.length > 0) {
+        setContacts(
+          mapProfilesToContacts(profiles, contactMap, unreadCounts) as Contact[]
         );
-      });
-
-      if (profiles) {
-        const mappedContacts: Contact[] = profiles.map((p) => ({
-          id: p.id,
-          username: p.username || "Unknown",
-          avatar_url: p.avatar_url,
-          last_msg: contactMap.get(p.id)?.lastMsg,
-          last_msg_time: new Date(
-            contactMap.get(p.id)?.time
-          ).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" }),
-          online: p.is_online,
-          unread_count: unreadCounts.get(p.id) || 0,
-        }));
-        setContacts(mappedContacts);
+      } else {
+        setContacts([]);
       }
     }
 
     fetchContacts();
-  }, [currentUserId, supabase.from]);
+  }, [currentUserId, supabase]);
 
   // 2. Subscribe to Realtime Messages with Auto-Reconnect
   const setupRealtimeSubscription = useCallback(() => {
@@ -302,9 +420,7 @@ export function useChat(
     }
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        console.log("📱 Tab became visible, checking connection...");
-        // If we're not subscribed, reconnect
+      const resumeSubscriptions = () => {
         if (!isSubscribedRef.current) {
           console.log("🔄 Reconnecting after tab became visible...");
           if (channelRef.current) {
@@ -312,8 +428,9 @@ export function useChat(
           }
           setupRealtimeSubscription();
         }
-      } else {
-        // ✅ OPTIMIZATION: Pause subscription when tab is hidden
+      };
+
+      const pauseSubscriptions = () => {
         console.log("💤 Tab hidden, pausing realtime subscription...");
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
@@ -324,7 +441,14 @@ export function useChat(
           typingChannelRef.current = null;
         }
         isSubscribedRef.current = false;
+      };
+
+      if (document.visibilityState === "visible") {
+        console.log("📱 Tab became visible, checking connection...");
+        resumeSubscriptions();
+        return;
       }
+      pauseSubscriptions();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -411,6 +535,12 @@ export function useChat(
 
   // 6. Methods
   const fetchMessages = async (otherUserId: string) => {
+    if (!currentUserId) {
+      setMessages([]);
+      setIsLoading(false);
+      return;
+    }
+
     // Skip database fetch for GamerBot (client-side only)
     if (otherUserId === "gamerbot-ai") {
       setMessages([]);
@@ -432,7 +562,7 @@ export function useChat(
     } else {
       // Filter out messages deleted by current user
       const filteredMessages = (data || []).filter(
-        (msg) => !msg.deleted_by?.includes(currentUserId!)
+        (msg) => !msg.deleted_by?.includes(currentUserId)
       );
       setMessages(filteredMessages);
     }
@@ -440,29 +570,24 @@ export function useChat(
   };
 
   const sendMessage = async (content: string, receiverId: string) => {
-    // Validation: Ensure user is authenticated
-    if (!currentUserId) {
-      console.error("sendMessage: No currentUserId - user not authenticated");
+    const validationError = getSendMessageValidationError(
+      currentUserId,
+      content,
+      receiverId
+    );
+    if (validationError) {
+      console.error("sendMessage validation failed:", validationError);
+      toast.error(validationError);
+      return;
+    }
+    const senderId = currentUserId;
+    if (!senderId) {
       toast.error("אנא התחבר כדי לשלוח הודעות");
       return;
     }
 
-    // Validation: Ensure content is not empty
-    if (!content.trim()) {
-      console.error("sendMessage: Empty content");
-      toast.error("לא ניתן לשלוח הודעה ריקה");
-      return;
-    }
-
-    // Validation: Ensure receiver ID is valid
-    if (!receiverId) {
-      console.error("sendMessage: No receiverId");
-      toast.error("שגיאה: לא נבחר נמען");
-      return;
-    }
-
     console.log("Sending message...", {
-      sender_id: currentUserId,
+      sender_id: senderId,
       receiver_id: receiverId,
       content: content.substring(0, 50) + (content.length > 50 ? "..." : ""),
     });
@@ -470,7 +595,7 @@ export function useChat(
     // Optimistic update - add message immediately to UI
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`, // Temporary ID
-      sender_id: currentUserId,
+      sender_id: senderId,
       receiver_id: receiverId,
       content,
       created_at: new Date().toISOString(),
@@ -483,7 +608,7 @@ export function useChat(
       const { data, error } = await supabase
         .from("messages")
         .insert({
-          sender_id: currentUserId,
+          sender_id: senderId,
           receiver_id: receiverId,
           content,
         })
@@ -502,13 +627,9 @@ export function useChat(
           code: error.code,
         });
 
-        // Provide specific error messages based on error type
-        if (error.code === "PGRST301" || error.message.includes("JWT")) {
+        if (isAuthError(error.code, error.message)) {
           toast.error("פג תוקף ההתחברות. אנא התחבר מחדש");
-        } else if (
-          error.code === "42501" ||
-          error.message.includes("permission")
-        ) {
+        } else if (isPermissionError(error.code, error.message)) {
           toast.error("אין לך הרשאה לשלוח הודעה זו");
         } else {
           toast.error(`שגיאה בשליחת הודעה: ${error.message}`);
@@ -525,33 +646,7 @@ export function useChat(
         );
       }
 
-      // Trigger Push Notification (non-blocking, silent failure)
-      if (receiverId !== currentUserId) {
-        fetch("/api/send-push", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: receiverId,
-            title: "הודעה חדשה",
-            message: content,
-            url: `/chat?target=${currentUserId}`,
-          }),
-        })
-          .then((res) => {
-            if (!res.ok) {
-              console.warn(
-                "Push notification failed (non-critical):",
-                res.status
-              );
-            }
-          })
-          .catch((err) => {
-            console.warn(
-              "Push notification unavailable (non-critical):",
-              err.message
-            );
-          });
-      }
+      sendPushNotification(receiverId, senderId, content);
     } catch (err) {
       // Remove optimistic message on unexpected error
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
@@ -560,7 +655,7 @@ export function useChat(
     }
   };
 
-  const refreshConnection = useCallback(async () => {
+  const refreshConnection = useCallback(() => {
     console.log("Manual refresh triggered");
     // Reconnect realtime
     if (channelRef.current) {
