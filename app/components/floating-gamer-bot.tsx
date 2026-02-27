@@ -9,7 +9,7 @@ import {
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
@@ -44,9 +44,13 @@ function getLocalBotReply(message: string): string {
 }
 
 export default function FloatingGamerBot() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [input, setInput] = useState("");
+  const [ui, setUi] = useState({
+    isOpen: false,
+    isMinimized: false,
+    input: "",
+    isTyping: false,
+    position: { x: 0, y: 0 },
+  });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -56,10 +60,8 @@ export default function FloatingGamerBot() {
       timestamp: "",
     },
   ]);
-  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const [position, setPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -75,7 +77,7 @@ export default function FloatingGamerBot() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!input.trim()) {
+    if (!ui.input.trim()) {
       toast.error("לא ניתן לשלוח הודעה ריקה");
       return;
     }
@@ -83,13 +85,12 @@ export default function FloatingGamerBot() {
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       sender: "user",
-      content: input.trim(),
+      content: ui.input.trim(),
       timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsTyping(true);
+    setUi((prev) => ({ ...prev, input: "", isTyping: true }));
     await new Promise((resolve) => {
       setTimeout(resolve, 300);
     });
@@ -102,25 +103,33 @@ export default function FloatingGamerBot() {
     };
 
     setMessages((prev) => [...prev, botMessage]);
-    setIsTyping(false);
+    setUi((prev) => ({ ...prev, isTyping: false }));
   };
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
       {/* Floating Button */}
       <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            animate={{ scale: 1, opacity: 1, x: position.x, y: position.y }}
+        {!ui.isOpen && (
+          <m.button
+            animate={{
+              scale: 1,
+              opacity: 1,
+              x: ui.position.x,
+              y: ui.position.y,
+            }}
             className="group fixed bottom-24 left-6 z-9999 flex h-16 w-16 cursor-move items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary shadow-2xl shadow-primary/50 transition-shadow hover:shadow-primary/70 md:bottom-6"
             drag
             dragElastic={0}
             dragMomentum={false}
-            exit={{ scale: 0, opacity: 0 }}
-            initial={{ scale: 0, opacity: 0 }}
-            onClick={() => setIsOpen(true)}
+            exit={{ scale: 0.95, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            onClick={() => setUi((prev) => ({ ...prev, isOpen: true }))}
             onDragEnd={(_e, info) => {
-              setPosition({ x: info.offset.x, y: info.offset.y });
+              setUi((prev) => ({
+                ...prev,
+                position: { x: info.offset.x, y: info.offset.y },
+              }));
             }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -131,19 +140,19 @@ export default function FloatingGamerBot() {
               size={28}
             />
             <span className="absolute -top-1 -right-1 h-4 w-4 animate-pulse rounded-full border-2 border-primary-foreground bg-green-500" />
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
 
       {/* Chat Window */}
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
+        {ui.isOpen && (
+          <m.div
             animate={{
               opacity: 1,
               scale: 1,
               y: 0,
-              height: isMinimized ? "auto" : "37.5rem",
+              height: ui.isMinimized ? "auto" : "37.5rem",
             }}
             className="fixed bottom-24 left-6 z-9999 flex w-96 flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl md:bottom-6"
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -179,10 +188,15 @@ export default function FloatingGamerBot() {
               <div className="flex items-center gap-1">
                 <button
                   className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
-                  onClick={() => setIsMinimized(!isMinimized)}
+                  onClick={() =>
+                    setUi((prev) => ({
+                      ...prev,
+                      isMinimized: !prev.isMinimized,
+                    }))
+                  }
                   type="button"
                 >
-                  {isMinimized ? (
+                  {ui.isMinimized ? (
                     <HugeiconsIcon icon={Maximize02Icon} size={16} />
                   ) : (
                     <HugeiconsIcon icon={Minimize02Icon} size={16} />
@@ -190,7 +204,7 @@ export default function FloatingGamerBot() {
                 </button>
                 <button
                   className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setUi((prev) => ({ ...prev, isOpen: false }))}
                   type="button"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={16} />
@@ -199,7 +213,7 @@ export default function FloatingGamerBot() {
             </div>
 
             {/* Messages */}
-            {!isMinimized && (
+            {!ui.isMinimized && (
               <>
                 <div
                   className="flex-1 space-y-3 overflow-y-auto bg-primary-foreground p-4"
@@ -207,7 +221,7 @@ export default function FloatingGamerBot() {
                 >
                   <AnimatePresence initial={false}>
                     {messages.map((msg) => (
-                      <motion.div
+                      <m.div
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                         exit={{
@@ -241,10 +255,10 @@ export default function FloatingGamerBot() {
                               : ""}
                           </span>
                         </div>
-                      </motion.div>
+                      </m.div>
                     ))}
-                    {isTyping && (
-                      <motion.div
+                    {ui.isTyping && (
+                      <m.div
                         animate={{ opacity: 1 }}
                         className="flex justify-start"
                         initial={{ opacity: 0 }}
@@ -254,7 +268,7 @@ export default function FloatingGamerBot() {
                           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
                           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
                         </div>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
                 </div>
@@ -267,19 +281,21 @@ export default function FloatingGamerBot() {
                   >
                     <input
                       className="dir-rtl h-9 flex-1 bg-transparent px-2 text-right text-fluid-sm text-white outline-hidden placeholder:text-gray-600"
-                      onChange={(e) => setInput(e.target.value)}
+                      onChange={(e) =>
+                        setUi((prev) => ({ ...prev, input: e.target.value }))
+                      }
                       placeholder="כתוב הודעה..."
                       type="text"
-                      value={input}
+                      value={ui.input}
                     />
                     <button
                       className="rounded-lg bg-primary p-2 text-black transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={!input.trim() || isTyping}
+                      disabled={!ui.input.trim() || ui.isTyping}
                       type="submit"
                     >
                       <HugeiconsIcon
                         className={
-                          input.trim() && !isTyping
+                          ui.input.trim() && !ui.isTyping
                             ? "translate-x-0.5 -translate-y-0.5"
                             : ""
                         }
@@ -291,9 +307,9 @@ export default function FloatingGamerBot() {
                 </div>
               </>
             )}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </>
+    </LazyMotion>
   );
 }

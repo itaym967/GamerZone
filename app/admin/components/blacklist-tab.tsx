@@ -4,7 +4,6 @@ import {
   Add01Icon,
   BrainIcon,
   Delete02Icon,
-  Loading02Icon,
   Search01Icon,
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
@@ -12,7 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { AIAnalysisResult, BlockedWord } from "../types";
+import type { BlockedWord } from "../types";
 
 interface BlacklistTabProps {
   currentUser: string | null;
@@ -27,10 +26,6 @@ export default function BlacklistTab({
   const [loading, setLoading] = useState(true);
   const [newWord, setNewWord] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAnalyzing, _setIsAnalyzing] = useState(false);
-  const [analysisResult, _setAnalysisResult] =
-    useState<AIAnalysisResult | null>(null);
-  const [showAnalysis, _setShowAnalysis] = useState(false);
 
   const fetchWords = useCallback(
     async (showLoading = false) => {
@@ -130,30 +125,6 @@ export default function BlacklistTab({
     toast.info("ניתוח רעלנות עם AI הוסר מהמערכת.");
   };
 
-  const addSuggestedWord = async (word: string) => {
-    if (blockedWords.some((w) => w.word === word)) {
-      toast.info("המילה כבר קיימת ברשימה");
-      return;
-    }
-    try {
-      const { error } = await supabase.from("blocked_words").insert([{ word }]);
-      if (error) {
-        toast.error("שגיאה בהוספת מילה");
-        return;
-      }
-      toast.success(`המילה "${word}" נוספה לרשימה`);
-      fetchWords();
-      await supabase.from("admin_logs").insert({
-        action: "ADD_WORD_FROM_AI",
-        details: { word },
-        admin_id: currentUser,
-      });
-    } catch (error) {
-      toast.error("שגיאה בהוספת מילה");
-      console.error(error);
-    }
-  };
-
   const filteredWords = searchQuery
     ? blockedWords.filter((w) => w.word.includes(searchQuery.toLowerCase()))
     : blockedWords;
@@ -188,64 +159,14 @@ export default function BlacklistTab({
           </div>
           <button
             className="flex items-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 px-6 py-3 font-bold text-white transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isAnalyzing || blockedWords.length === 0}
+            disabled={blockedWords.length === 0}
             onClick={analyzeWithAI}
             type="button"
           >
-            {isAnalyzing ? (
-              <>
-                <HugeiconsIcon
-                  className="animate-spin"
-                  icon={Loading02Icon}
-                  size={18}
-                />
-                <span>מנתח...</span>
-              </>
-            ) : (
-              <>
-                <HugeiconsIcon icon={SparklesIcon} size={18} />
-                <span>נתח עם AI</span>
-              </>
-            )}
+            <HugeiconsIcon icon={SparklesIcon} size={18} />
+            <span>נתח עם AI</span>
           </button>
         </div>
-
-        {showAnalysis && analysisResult && (
-          <div className="mt-6 space-y-4">
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-              <h4 className="mb-2 font-bold text-fluid-sm text-purple-400">
-                ניתוח:
-              </h4>
-              <p className="whitespace-pre-wrap text-fluid-sm text-gray-300 leading-relaxed">
-                {analysisResult.analysis}
-              </p>
-            </div>
-            {analysisResult.suggestions.length > 0 && (
-              <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-                <h4 className="mb-3 font-bold text-blue-400 text-fluid-sm">
-                  המלצות למילים נוספות:
-                </h4>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-                  {analysisResult.suggestions.map((word) => (
-                    <button
-                      className="group flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-2 transition-all hover:border-blue-500/50 hover:bg-white/10"
-                      key={word}
-                      onClick={() => addSuggestedWord(word)}
-                      type="button"
-                    >
-                      <span className="text-fluid-sm text-white">{word}</span>
-                      <HugeiconsIcon
-                        className="text-gray-500 group-hover:text-blue-400"
-                        icon={Add01Icon}
-                        size={14}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

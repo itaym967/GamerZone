@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { domAnimation, LazyMotion, m, type Variants } from "framer-motion";
 import type { ReactNode } from "react";
 
 interface PageTransitionProps {
@@ -33,14 +33,16 @@ export default function PageTransition({
   className = "",
 }: PageTransitionProps) {
   return (
-    <motion.div
-      animate="animate"
-      className={className}
-      exit="exit"
-      initial="initial"
-      variants={pageVariants}
-    >
-      {children}
-    </motion.div>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        animate="animate"
+        className={className}
+        exit="exit"
+        initial="initial"
+        variants={pageVariants}
+      >
+        {children}
+      </m.div>
+    </LazyMotion>
   );
 }

@@ -2,9 +2,9 @@
 
 import { Refresh01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { motion } from "framer-motion";
+import { domAnimation, LazyMotion, m } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AvatarCreatorProps {
   initialSeed?: string;
@@ -28,10 +28,7 @@ export default function AvatarCreator({
 }: AvatarCreatorProps) {
   const [selectedStyle, setSelectedStyle] = useState("avataaars");
   const [seed, setSeed] = useState(initialSeed || "gamer");
-  const avatarUrl = useMemo(
-    () => `https://api.dicebear.com/7.x/${selectedStyle}/svg?seed=${seed}`,
-    [selectedStyle, seed]
-  );
+  const avatarUrl = `https://api.dicebear.com/7.x/${selectedStyle}/svg?seed=${seed}`;
 
   useEffect(() => {
     onSelect(avatarUrl);
@@ -42,77 +39,79 @@ export default function AvatarCreator({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Preview */}
-      <div className="flex justify-center">
-        <motion.div
-          animate={{ scale: 1, opacity: 1 }}
-          className="relative"
-          initial={{ scale: 0.8, opacity: 0 }}
-          key={avatarUrl}
-        >
-          <div className="h-40 w-40 rounded-full bg-linear-to-br from-primary to-secondary p-1">
-            <div className="h-full w-full overflow-hidden rounded-full bg-black">
-              <Image
-                alt="Avatar Preview"
-                className="h-full w-full object-cover"
-                height={160}
-                src={avatarUrl}
-                width={160}
-              />
-            </div>
-          </div>
-          <button
-            className="absolute -right-2 -bottom-2 rounded-full bg-primary p-3 text-black shadow-lg transition-all hover:scale-110 hover:bg-primary/80"
-            onClick={randomize}
-            title="אווטאר אקראי"
-            type="button"
+    <LazyMotion features={domAnimation}>
+      <div className="space-y-6">
+        {/* Preview */}
+        <div className="flex justify-center">
+          <m.div
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative"
+            initial={{ scale: 0.8, opacity: 0 }}
+            key={avatarUrl}
           >
-            <HugeiconsIcon icon={Refresh01Icon} size={20} />
-          </button>
-        </motion.div>
-      </div>
-
-      {/* Style Selector */}
-      <div>
-        <p className="mb-3 block text-right font-medium text-fluid-sm text-gray-400">
-          בחר סגנון אווטאר
-        </p>
-        <div className="grid grid-cols-4 gap-2">
-          {AVATAR_STYLES.map((style) => (
+            <div className="h-40 w-40 rounded-full bg-linear-to-br from-primary to-secondary p-1">
+              <div className="h-full w-full overflow-hidden rounded-full bg-black">
+                <Image
+                  alt="Avatar Preview"
+                  className="h-full w-full object-cover"
+                  height={160}
+                  src={avatarUrl}
+                  width={160}
+                />
+              </div>
+            </div>
             <button
-              className={`relative rounded-xl border-2 p-3 text-center transition-all ${
-                selectedStyle === style.id
-                  ? "border-primary bg-primary/10"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
-              }`}
-              key={style.id}
-              onClick={() => setSelectedStyle(style.id)}
+              className="absolute -right-2 -bottom-2 rounded-full bg-primary p-3 text-black shadow-lg transition-all hover:scale-110 hover:bg-primary/80"
+              onClick={randomize}
+              title="אווטאר אקראי"
               type="button"
             >
-              <div className="mb-1 text-fluid-xl">{style.emoji}</div>
-              <div className="font-medium text-fluid-xs text-white">
-                {style.name}
-              </div>
-              {selectedStyle === style.id && (
-                <div className="absolute -top-1 -right-1 rounded-full bg-primary p-0.5 text-black">
-                  <HugeiconsIcon icon={Tick01Icon} size={12} />
-                </div>
-              )}
+              <HugeiconsIcon icon={Refresh01Icon} size={20} />
             </button>
-          ))}
+          </m.div>
         </div>
-      </div>
 
-      {/* Randomize Button */}
-      <button
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-white transition-all hover:border-primary/50"
-        onClick={randomize}
-        type="button"
-      >
-        <HugeiconsIcon icon={Refresh01Icon} size={18} />
-        <span>אווטאר אקראי חדש</span>
-      </button>
-    </div>
+        {/* Style Selector */}
+        <div>
+          <p className="mb-3 block text-right font-medium text-fluid-sm text-gray-400">
+            בחר סגנון אווטאר
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {AVATAR_STYLES.map((style) => (
+              <button
+                className={`relative rounded-xl border-2 p-3 text-center transition-all ${
+                  selectedStyle === style.id
+                    ? "border-primary bg-primary/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+                }`}
+                key={style.id}
+                onClick={() => setSelectedStyle(style.id)}
+                type="button"
+              >
+                <div className="mb-1 text-fluid-xl">{style.emoji}</div>
+                <div className="font-medium text-fluid-xs text-white">
+                  {style.name}
+                </div>
+                {selectedStyle === style.id && (
+                  <div className="absolute -top-1 -right-1 rounded-full bg-primary p-0.5 text-black">
+                    <HugeiconsIcon icon={Tick01Icon} size={12} />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Randomize Button */}
+        <button
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-white transition-all hover:border-primary/50"
+          onClick={randomize}
+          type="button"
+        >
+          <HugeiconsIcon icon={Refresh01Icon} size={18} />
+          <span>אווטאר אקראי חדש</span>
+        </button>
+      </div>
+    </LazyMotion>
   );
 }

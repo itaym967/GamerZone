@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import ForgotPasswordPageClient from "./forgot-password-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Forgot Password",
   description: "Reset your GamerZone password.",
 };
 
-export default function ForgotPasswordPage() {
-  return <ForgotPasswordPageClient />;
+export default function ForgotPasswordLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return children;
 }

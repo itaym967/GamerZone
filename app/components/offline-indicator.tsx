@@ -1,22 +1,45 @@
 "use client";
 import { WifiOff01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
+
+interface OfflineState {
+  isOffline: boolean;
+  showBanner: boolean;
+}
+
+type OfflineAction =
+  | { type: "ONLINE" }
+  | { type: "OFFLINE" }
+  | { type: "DISMISS" };
+
+function offlineReducer(
+  state: OfflineState,
+  action: OfflineAction
+): OfflineState {
+  if (action.type === "ONLINE") {
+    return { isOffline: false, showBanner: false };
+  }
+  if (action.type === "OFFLINE") {
+    return { isOffline: true, showBanner: true };
+  }
+  return { ...state, showBanner: false };
+}
 
 export default function OfflineIndicator() {
   const initialOffline =
     typeof navigator !== "undefined" ? !navigator.onLine : false;
-  const [isOffline, setIsOffline] = useState(initialOffline);
-  const [showBanner, setShowBanner] = useState(initialOffline);
+  const [state, dispatch] = useReducer(offlineReducer, {
+    isOffline: initialOffline,
+    showBanner: initialOffline,
+  });
 
   useEffect(() => {
     const handleOnline = () => {
-      setIsOffline(false);
-      setShowBanner(false);
+      dispatch({ type: "ONLINE" });
     };
     const handleOffline = () => {
-      setIsOffline(true);
-      setShowBanner(true);
+      dispatch({ type: "OFFLINE" });
     };
 
     window.addEventListener("online", handleOnline);
@@ -28,7 +51,7 @@ export default function OfflineIndicator() {
     };
   }, []);
 
-  if (!(isOffline && showBanner)) {
+  if (!(state.isOffline && state.showBanner)) {
     return null;
   }
 
@@ -38,7 +61,7 @@ export default function OfflineIndicator() {
       <span>אתה במצב לא מקוון - חלק מהתכנים עשויים להיות לא מעודכנים</span>
       <button
         className="mr-2 text-black/70 hover:text-black"
-        onClick={() => setShowBanner(false)}
+        onClick={() => dispatch({ type: "DISMISS" })}
         type="button"
       >
         ✕

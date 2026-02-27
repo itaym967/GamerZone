@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import ProfilePageClient from "./profile-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Profile",
   description: "Manage your GamerZone profile.",
 };
 
-export default function ProfilePage() {
-  return <ProfilePageClient />;
+export default function ProfileLayout({ children }: { children: ReactNode }) {
+  return children;
 }

@@ -55,6 +55,65 @@ const drawerNavItems = [
 const DEFAULT_AVATAR_URL =
   "https://api.dicebear.com/7.x/adventurer/svg?seed=Gamer";
 
+function DrawerHeaderContent({
+  isMounted,
+  showSkeleton,
+  user,
+  profile,
+  onClose,
+}: {
+  isMounted: boolean;
+  showSkeleton: boolean;
+  user: { id: string } | null;
+  profile: { avatar_url?: string | null; username?: string | null } | null;
+  onClose: () => void;
+}) {
+  if (!isMounted || showSkeleton) {
+    return (
+      <div className="flex animate-pulse items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-white/10" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-24 rounded-xs bg-white/10" />
+          <div className="h-3 w-16 rounded-xs bg-white/10" />
+        </div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="flex items-center gap-3">
+        <OptimizedAvatar
+          className="rounded-full border-2 border-primary/30 bg-black"
+          seed={profile?.avatar_url || DEFAULT_AVATAR_URL}
+          size={48}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-bold text-fluid-base text-white">
+            {profile?.username || "Gamer"}
+          </p>
+          <p className="flex items-center gap-1 text-fluid-xs text-primary">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+            מחובר
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
+      href="/login"
+      onClick={onClose}
+      prefetch={false}
+    >
+      <HugeiconsIcon icon={Login01Icon} size={20} />
+      <span>התחברות</span>
+    </Link>
+  );
+}
+
 export default function MobileNav({
   user,
   profile,
@@ -91,53 +150,6 @@ export default function MobileNav({
   const isDrawerItemActive =
     visibleDrawerItems.some((item) => pathname === item.href) ||
     (isAdmin && pathname === "/admin");
-
-  const renderDrawerHeaderContent = () => {
-    if (!isMounted || showSkeleton) {
-      return (
-        <div className="flex animate-pulse items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-white/10" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-24 rounded-xs bg-white/10" />
-            <div className="h-3 w-16 rounded-xs bg-white/10" />
-          </div>
-        </div>
-      );
-    }
-
-    if (user) {
-      return (
-        <div className="flex items-center gap-3">
-          <OptimizedAvatar
-            className="rounded-full border-2 border-primary/30 bg-black"
-            seed={profile?.avatar_url || DEFAULT_AVATAR_URL}
-            size={48}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-bold text-fluid-base text-white">
-              {profile?.username || "Gamer"}
-            </p>
-            <p className="flex items-center gap-1 text-fluid-xs text-primary">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-              מחובר
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <Link
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
-        href="/login"
-        onClick={() => setDrawerOpen(false)}
-        prefetch={false}
-      >
-        <HugeiconsIcon icon={Login01Icon} size={20} />
-        <span>התחברות</span>
-      </Link>
-    );
-  };
 
   return (
     <>
@@ -213,7 +225,13 @@ export default function MobileNav({
       >
         {/* Drawer Header */}
         <div className="border-white/5 border-b p-5 pt-12">
-          {renderDrawerHeaderContent()}
+          <DrawerHeaderContent
+            isMounted={isMounted}
+            onClose={() => setDrawerOpen(false)}
+            profile={profile}
+            showSkeleton={showSkeleton}
+            user={user}
+          />
         </div>
 
         {/* Drawer Nav Items */}

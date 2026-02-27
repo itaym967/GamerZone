@@ -25,56 +25,62 @@ export default function GamertagsTab({
   onAddGamertag,
   onRemoveGamertag,
 }: GamertagsTabProps) {
-  const [newPlatform, setNewPlatform] = useState(PLATFORMS[0]);
-  const [newTag, setNewTag] = useState("");
-  const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [ui, setUi] = useState({
+    newPlatform: PLATFORMS[0],
+    newTag: "",
+    editingPlatform: null as string | null,
+    editValue: "",
+    confirmDelete: null as string | null,
+  });
 
   const availablePlatforms = PLATFORMS.filter(
     (p) => !formData.games.includes(p)
   );
 
   const handleAdd = () => {
-    if (!newTag.trim()) {
+    if (!ui.newTag.trim()) {
       return;
     }
-    onAddGamertag(newPlatform, newTag.trim());
-    setNewTag("");
+    onAddGamertag(ui.newPlatform, ui.newTag.trim());
+    setUi((prev) => ({ ...prev, newTag: "" }));
     if (availablePlatforms.length > 1) {
-      const nextPlatform = availablePlatforms.find((p) => p !== newPlatform);
+      const nextPlatform = availablePlatforms.find((p) => p !== ui.newPlatform);
       if (nextPlatform) {
-        setNewPlatform(nextPlatform);
+        setUi((prev) => ({ ...prev, newPlatform: nextPlatform }));
       }
     }
   };
 
   const handleStartEdit = (platform: string) => {
-    setEditingPlatform(platform);
-    setEditValue(formData.hiddenTags[platform] || "");
+    setUi((prev) => ({
+      ...prev,
+      editingPlatform: platform,
+      editValue: formData.hiddenTags[platform] || "",
+    }));
   };
 
   const handleSaveEdit = (platform: string) => {
-    if (!editValue.trim()) {
+    if (!ui.editValue.trim()) {
       return;
     }
-    const newTags = { ...formData.hiddenTags, [platform]: editValue.trim() };
+    const newTags = { ...formData.hiddenTags, [platform]: ui.editValue.trim() };
     onUpdateFormData({ hiddenTags: newTags });
-    setEditingPlatform(null);
+    setUi((prev) => ({ ...prev, editingPlatform: null }));
   };
 
   const handleCancelEdit = () => {
-    setEditingPlatform(null);
-    setEditValue("");
+    setUi((prev) => ({ ...prev, editingPlatform: null, editValue: "" }));
   };
 
   const handleDelete = (platform: string) => {
-    if (confirmDelete === platform) {
+    if (ui.confirmDelete === platform) {
       onRemoveGamertag(platform);
-      setConfirmDelete(null);
+      setUi((prev) => ({ ...prev, confirmDelete: null }));
     } else {
-      setConfirmDelete(platform);
-      setTimeout(() => setConfirmDelete(null), 3000);
+      setUi((prev) => ({ ...prev, confirmDelete: platform }));
+      setTimeout(() => {
+        setUi((prev) => ({ ...prev, confirmDelete: null }));
+      }, 3000);
     }
   };
 
@@ -99,7 +105,7 @@ export default function GamertagsTab({
           <div className="flex gap-2">
             <button
               className="rounded-xl bg-primary p-2.5 text-black transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!newTag.trim()}
+              disabled={!ui.newTag.trim()}
               onClick={handleAdd}
               type="button"
             >
@@ -108,16 +114,20 @@ export default function GamertagsTab({
             <input
               className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-fluid-sm text-white outline-hidden focus:border-primary/50"
               dir="ltr"
-              onChange={(e) => setNewTag(e.target.value)}
+              onChange={(e) =>
+                setUi((prev) => ({ ...prev, newTag: e.target.value }))
+              }
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               placeholder="הכנס את ה-Gamertag שלך..."
               type="text"
-              value={newTag}
+              value={ui.newTag}
             />
             <select
               className="min-w-30 appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
-              onChange={(e) => setNewPlatform(e.target.value)}
-              value={newPlatform}
+              onChange={(e) =>
+                setUi((prev) => ({ ...prev, newPlatform: e.target.value }))
+              }
+              value={ui.newPlatform}
             >
               {availablePlatforms.map((p) => (
                 <option className="bg-card" key={p} value={p}>
@@ -155,13 +165,14 @@ export default function GamertagsTab({
               </span>
 
               {/* Tag Value */}
-              {editingPlatform === platform ? (
+              {ui.editingPlatform === platform ? (
                 <div className="flex flex-1 gap-2">
                   <input
-                    autoFocus
                     className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-fluid-sm text-white outline-hidden"
                     dir="ltr"
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) =>
+                      setUi((prev) => ({ ...prev, editValue: e.target.value }))
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         handleSaveEdit(platform);
@@ -171,7 +182,7 @@ export default function GamertagsTab({
                       }
                     }}
                     type="text"
-                    value={editValue}
+                    value={ui.editValue}
                   />
                   <button
                     className="rounded-lg bg-green-500/20 p-1.5 text-green-400 transition-colors hover:bg-green-500/30"
@@ -209,13 +220,13 @@ export default function GamertagsTab({
                     </button>
                     <button
                       className={`rounded-lg p-1.5 transition-colors ${
-                        confirmDelete === platform
+                        ui.confirmDelete === platform
                           ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
                           : "text-gray-400 hover:bg-red-500/10 hover:text-red-400"
                       }`}
                       onClick={() => handleDelete(platform)}
                       title={
-                        confirmDelete === platform ? "לחץ שוב לאישור" : "מחק"
+                        ui.confirmDelete === platform ? "לחץ שוב לאישור" : "מחק"
                       }
                       type="button"
                     >

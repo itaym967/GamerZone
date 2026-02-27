@@ -6,7 +6,7 @@ import {
   Share01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { toast } from "sonner";
 
 const MOBILE_REGEX = /Android|iPhone|iPad|iPod/i;
@@ -19,15 +19,36 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+interface PromptState {
+  deferredPrompt: BeforeInstallPromptEvent | null;
+  showBanner: boolean;
+}
+
+type PromptAction =
+  | { type: "SHOW"; payload: BeforeInstallPromptEvent | null }
+  | { type: "HIDE" }
+  | { type: "DISMISS" };
+
+function promptReducer(state: PromptState, action: PromptAction): PromptState {
+  if (action.type === "SHOW") {
+    return { showBanner: true, deferredPrompt: action.payload };
+  }
+  if (action.type === "DISMISS") {
+    return { ...state, showBanner: false, deferredPrompt: null };
+  }
+  return { ...state, showBanner: false, deferredPrompt: null };
+}
+
 /**
  * PWA Install Prompt Component
  * Shows a visual install banner for Android (beforeinstallprompt)
  * and iOS Safari instructions (share → add to home screen).
  */
 export default function PWAInstallPrompt() {
-  const [showBanner, setShowBanner] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [state, dispatch] = useReducer(promptReducer, {
+    showBanner: false,
+    deferredPrompt: null,
+  });
   const isIOS =
     typeof navigator !== "undefined" && IOS_REGEX.test(navigator.userAgent);
 
@@ -77,48 +98,45 @@ export default function PWAInstallPrompt() {
     const handler = (event: Event) => {
       const e = event as BeforeInstallPromptEvent;
       e.preventDefault();
-      setDeferredPrompt(e);
-      setTimeout(() => setShowBanner(true), 4000);
+      setTimeout(() => dispatch({ type: "SHOW", payload: e }), 4000);
     };
     window.addEventListener("beforeinstallprompt", handler);
 
     // iOS Safari: show instructions after delay
     if (ios && isIOSSafari()) {
-      setTimeout(() => setShowBanner(true), 4000);
+      setTimeout(() => dispatch({ type: "SHOW", payload: null }), 4000);
     }
 
     // Listen for successful install
     window.addEventListener("appinstalled", () => {
       toast.success("GamerZone הותקן בהצלחה!");
-      setShowBanner(false);
-      setDeferredPrompt(null);
+      dispatch({ type: "HIDE" });
     });
 
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) {
+    if (!state.deferredPrompt) {
       return;
     }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    state.deferredPrompt.prompt();
+    const { outcome } = await state.deferredPrompt.userChoice;
     if (outcome === "accepted") {
       toast.success("תודה שהתקנת את GamerZone!");
     }
-    setDeferredPrompt(null);
-    setShowBanner(false);
+    dispatch({ type: "HIDE" });
   };
 
   const handleDismiss = () => {
-    setShowBanner(false);
+    dispatch({ type: "DISMISS" });
     localStorage.setItem(
       "pwa-install-dismissed",
       JSON.stringify({ timestamp: Date.now() })
     );
   };
 
-  if (!showBanner) {
+  if (!state.showBanner) {
     return null;
   }
 

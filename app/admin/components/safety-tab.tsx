@@ -77,16 +77,18 @@ const getReportStatusLabel = (
 export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   const [reports, setReports] = useState<ContentReport[]>([]);
   const [minorUsers, setMinorUsers] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [reportFilter, setReportFilter] = useState<ReportStatusFilter>("all");
-  const [activeReportId, setActiveReportId] = useState<string | null>(null);
-  const [adminNotes, setAdminNotes] = useState("");
-  const [minorSearch, setMinorSearch] = useState("");
+  const [uiState, setUiState] = useState({
+    loading: true,
+    reportFilter: "all" as ReportStatusFilter,
+    activeReportId: null as string | null,
+    adminNotes: "",
+    minorSearch: "",
+  });
 
   const fetchData = useCallback(
     async (showLoading = false) => {
       if (showLoading) {
-        setLoading(true);
+        setUiState((prev) => ({ ...prev, loading: true }));
       }
       try {
         const [reportsRes, minorsRes] = await Promise.all([
@@ -115,7 +117,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
         console.error("Error fetching safety data:", error);
         toast.error("שגיאה בטעינת נתוני בטיחות");
       }
-      setLoading(false);
+      setUiState((prev) => ({ ...prev, loading: false }));
     },
     [supabase]
   );
@@ -133,16 +135,16 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
     reportId: string,
     status: "reviewing" | "resolved" | "dismissed"
   ) => {
-    const notes = adminNotes.trim() === "" ? null : adminNotes;
+    const notes = uiState.adminNotes.trim() === "" ? null : uiState.adminNotes;
+    const shouldResolveFields =
+      status === "resolved" ? true : status === "dismissed";
     try {
       const now = new Date().toISOString();
       const update: ReportUpdateInput = {
         status,
         admin_notes: notes,
       };
-      const isResolved = status === "resolved";
-      const isDismissed = status === "dismissed";
-      if (isResolved || isDismissed) {
+      if (shouldResolveFields) {
         update.resolved_by = currentUser;
         update.resolved_at = now;
       }
@@ -160,14 +162,22 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
       const statusLabel = getReportStatusLabel(status);
       toast.success(`הדיווח סומן כ${statusLabel}`);
 
+      let logAction: "DISMISS_REPORT" | "RESOLVE_REPORT" = "RESOLVE_REPORT";
+      if (status === "dismissed") {
+        logAction = "DISMISS_REPORT";
+      }
+
       await supabase.from("admin_logs").insert({
-        action: status === "dismissed" ? "DISMISS_REPORT" : "RESOLVE_REPORT",
-        details: { report_id: reportId, status, admin_notes: adminNotes },
+        action: logAction,
+        details: {
+          report_id: reportId,
+          status,
+          admin_notes: uiState.adminNotes,
+        },
         admin_id: currentUser,
       });
 
-      setActiveReportId(null);
-      setAdminNotes("");
+      setUiState((prev) => ({ ...prev, activeReportId: null, adminNotes: "" }));
       fetchData();
     } catch (error) {
       console.error("Error updating report:", error);
@@ -176,13 +186,13 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
   };
 
   const filteredReports = reports.filter((r) =>
-    reportFilter === "all" ? true : r.status === reportFilter
+    uiState.reportFilter === "all" ? true : r.status === uiState.reportFilter
   );
 
   const filteredMinors = minorUsers.filter(
     (m) =>
-      !minorSearch ||
-      m.username?.toLowerCase().includes(minorSearch.toLowerCase())
+      !uiState.minorSearch ||
+      m.username?.toLowerCase().includes(uiState.minorSearch.toLowerCase())
   );
 
   const stats = {
@@ -193,7 +203,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
     withConsent: minorUsers.filter((u) => u.parental_consent).length,
   };
 
-  if (loading) {
+  if (uiState.loading) {
     return (
       <div className="flex justify-center py-20">
         <span className="h-10 w-10 animate-spin rounded-full border-4 border-green-500/30 border-t-green-500" />
@@ -292,12 +302,14 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
             ).map((f) => (
               <button
                 className={`rounded-lg px-2.5 py-1 font-bold text-[0.6875rem] transition-all ${
-                  reportFilter === f
+                  uiState.reportFilter === f
                     ? "border border-amber-500/30 bg-amber-500/20 text-amber-400"
                     : "border border-white/5 bg-white/5 text-gray-500 hover:bg-white/10"
                 }`}
                 key={f}
-                onClick={() => setReportFilter(f)}
+                onClick={() =>
+                  setUiState((prev) => ({ ...prev, reportFilter: f }))
+                }
                 type="button"
               >
                 {REPORT_STATUS_FILTER_LABELS[f]}
@@ -342,13 +354,18 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                   {report.status === "pending" ||
                   report.status === "reviewing" ? (
                     <div className="flex shrink-0 flex-col gap-1.5">
-                      {activeReportId === report.id ? (
+                      {uiState.activeReportId === report.id ? (
                         <div className="w-64 space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
                           <textarea
                             className="h-16 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-right text-fluid-xs text-white outline-hidden"
-                            onChange={(e) => setAdminNotes(e.target.value)}
+                            onChange={(e) =>
+                              setUiState((prev) => ({
+                                ...prev,
+                                adminNotes: e.target.value,
+                              }))
+                            }
                             placeholder="הערות מנהל (אופציונלי)..."
-                            value={adminNotes}
+                            value={uiState.adminNotes}
                           />
                           <div className="flex gap-1.5">
                             {report.status === "pending" && (
@@ -383,8 +400,11 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                             <button
                               className="p-1.5 text-gray-500 transition-colors hover:text-white"
                               onClick={() => {
-                                setActiveReportId(null);
-                                setAdminNotes("");
+                                setUiState((prev) => ({
+                                  ...prev,
+                                  activeReportId: null,
+                                  adminNotes: "",
+                                }));
                               }}
                               type="button"
                             >
@@ -395,7 +415,12 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
                       ) : (
                         <button
                           className="rounded-lg bg-amber-500/10 px-3 py-1.5 font-bold text-amber-400 text-fluid-xs transition-colors hover:bg-amber-500/20"
-                          onClick={() => setActiveReportId(report.id)}
+                          onClick={() =>
+                            setUiState((prev) => ({
+                              ...prev,
+                              activeReportId: report.id,
+                            }))
+                          }
                           type="button"
                         >
                           טפל בדיווח
@@ -415,7 +440,7 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
               size={32}
             />
             <p>
-              {reportFilter !== "all"
+              {uiState.reportFilter !== "all"
                 ? "אין דיווחים בסטטוס זה"
                 : "אין דיווחים ממתינים"}
             </p>
@@ -442,10 +467,12 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
             />
             <input
               className="w-full rounded-lg border border-white/5 bg-black/20 py-1.5 pr-8 pl-3 text-right text-fluid-xs text-white outline-hidden"
-              onChange={(e) => setMinorSearch(e.target.value)}
+              onChange={(e) =>
+                setUiState((prev) => ({ ...prev, minorSearch: e.target.value }))
+              }
               placeholder="חפש קטין..."
               type="text"
-              value={minorSearch}
+              value={uiState.minorSearch}
             />
           </div>
         </div>
@@ -524,7 +551,9 @@ export default function SafetyTab({ supabase, currentUser }: SafetyTabProps) {
               size={32}
             />
             <p>
-              {minorSearch ? "לא נמצאו קטינים" : "אין חשבונות קטינים רשומים"}
+              {uiState.minorSearch
+                ? "לא נמצאו קטינים"
+                : "אין חשבונות קטינים רשומים"}
             </p>
           </div>
         )}

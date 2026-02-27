@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -10,8 +9,6 @@ import { toast } from "sonner";
  * notification click messages to navigate within the app.
  */
 export default function ServiceWorkerRegistration() {
-  const router = useRouter();
-
   useEffect(() => {
     if (!("serviceWorker" in navigator)) {
       return;
@@ -78,7 +75,7 @@ export default function ServiceWorkerRegistration() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "NOTIFICATION_CLICK" && event.data.url) {
         const url = new URL(event.data.url);
-        router.push(url.pathname + url.search);
+        window.location.assign(url.pathname + url.search);
       }
     };
     navigator.serviceWorker.addEventListener("message", handleMessage);
@@ -90,7 +87,7 @@ export default function ServiceWorkerRegistration() {
       );
       navigator.serviceWorker.removeEventListener("message", handleMessage);
     };
-  }, [router]);
+  }, []);
 
   return null;
 }

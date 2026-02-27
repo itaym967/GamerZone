@@ -39,18 +39,50 @@ const getFreezeNotificationMessage = (isBanning: boolean, reason: string) => {
   return "חשבונך הוקפא על ידי מנהל המערכת.";
 };
 
+interface ProfileRealtimePayload {
+  eventType: "DELETE" | "INSERT" | "UPDATE";
+  new: Partial<Profile> & { id?: string };
+  old: { id?: string };
+}
+
+interface UsersTabUiState {
+  deleteTarget: Profile | null;
+  freezeReason: string;
+  freezeTarget: Profile | null;
+  roleChangeTarget: { newRole: string; user: Profile } | null;
+  roleFilter: RoleFilter;
+  searchQuery: string;
+}
+
+function applyProfileRealtimeUpdate(
+  previousUsers: Profile[],
+  payload: ProfileRealtimePayload
+) {
+  if (payload.eventType === "UPDATE" && payload.new.id) {
+    return previousUsers.map((user) =>
+      user.id === payload.new.id ? { ...user, ...payload.new } : user
+    );
+  }
+  if (payload.eventType === "INSERT") {
+    return [payload.new as Profile, ...previousUsers];
+  }
+  if (payload.eventType === "DELETE" && payload.old.id) {
+    return previousUsers.filter((user) => user.id !== payload.old.id);
+  }
+  return previousUsers;
+}
+
 export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [freezeTarget, setFreezeTarget] = useState<Profile | null>(null);
-  const [freezeReason, setFreezeReason] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
-  const [roleChangeTarget, setRoleChangeTarget] = useState<{
-    newRole: string;
-    user: Profile;
-  } | null>(null);
+  const [uiState, setUiState] = useState<UsersTabUiState>({
+    searchQuery: "",
+    roleFilter: "all",
+    freezeTarget: null,
+    freezeReason: "",
+    deleteTarget: null,
+    roleChangeTarget: null,
+  });
 
   const fetchUsers = useCallback(
     async (showLoading = false) => {
@@ -106,17 +138,12 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           "postgres_changes",
           { event: "*", schema: "public", table: "profiles" },
           (payload) => {
-            if (payload.eventType === "UPDATE") {
-              setUsers((prev) =>
-                prev.map((u) =>
-                  u.id === payload.new.id ? { ...u, ...payload.new } : u
-                )
-              );
-            } else if (payload.eventType === "INSERT") {
-              setUsers((prev) => [payload.new as Profile, ...prev]);
-            } else if (payload.eventType === "DELETE") {
-              setUsers((prev) => prev.filter((u) => u.id !== payload.old.id));
-            }
+            setUsers((prev) =>
+              applyProfileRealtimeUpdate(
+                prev,
+                payload as ProfileRealtimePayload
+              )
+            );
           }
         )
         .subscribe();
@@ -151,27 +178,7 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
       });
       await fetchUsers();
     };
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ is_banned: isBanning, ban_reason: banReason })
-        .eq("id", user.id)
-        .select()
-        .single();
-      if (error || !data || data.is_banned !== isBanning) {
-        await handleFailedFreezeUpdate();
-        return;
-      }
-
-      setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, ...data } : u))
-      );
-      toast.success(
-        isBanning
-          ? `המשתמש ${user.username} הוקפא`
-          : `המשתמש ${user.username} שוחרר`
-      );
-
+    const handleFreezeSideEffects = async () => {
       if (isBanning) {
         fetch("/api/admin/revoke-session", {
           method: "POST",
@@ -202,6 +209,36 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         details: { target_user: user.username, reason },
         admin_id: currentUser,
       });
+    };
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ is_banned: isBanning, ban_reason: banReason })
+        .eq("id", user.id)
+        .select()
+        .single();
+      if (error) {
+        await handleFailedFreezeUpdate();
+        return;
+      }
+      if (!data) {
+        await handleFailedFreezeUpdate();
+        return;
+      }
+      if (data.is_banned !== isBanning) {
+        await handleFailedFreezeUpdate();
+        return;
+      }
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, ...data } : u))
+      );
+      let successMessage = `המשתמש ${user.username} שוחרר`;
+      if (isBanning) {
+        successMessage = `המשתמש ${user.username} הוקפא`;
+      }
+      toast.success(successMessage);
+      await handleFreezeSideEffects();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "נא לנסות שוב";
@@ -265,36 +302,35 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
   };
 
   const onFreezeClick = (user: Profile) => {
-    setFreezeTarget(user);
-    setFreezeReason("");
+    setUiState((prev) => ({ ...prev, freezeTarget: user, freezeReason: "" }));
   };
 
   const onDeleteClick = (user: Profile) => {
-    setDeleteTarget(user);
+    setUiState((prev) => ({ ...prev, deleteTarget: user }));
   };
 
   const onRoleChangeAttempt = (user: Profile, newRole: string) => {
     if ((user.role || "user") === newRole) {
       return;
     }
-    setRoleChangeTarget({ user, newRole });
+    setUiState((prev) => ({ ...prev, roleChangeTarget: { user, newRole } }));
   };
 
   const filtered = users.filter((u) => {
     const matchesSearch =
-      !searchQuery ||
-      u.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      !uiState.searchQuery ||
+      u.username?.toLowerCase().includes(uiState.searchQuery.toLowerCase()) ||
+      u.full_name?.toLowerCase().includes(uiState.searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(uiState.searchQuery.toLowerCase());
     const matchesRole =
-      roleFilter === "all" ||
-      (roleFilter === "admin" && u.role === "admin") ||
-      (roleFilter === "user" &&
+      uiState.roleFilter === "all" ||
+      (uiState.roleFilter === "admin" && u.role === "admin") ||
+      (uiState.roleFilter === "user" &&
         u.role !== "admin" &&
         !u.is_minor &&
         !u.is_banned) ||
-      (roleFilter === "minor" && u.is_minor) ||
-      (roleFilter === "banned" && u.is_banned);
+      (uiState.roleFilter === "minor" && u.is_minor) ||
+      (uiState.roleFilter === "banned" && u.is_banned);
     return matchesSearch && matchesRole;
   });
 
@@ -318,10 +354,12 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
           />
           <input
             className="w-full rounded-xl border border-white/5 bg-card py-2.5 pr-10 pl-4 text-right text-fluid-sm text-white outline-hidden focus:border-red-500/30"
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) =>
+              setUiState((prev) => ({ ...prev, searchQuery: e.target.value }))
+            }
             placeholder="חפש לפי שם משתמש, שם מלא או אימייל..."
             type="text"
-            value={searchQuery}
+            value={uiState.searchQuery}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -334,12 +372,14 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
             (f) => (
               <button
                 className={`rounded-lg px-3 py-1.5 font-bold text-fluid-xs transition-all ${
-                  roleFilter === f
+                  uiState.roleFilter === f
                     ? "border border-red-500/30 bg-red-500/20 text-red-400"
                     : "border border-white/5 bg-white/5 text-gray-400 hover:bg-white/10"
                 }`}
                 key={f}
-                onClick={() => setRoleFilter(f)}
+                onClick={() =>
+                  setUiState((prev) => ({ ...prev, roleFilter: f }))
+                }
                 type="button"
               >
                 {ROLE_FILTER_LABELS[f]}
@@ -460,35 +500,44 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
               icon={UserCheck01Icon}
               size={32}
             />
-            <p>{searchQuery ? "לא נמצאו משתמשים" : "אין משתמשים להצגה"}</p>
+            <p>
+              {uiState.searchQuery ? "לא נמצאו משתמשים" : "אין משתמשים להצגה"}
+            </p>
           </div>
         )}
       </div>
 
-      {freezeTarget && (
+      {uiState.freezeTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-5">
             <h3 className="mb-2 font-bold text-fluid-lg text-white">
-              {freezeTarget.is_banned ? "שחרור משתמש" : "הקפאת משתמש"}
+              {uiState.freezeTarget.is_banned ? "שחרור משתמש" : "הקפאת משתמש"}
             </h3>
             <p className="mb-4 text-fluid-sm text-gray-300">
-              {freezeTarget.is_banned
-                ? `לשחרר את ${freezeTarget.username} מהקפאה?`
-                : `להקפיא את ${freezeTarget.username}?`}
+              {uiState.freezeTarget.is_banned
+                ? `לשחרר את ${uiState.freezeTarget.username} מהקפאה?`
+                : `להקפיא את ${uiState.freezeTarget.username}?`}
             </p>
-            {!freezeTarget.is_banned && (
+            {!uiState.freezeTarget.is_banned && (
               <input
                 className="mb-4 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-right text-white outline-hidden"
-                onChange={(e) => setFreezeReason(e.target.value)}
+                onChange={(e) =>
+                  setUiState((prev) => ({
+                    ...prev,
+                    freezeReason: e.target.value,
+                  }))
+                }
                 placeholder="סיבת הקפאה (אופציונלי)"
                 type="text"
-                value={freezeReason}
+                value={uiState.freezeReason}
               />
             )}
             <div className="flex gap-2">
               <button
                 className="flex-1 rounded-lg bg-white/10 px-3 py-2 font-bold text-white hover:bg-white/20"
-                onClick={() => setFreezeTarget(null)}
+                onClick={() =>
+                  setUiState((prev) => ({ ...prev, freezeTarget: null }))
+                }
                 type="button"
               >
                 ביטול
@@ -496,9 +545,16 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
               <button
                 className="flex-1 rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-500"
                 onClick={async () => {
-                  const user = freezeTarget;
-                  setFreezeTarget(null);
-                  await applyFreezeChange(user, !user.is_banned, freezeReason);
+                  const user = uiState.freezeTarget;
+                  setUiState((prev) => ({ ...prev, freezeTarget: null }));
+                  if (!user) {
+                    return;
+                  }
+                  await applyFreezeChange(
+                    user,
+                    !user.is_banned,
+                    uiState.freezeReason
+                  );
                 }}
                 type="button"
               >
@@ -509,19 +565,21 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         </div>
       )}
 
-      {deleteTarget && (
+      {uiState.deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-5">
             <h3 className="mb-2 font-bold text-fluid-lg text-white">
               מחיקת משתמש
             </h3>
             <p className="mb-4 text-fluid-sm text-gray-300">
-              {`למחוק את ${deleteTarget.username}? פעולה זו אינה הפיכה.`}
+              {`למחוק את ${uiState.deleteTarget.username}? פעולה זו אינה הפיכה.`}
             </p>
             <div className="flex gap-2">
               <button
                 className="flex-1 rounded-lg bg-white/10 px-3 py-2 font-bold text-white hover:bg-white/20"
-                onClick={() => setDeleteTarget(null)}
+                onClick={() =>
+                  setUiState((prev) => ({ ...prev, deleteTarget: null }))
+                }
                 type="button"
               >
                 ביטול
@@ -529,8 +587,11 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
               <button
                 className="flex-1 rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-500"
                 onClick={async () => {
-                  const user = deleteTarget;
-                  setDeleteTarget(null);
+                  const user = uiState.deleteTarget;
+                  setUiState((prev) => ({ ...prev, deleteTarget: null }));
+                  if (!user) {
+                    return;
+                  }
                   await confirmDelete(user);
                 }}
                 type="button"
@@ -542,19 +603,21 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
         </div>
       )}
 
-      {roleChangeTarget && (
+      {uiState.roleChangeTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-5">
             <h3 className="mb-2 font-bold text-fluid-lg text-white">
               שינוי תפקיד
             </h3>
             <p className="mb-4 text-fluid-sm text-gray-300">
-              {`לשנות את התפקיד של ${roleChangeTarget.user.username} ל-${roleChangeTarget.newRole}?`}
+              {`לשנות את התפקיד של ${uiState.roleChangeTarget.user.username} ל-${uiState.roleChangeTarget.newRole}?`}
             </p>
             <div className="flex gap-2">
               <button
                 className="flex-1 rounded-lg bg-white/10 px-3 py-2 font-bold text-white hover:bg-white/20"
-                onClick={() => setRoleChangeTarget(null)}
+                onClick={() =>
+                  setUiState((prev) => ({ ...prev, roleChangeTarget: null }))
+                }
                 type="button"
               >
                 ביטול
@@ -562,8 +625,11 @@ export default function UsersTab({ supabase, currentUser }: UsersTabProps) {
               <button
                 className="flex-1 rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-500"
                 onClick={async () => {
-                  const change = roleChangeTarget;
-                  setRoleChangeTarget(null);
+                  const change = uiState.roleChangeTarget;
+                  setUiState((prev) => ({ ...prev, roleChangeTarget: null }));
+                  if (!change) {
+                    return;
+                  }
                   await confirmRoleChange(change.user, change.newRole);
                 }}
                 type="button"

@@ -209,69 +209,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase, router]
   );
 
-  useEffect(() => {
-    let mounted = true;
-    let timeoutId: NodeJS.Timeout;
+  const initializeAuthSession = useCallback(
+    async (isMounted: () => boolean) => {
+      let timeoutId: NodeJS.Timeout | undefined;
+      const finish = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        if (isMounted()) {
+          setIsLoading(false);
+        }
+      };
 
-    const initAuth = async () => {
+      let session: Session | null = null;
+      let sessionError: { message?: string } | null = null;
+
       try {
-        // Set a timeout to prevent infinite loading
         timeoutId = setTimeout(() => {
-          if (mounted) {
-            console.warn(
-              "AuthContext: Session check timeout - forcing completion"
-            );
-            setUser(null);
-            setProfile(null);
-            clearCachedProfile();
-            setIsLoading(false);
+          if (!isMounted()) {
+            return;
           }
+          console.warn(
+            "AuthContext: Session check timeout - forcing completion"
+          );
+          clearAuthState();
+          setIsLoading(false);
         }, 10_000);
 
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        // Clear timeout on successful response
-        clearTimeout(timeoutId);
-
-        // Handle refresh token errors
-        if (hasSessionRefreshTokenError(error)) {
-          await supabase.auth.signOut();
-          clearAuthState();
-          if (mounted) {
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id, true);
-        } else {
-          setUser(null);
-          setProfile(null);
-          clearCachedProfile();
-        }
+        const sessionResult = await supabase.auth.getSession();
+        session = sessionResult.data.session;
+        sessionError = sessionResult.error;
       } catch (error: unknown) {
         console.error("AuthContext: Error checking session", error);
-        // Clear session on any error to prevent loops
         clearAuthState();
+        finish();
+        return;
       }
-      clearTimeout(timeoutId);
-      if (mounted) {
-        setIsLoading(false);
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
-    };
 
-    initAuth();
+      if (hasSessionRefreshTokenError(sessionError)) {
+        await supabase.auth.signOut();
+        clearAuthState();
+        finish();
+        return;
+      }
 
-    const handleAuthStateChange = async (
+      const sessionUser = session ? session.user : null;
+      if (!sessionUser) {
+        clearAuthState();
+        finish();
+        return;
+      }
+
+      setUser(sessionUser);
+      await fetchProfile(sessionUser.id, true);
+      finish();
+    },
+    [supabase, clearAuthState, fetchProfile]
+  );
+
+  const handleAuthStateChange = useCallback(
+    async (
       event: AuthChangeEvent,
-      session: Session | null
+      session: Session | null,
+      isMounted: () => boolean
     ) => {
-      if (!mounted) {
+      if (!isMounted()) {
         return;
       }
 
@@ -301,23 +307,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setIsLoading(false);
-    };
+    },
+    [fetchProfile, clearAuthState, router]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    const isMounted = () => mounted;
+    const initializeTimeoutId = setTimeout(() => {
+      initializeAuthSession(isMounted).catch((error: unknown) => {
+        console.error("AuthContext: Failed to initialize auth session", error);
+      });
+    }, 0);
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      handleAuthStateChange(event, session, isMounted).catch(
+        (error: unknown) => {
+          console.error(
+            "AuthContext: Failed auth state change handling",
+            error
+          );
+        }
+      );
+    });
 
     return () => {
       mounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      clearTimeout(initializeTimeoutId);
       subscription.unsubscribe();
       if (profileChannelRef.current) {
         supabase.removeChannel(profileChannelRef.current);
       }
     };
-  }, [supabase, fetchProfile, router, clearAuthState]);
+  }, [supabase, initializeAuthSession, handleAuthStateChange]);
 
   const signOut = useCallback(async () => {
     try {

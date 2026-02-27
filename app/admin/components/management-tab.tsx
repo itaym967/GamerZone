@@ -62,6 +62,24 @@ interface SlowQueryMetricsResult {
   slow_count: number;
 }
 
+const getMetricNumber = (value: unknown) =>
+  typeof value === "number" ? value : 0;
+
+const buildMetrics = (
+  rtData: RealtimeSubscriptionCountResult | null,
+  sqData: SlowQueryMetricsResult | null
+): DBMetrics => ({
+  realtimeSubscriptions: getMetricNumber(rtData?.count),
+  slowQueryCount: getMetricNumber(sqData?.slow_count),
+  avgQueryTime: getMetricNumber(sqData?.avg_time),
+  optimizationStatus: {
+    lfgPage: true,
+    chatHook: true,
+    gamerCard: true,
+    adminPage: true,
+  },
+});
+
 export default function ManagementTab({ supabase }: ManagementTabProps) {
   const [dbMetrics, setDbMetrics] = useState<DBMetrics>(DEFAULT_METRICS);
   const [loading, setLoading] = useState(true);
@@ -90,30 +108,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           return;
         }
 
-        let realtimeSubscriptions = 0;
-        if (rtData && typeof rtData.count === "number") {
-          realtimeSubscriptions = rtData.count;
-        }
-        let slowQueryCount = 0;
-        if (sqData && typeof sqData.slow_count === "number") {
-          slowQueryCount = sqData.slow_count;
-        }
-        let avgQueryTime = 0;
-        if (sqData && typeof sqData.avg_time === "number") {
-          avgQueryTime = sqData.avg_time;
-        }
-
-        setDbMetrics({
-          realtimeSubscriptions,
-          slowQueryCount,
-          avgQueryTime,
-          optimizationStatus: {
-            lfgPage: true,
-            chatHook: true,
-            gamerCard: true,
-            adminPage: true,
-          },
-        });
+        setDbMetrics(buildMetrics(rtData, sqData));
       } catch {
         setDbMetrics(DEFAULT_METRICS);
       }

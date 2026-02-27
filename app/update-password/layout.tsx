@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import UpdatePasswordPageClient from "./update-password-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Update Password",
   description: "Set a new password for your GamerZone account.",
 };
 
-export default function UpdatePasswordPage() {
-  return <UpdatePasswordPageClient />;
+export default function UpdatePasswordLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return children;
 }

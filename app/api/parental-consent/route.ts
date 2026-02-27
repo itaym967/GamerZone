@@ -5,7 +5,6 @@ let _adminClient: SupabaseClient | null = null;
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$/;
 
 // Token-based consent links are user-specific and must never be cached.
-export const dynamic = "force-dynamic";
 const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
 
 function getNoStoreHeaders(): HeadersInit {

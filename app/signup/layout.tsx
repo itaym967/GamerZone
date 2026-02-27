@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import SignupPageClient from "./signup-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Sign Up",
   description: "Create your GamerZone account.",
 };
 
-export default function SignupPage() {
-  return <SignupPageClient />;
+export default function SignupLayout({ children }: { children: ReactNode }) {
+  return children;
 }

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import OnboardingPageClient from "./onboarding-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Onboarding",
   description: "Complete your GamerZone profile setup.",
 };
 
-export default function OnboardingPage() {
-  return <OnboardingPageClient />;
+export default function OnboardingLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return children;
 }

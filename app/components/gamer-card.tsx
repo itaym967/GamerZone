@@ -14,7 +14,7 @@ import {
   UserCheck01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import Link from "next/link";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -366,7 +366,7 @@ export default function GamerCard({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
-  const [xp, setXp] = useState(getDeterministicXp(`${id}:${username}`));
+  const [xp, setXp] = useState(() => getDeterministicXp(`${id}:${username}`));
   const [showXpGain, setShowXpGain] = useState(false);
   // State for revealed tags
   const [revealedTags, setRevealedTags] = useState<{
@@ -456,6 +456,7 @@ export default function GamerCard({
     }
     setIsLoading(true);
     const newStatus: SwapStatus = approved ? "approved" : "rejected";
+    const feedbackType = approved ? "success" : "medium";
     try {
       // Find requests where *I* am the receiver and *THEY* are the sender
       const { error } = await supabase
@@ -475,7 +476,7 @@ export default function GamerCard({
         onSwapStatusChange(id, newStatus);
       }
 
-      haptic(approved ? "success" : "medium");
+      haptic(feedbackType);
 
       if (approved) {
         await ensureFriendship({
@@ -516,192 +517,196 @@ export default function GamerCard({
   const displayTags = revealedTags || hiddenTags;
 
   return (
-    <motion.div
-      animate={{ opacity: 1, y: 0 }}
-      className={`cq-card glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl border p-fluid-lg transition-all duration-300 ${status === "approved" ? "border-primary shadow-[0_0_1.25rem_rgba(0,255,157,0.1)]" : "border-transparent hover:border-primary"}`}
-      initial={{ opacity: 0, y: 20 }}
-      layout
-      whileHover={{ scale: 1.02, y: -5 }}
-    >
-      {/* Decorative Glow */}
-      <div
-        className={`absolute top-0 right-0 h-24 w-24 translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl transition-all duration-700 ${status === "approved" ? "h-full w-full bg-primary/40 opacity-20" : "bg-primary/20 group-hover:bg-primary/40"}`}
-      />
+    <LazyMotion features={domAnimation}>
+      <m.div
+        animate={{ opacity: 1, y: 0 }}
+        className={`cq-card glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl border p-fluid-lg transition-all duration-300 ${status === "approved" ? "border-primary shadow-[0_0_1.25rem_rgba(0,255,157,0.1)]" : "border-transparent hover:border-primary"}`}
+        initial={{ opacity: 0, y: 20 }}
+        layout
+        whileHover={{ scale: 1.02, y: -5 }}
+      >
+        {/* Decorative Glow */}
+        <div
+          className={`absolute top-0 right-0 h-24 w-24 translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl transition-all duration-700 ${status === "approved" ? "h-full w-full bg-primary/40 opacity-20" : "bg-primary/20 group-hover:bg-primary/40"}`}
+        />
 
-      <div className="relative z-10 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-0.5">
-              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
-                <OptimizedAvatar
-                  className="h-full w-full object-cover"
-                  seed={currentSeed}
-                  size={48}
-                  style={
-                    currentSeed.startsWith("/avatars") ? "avataaars" : "bottts"
-                  }
+        <div className="relative z-10 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="h-12 w-12 rounded-full bg-linear-to-br from-primary to-secondary p-0.5">
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
+                  <OptimizedAvatar
+                    className="h-full w-full object-cover"
+                    seed={currentSeed}
+                    size={48}
+                    style={
+                      currentSeed.startsWith("/avatars")
+                        ? "avataaars"
+                        : "bottts"
+                    }
+                  />
+                </div>
+              </div>
+              {/* Level Badge */}
+              <div className="absolute -right-1 -bottom-2 z-20 rounded-md border border-primary bg-black px-1.5 font-bold text-[0.625rem] text-primary shadow-lg">
+                LVL {level}
+              </div>
+            </div>
+
+            <div className="text-right">
+              {" "}
+              {/* RTL Alignment */}
+              <div className="flex items-center gap-2">
+                <h3 className="cq-card-title font-bold text-fluid-lg text-white leading-tight">
+                  {username}
+                </h3>
+                {online && (
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                )}
+              </div>
+              <span
+                className="cq-card-subtitle block text-fluid-xs text-gray-400"
+                dir="ltr"
+              >
+                {tag}
+              </span>
+              {/* XP Bar */}
+              <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-white/10">
+                <m.div
+                  animate={{ width: `${progress}%` }}
+                  className="h-full bg-linear-to-r from-primary to-secondary"
+                  initial={{ width: 0 }}
                 />
               </div>
             </div>
-            {/* Level Badge */}
-            <div className="absolute -right-1 -bottom-2 z-20 rounded-md border border-primary bg-black px-1.5 font-bold text-[0.625rem] text-primary shadow-lg">
-              LVL {level}
-            </div>
-          </div>
-
-          <div className="text-right">
-            {" "}
-            {/* RTL Alignment */}
-            <div className="flex items-center gap-2">
-              <h3 className="cq-card-title font-bold text-fluid-lg text-white leading-tight">
-                {username}
-              </h3>
-              {online && (
-                <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-              )}
-            </div>
-            <span
-              className="cq-card-subtitle block text-fluid-xs text-gray-400"
-              dir="ltr"
-            >
-              {tag}
-            </span>
-            {/* XP Bar */}
-            <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-white/10">
-              <motion.div
-                animate={{ width: `${progress}%` }}
-                className="h-full bg-linear-to-r from-primary to-secondary"
-                initial={{ width: 0 }}
-              />
-            </div>
           </div>
         </div>
-      </div>
 
-      <div className="group/bio relative mt-4">
-        <p className="line-clamp-2 min-h-10 grow text-fluid-sm text-gray-300">
-          {bio}
-        </p>
-        {/* Bio Enhancer Button - Only show for own card */}
-        {currentUserId === id && (
-          <motion.button
-            className="absolute top-0 left-0 rounded-lg bg-linear-to-r from-primary to-secondary p-1.5 opacity-0 transition-all hover:shadow-lg hover:shadow-primary/50 disabled:cursor-not-allowed disabled:opacity-50 group-hover/bio:opacity-100"
-            disabled={isEnhancingBio}
-            onClick={handleEnhanceBio}
-            title="שפר את הביו שלך עם AI"
-            type="button"
-          >
-            {isEnhancingBio ? (
-              <HugeiconsIcon
-                className="animate-spin text-black"
-                icon={Loading02Icon}
-                size={14}
-              />
-            ) : (
-              <HugeiconsIcon
-                className="text-black"
-                icon={SparklesIcon}
-                size={14}
-              />
-            )}
-          </motion.button>
-        )}
-      </div>
-
-      {/* Revealed Gamertags Section */}
-      <AnimatePresence>
-        {status === "approved" && displayTags && (
-          <motion.div
-            animate={{ height: "auto", opacity: 1 }}
-            className="mt-4 space-y-2"
-            exit={{ height: 0, opacity: 0 }}
-            initial={{ height: 0, opacity: 0 }}
-          >
-            <h4 className="mb-2 font-bold text-[0.625rem] text-primary uppercase tracking-wider opacity-80">
-              Private Gamertags (Click to Copy):
-            </h4>
-            {Object.entries(displayTags).map(([game, realTag]) => (
-              <button
-                className="group/tag flex w-full items-center justify-between rounded-lg border border-white/5 bg-white/5 p-2.5 text-fluid-xs transition-all hover:border-primary/30 hover:bg-white/10"
-                key={game}
-                onClick={() => copyToClipboard(realTag)}
-                type="button"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-400">{game}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-white" dir="ltr">
-                    {realTag}
-                  </span>
-                  {copiedTag === realTag ? (
-                    <HugeiconsIcon
-                      className="text-green-400"
-                      icon={Tick01Icon}
-                      size={14}
-                    />
-                  ) : (
-                    <HugeiconsIcon
-                      className="text-gray-500 transition-colors group-hover/tag:text-primary"
-                      icon={Copy01Icon}
-                      size={14}
-                    />
-                  )}
-                </div>
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {games.map((game) => (
-          <span
-            className="rounded-md border border-secondary/20 bg-secondary/10 px-2 py-1 font-bold text-[0.625rem] text-secondary uppercase tracking-wider"
-            key={game}
-          >
-            {game}
-          </span>
-        ))}
-      </div>
-
-      <div className="relative mt-auto flex gap-2 pt-5">
-        <AnimatePresence>
-          {showXpGain && (
-            <motion.div
-              animate={{ y: -20, opacity: 1 }}
-              className="pointer-events-none absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap font-bold text-shadow-glow text-yellow-400"
-              exit={{ y: -30, opacity: 0 }}
-              initial={{ y: 0, opacity: 0 }}
+        <div className="group/bio relative mt-4">
+          <p className="line-clamp-2 min-h-10 grow text-fluid-sm text-gray-300">
+            {bio}
+          </p>
+          {/* Bio Enhancer Button - Only show for own card */}
+          {currentUserId === id && (
+            <m.button
+              className="absolute top-0 left-0 rounded-lg bg-linear-to-r from-primary to-secondary p-1.5 opacity-0 transition-all hover:shadow-lg hover:shadow-primary/50 disabled:cursor-not-allowed disabled:opacity-50 group-hover/bio:opacity-100"
+              disabled={isEnhancingBio}
+              onClick={handleEnhanceBio}
+              title="שפר את הביו שלך עם AI"
+              type="button"
             >
-              +50 XP
-            </motion.div>
+              {isEnhancingBio ? (
+                <HugeiconsIcon
+                  className="animate-spin text-black"
+                  icon={Loading02Icon}
+                  size={14}
+                />
+              ) : (
+                <HugeiconsIcon
+                  className="text-black"
+                  icon={SparklesIcon}
+                  size={14}
+                />
+              )}
+            </m.button>
+          )}
+        </div>
+
+        {/* Revealed Gamertags Section */}
+        <AnimatePresence>
+          {status === "approved" && displayTags && (
+            <m.div
+              animate={{ height: "auto", opacity: 1 }}
+              className="mt-4 space-y-2"
+              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0, opacity: 0 }}
+            >
+              <h4 className="mb-2 font-bold text-[0.625rem] text-primary uppercase tracking-wider opacity-80">
+                Private Gamertags (Click to Copy):
+              </h4>
+              {Object.entries(displayTags).map(([game, realTag]) => (
+                <button
+                  className="group/tag flex w-full items-center justify-between rounded-lg border border-white/5 bg-white/5 p-2.5 text-fluid-xs transition-all hover:border-primary/30 hover:bg-white/10"
+                  key={game}
+                  onClick={() => copyToClipboard(realTag)}
+                  type="button"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-400">{game}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-white" dir="ltr">
+                      {realTag}
+                    </span>
+                    {copiedTag === realTag ? (
+                      <HugeiconsIcon
+                        className="text-green-400"
+                        icon={Tick01Icon}
+                        size={14}
+                      />
+                    ) : (
+                      <HugeiconsIcon
+                        className="text-gray-500 transition-colors group-hover/tag:text-primary"
+                        icon={Copy01Icon}
+                        size={14}
+                      />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </m.div>
           )}
         </AnimatePresence>
 
-        <SwapActions
-          currentUserId={currentUserId}
-          handleApproveResponse={handleApproveResponse}
-          handleSendRequest={handleSendRequest}
-          isLoading={isLoading}
-          status={status}
-        />
+        <div className="mt-4 flex flex-wrap gap-2">
+          {games.map((game) => (
+            <span
+              className="rounded-md border border-secondary/20 bg-secondary/10 px-2 py-1 font-bold text-[0.625rem] text-secondary uppercase tracking-wider"
+              key={game}
+            >
+              {game}
+            </span>
+          ))}
+        </div>
 
-        <FriendActionButton
-          currentUserId={currentUserId}
-          friendshipStatus={friendshipStatus}
-          id={id}
-          onSendFriendRequest={onSendFriendRequest}
-        />
+        <div className="relative mt-auto flex gap-2 pt-5">
+          <AnimatePresence>
+            {showXpGain && (
+              <m.div
+                animate={{ y: -20, opacity: 1 }}
+                className="pointer-events-none absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap font-bold text-shadow-glow text-yellow-400"
+                exit={{ y: -30, opacity: 0 }}
+                initial={{ y: 0, opacity: 0 }}
+              >
+                +50 XP
+              </m.div>
+            )}
+          </AnimatePresence>
 
-        <Link
-          className={`rounded-xl p-2 transition-colors ${status === "approved" ? "bg-primary text-black hover:bg-primary/90" : "bg-white/5 text-white hover:bg-white/10"}`}
-          href={`/chat?target=${id}`}
-          prefetch={false}
-        >
-          <HugeiconsIcon icon={Message01Icon} size={18} />
-        </Link>
-      </div>
-    </motion.div>
+          <SwapActions
+            currentUserId={currentUserId}
+            handleApproveResponse={handleApproveResponse}
+            handleSendRequest={handleSendRequest}
+            isLoading={isLoading}
+            status={status}
+          />
+
+          <FriendActionButton
+            currentUserId={currentUserId}
+            friendshipStatus={friendshipStatus}
+            id={id}
+            onSendFriendRequest={onSendFriendRequest}
+          />
+
+          <Link
+            className={`rounded-xl p-2 transition-colors ${status === "approved" ? "bg-primary text-black hover:bg-primary/90" : "bg-white/5 text-white hover:bg-white/10"}`}
+            href={`/chat?target=${id}`}
+            prefetch={false}
+          >
+            <HugeiconsIcon icon={Message01Icon} size={18} />
+          </Link>
+        </div>
+      </m.div>
+    </LazyMotion>
   );
 }

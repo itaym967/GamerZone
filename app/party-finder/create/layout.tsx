@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import CreatePartyPageClient from "./create-party-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Create Party",
   description: "Create a new party in GamerZone.",
 };
 
-export default function CreatePartyPage() {
-  return <CreatePartyPageClient />;
+export default function PartyCreateLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return children;
 }

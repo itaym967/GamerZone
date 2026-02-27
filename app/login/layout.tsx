@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import LoginPageClient from "./login-page-client";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Login",
   description: "Login to GamerZone.",
 };
 
-export default function LoginPage() {
-  return <LoginPageClient />;
+export default function LoginLayout({ children }: { children: ReactNode }) {
+  return children;
 }

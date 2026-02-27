@@ -41,6 +41,123 @@ const authenticatedNavItems = [
 const DEFAULT_AVATAR_URL =
   "https://api.dicebear.com/7.x/adventurer/svg?seed=Gamer";
 
+function NotificationPrompt({
+  isMounted,
+  showSkeleton,
+  userExists,
+  hasSubscription,
+  onSubscribeToPush,
+}: {
+  isMounted: boolean;
+  showSkeleton: boolean;
+  userExists: boolean;
+  hasSubscription: boolean;
+  onSubscribeToPush: () => void;
+}) {
+  if (!isMounted) {
+    return (
+      <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black opacity-50">
+        <HugeiconsIcon icon={Login01Icon} size={20} />
+        <span>התחברות</span>
+      </div>
+    );
+  }
+
+  if (showSkeleton) {
+    return (
+      <div className="flex animate-pulse items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
+        <div className="h-8 w-8 rounded-full bg-white/10" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 w-20 rounded-xs bg-white/10" />
+          <div className="h-2 w-12 rounded-xs bg-white/10" />
+        </div>
+      </div>
+    );
+  }
+
+  if (userExists && !hasSubscription) {
+    return (
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-yellow-400 transition-all hover:bg-yellow-400/10 hover:text-yellow-300"
+        onClick={onSubscribeToPush}
+        type="button"
+      >
+        <HugeiconsIcon icon={Notification01Icon} size={20} />
+        <span>הפעל התראות</span>
+      </button>
+    );
+  }
+
+  return null;
+}
+
+function AccountSection({
+  isMounted,
+  showSkeleton,
+  userExists,
+  profileAvatarUrl,
+  profileUsername,
+  isSigningOut,
+  onSignOut,
+}: {
+  isMounted: boolean;
+  showSkeleton: boolean;
+  userExists: boolean;
+  profileAvatarUrl?: string | null;
+  profileUsername?: string | null;
+  isSigningOut: boolean;
+  onSignOut: () => void;
+}) {
+  if (!isMounted || showSkeleton) {
+    return null;
+  }
+
+  if (!userExists) {
+    return (
+      <Link
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
+        href="/login"
+        prefetch={false}
+      >
+        <HugeiconsIcon icon={Login01Icon} size={20} />
+        <span>התחברות</span>
+      </Link>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
+        <OptimizedAvatar
+          className="rounded-full border border-primary/20 bg-black"
+          seed={profileAvatarUrl || DEFAULT_AVATAR_URL}
+          size={32}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-bold text-fluid-sm text-white">
+            {profileUsername || "Gamer"}
+          </p>
+          <p className="truncate text-[0.625rem] text-gray-500">מחובר</p>
+        </div>
+      </div>
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-fluid-sm text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={isSigningOut}
+        onClick={onSignOut}
+        type="button"
+      >
+        {isSigningOut ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
+        ) : (
+          <HugeiconsIcon icon={Logout01Icon} size={18} />
+        )}
+        <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
+      </button>
+    </>
+  );
+}
+
 export default function Navigation() {
   const pathname = usePathname();
   const { user, profile, isAdmin, signOut, isLoading } = useAuth();
@@ -71,95 +188,6 @@ export default function Navigation() {
     ],
     [user, isAdmin]
   );
-
-  const renderNotificationPrompt = () => {
-    if (!isMounted) {
-      return (
-        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black opacity-50">
-          <HugeiconsIcon icon={Login01Icon} size={20} />
-          <span>התחברות</span>
-        </div>
-      );
-    }
-
-    if (showSkeleton) {
-      return (
-        <div className="flex animate-pulse items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
-          <div className="h-8 w-8 rounded-full bg-white/10" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-20 rounded-xs bg-white/10" />
-            <div className="h-2 w-12 rounded-xs bg-white/10" />
-          </div>
-        </div>
-      );
-    }
-
-    if (user && !subscription) {
-      return (
-        <button
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-yellow-400 transition-all hover:bg-yellow-400/10 hover:text-yellow-300"
-          onClick={() => subscribeToPush()}
-          type="button"
-        >
-          <HugeiconsIcon icon={Notification01Icon} size={20} />
-          <span>הפעל התראות</span>
-        </button>
-      );
-    }
-
-    return null;
-  };
-
-  const renderAccountSection = () => {
-    if (!isMounted || showSkeleton) {
-      return null;
-    }
-
-    if (!user) {
-      return (
-        <Link
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-black transition-all hover:bg-primary/90"
-          href="/login"
-          prefetch={false}
-        >
-          <HugeiconsIcon icon={Login01Icon} size={20} />
-          <span>התחברות</span>
-        </Link>
-      );
-    }
-
-    return (
-      <>
-        <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-4 py-3">
-          <OptimizedAvatar
-            className="rounded-full border border-primary/20 bg-black"
-            seed={profile?.avatar_url || DEFAULT_AVATAR_URL}
-            size={32}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-bold text-fluid-sm text-white">
-              {profile?.username || "Gamer"}
-            </p>
-            <p className="truncate text-[0.625rem] text-gray-500">מחובר</p>
-          </div>
-        </div>
-
-        <button
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-medium text-fluid-sm text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={isSigningOut}
-          onClick={handleSignOut}
-          type="button"
-        >
-          {isSigningOut ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
-          ) : (
-            <HugeiconsIcon icon={Logout01Icon} size={18} />
-          )}
-          <span>{isSigningOut ? "מתנתק..." : "התנתק"}</span>
-        </button>
-      </>
-    );
-  };
 
   return (
     <>
@@ -216,8 +244,22 @@ export default function Navigation() {
         </nav>
 
         <div className="mt-auto space-y-3 border-white/5 border-t pt-6">
-          {renderNotificationPrompt()}
-          {renderAccountSection()}
+          <NotificationPrompt
+            hasSubscription={Boolean(subscription)}
+            isMounted={isMounted}
+            onSubscribeToPush={subscribeToPush}
+            showSkeleton={showSkeleton}
+            userExists={Boolean(user)}
+          />
+          <AccountSection
+            isMounted={isMounted}
+            isSigningOut={isSigningOut}
+            onSignOut={handleSignOut}
+            profileAvatarUrl={profile?.avatar_url}
+            profileUsername={profile?.username}
+            showSkeleton={showSkeleton}
+            userExists={Boolean(user)}
+          />
         </div>
       </aside>
 
