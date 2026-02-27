@@ -24,7 +24,7 @@ export function useBackGesture() {
       window.history.pushState({ pwa: true }, "");
     }
 
-    const handlePopState = (e: PopStateEvent) => {
+    const handlePopState = (_e: PopStateEvent) => {
       // Push state again to keep the app from closing
       window.history.pushState({ pwa: true }, "");
 

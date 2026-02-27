@@ -94,7 +94,7 @@ export default function Dashboard() {
 
           {loading ? (
             <div className="grid auto-rows-fr grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[...Array(8)].map((_, i) => (
+              {[...new Array(8)].map((_, i) => (
                 <GamerCardSkeleton key={i} />
               ))}
             </div>

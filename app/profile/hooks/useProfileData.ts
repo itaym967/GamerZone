@@ -114,7 +114,7 @@ export function useProfileData() {
 
         const newFormData: ProfileFormData = {
           username: profile.username || "",
-          tag: "@" + (profile.username || "user").toLowerCase(),
+          tag: `@${(profile.username || "user").toLowerCase()}`,
           bio: profile.bio || "",
           games: gamesList,
           hiddenTags: hiddenTagsMap,

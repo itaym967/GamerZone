@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         .then(() => {
           console.log(
             "Push sent successfully to:",
-            sub.endpoint.substring(0, 50) + "..."
+            `${sub.endpoint.substring(0, 50)}...`
           );
         })
         .catch((error: any) => {

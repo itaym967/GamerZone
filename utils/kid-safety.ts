@@ -105,7 +105,6 @@ export function getSafetyRestrictions(
         contentFilterLevel: "moderate",
         requiresParentalConsent: false,
       };
-    case "standard": // 18+
     default:
       return {
         chatEnabled: true,
@@ -130,7 +129,7 @@ export function validateDateOfBirth(dateOfBirth: string): string | null {
   const dob = new Date(dateOfBirth);
   const today = new Date();
 
-  if (isNaN(dob.getTime())) {
+  if (Number.isNaN(dob.getTime())) {
     return "תאריך לידה לא תקין";
   }
 
@@ -256,7 +255,6 @@ export function getSafetyMessage(accountType: AccountType): string {
       return "החשבון שלך מפוקח. חלק מהתכונות מוגבלות להגנתך. הורה או אפוטרופוס צריך לאשר את החשבון.";
     case "minor":
       return "אתה משתמש צעיר. סינון תוכן מוגבר פעיל להגנתך. אל תשתף מידע אישי עם זרים.";
-    case "standard":
     default:
       return "";
   }

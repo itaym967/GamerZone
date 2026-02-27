@@ -35,7 +35,7 @@ export default function FloatingGamerBot() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, []);
 
   // Hide bot for unauthenticated users (after all hooks)
   if (!user) {
@@ -113,7 +113,7 @@ export default function FloatingGamerBot() {
             exit={{ scale: 0, opacity: 0 }}
             initial={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
-            onDragEnd={(e, info) => {
+            onDragEnd={(_e, info) => {
               setPosition({ x: info.offset.x, y: info.offset.y });
             }}
             whileHover={{ scale: 1.1 }}

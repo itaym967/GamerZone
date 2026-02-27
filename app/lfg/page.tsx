@@ -31,7 +31,7 @@ export default function LFGPage() {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const { user } = useAuth();
   const supabase = createClient();
-  const router = useRouter();
+  const _router = useRouter();
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -110,7 +110,13 @@ export default function LFGPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [selectedGame]);
+  }, [
+    selectedGame,
+    fetchPosts,
+    supabase.from,
+    supabase.channel,
+    supabase.removeChannel,
+  ]);
 
   // Pause subscription when tab is hidden to reduce database load
   useEffect(() => {
@@ -128,7 +134,11 @@ export default function LFGPage() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [selectedGame]);
+  }, [
+    // Re-fetch when tab becomes visible
+    fetchPosts, // Remove all channels when tab is hidden
+    supabase.removeAllChannels,
+  ]);
 
   return (
     <div className="min-h-screen pb-24 md:pr-64 md:pb-0">

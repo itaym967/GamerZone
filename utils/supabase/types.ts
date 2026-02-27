@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       admin_logs: {
@@ -611,15 +611,15 @@ export type Database = {
     Functions: {
       delete_user_as_admin: {
         Args: { target_user_id: string };
-        Returns: void;
+        Returns: undefined;
       };
       soft_delete_message: {
         Args: { message_id: string; user_id: string };
-        Returns: void;
+        Returns: undefined;
       };
       clear_conversation: {
         Args: { user_id_param: string; other_user_id: string };
-        Returns: void;
+        Returns: undefined;
       };
       get_dashboard_data: {
         Args: Record<string, never>;
@@ -641,4 +641,4 @@ export type Database = {
       [_ in never]: never;
     };
   };
-};
+}

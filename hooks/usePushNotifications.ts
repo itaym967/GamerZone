@@ -12,7 +12,7 @@ export function usePushNotifications() {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       checkExistingSubscription();
     }
-  }, []);
+  }, [checkExistingSubscription]);
 
   async function checkExistingSubscription() {
     try {

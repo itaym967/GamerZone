@@ -147,7 +147,14 @@ export default function GamerCard({
     };
 
     checkStatus();
-  }, [currentUserId, id, initialSwapStatus]);
+  }, [
+    currentUserId,
+    id,
+    initialSwapStatus,
+    determineStatus,
+    fetchRealTags,
+    supabase.from,
+  ]);
 
   // Helper function to determine status from swap request data
   const determineStatus = (data: any, userId: string) => {

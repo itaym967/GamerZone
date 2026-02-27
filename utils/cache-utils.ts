@@ -3,8 +3,8 @@
  * Handles clearing all browser caches on auth state changes
  */
 
-const PROFILE_CACHE_KEY = "gamerzone_profile_cache";
-const DASHBOARD_CACHE_PREFIX = "gamerzone_dashboard_cache";
+const _PROFILE_CACHE_KEY = "gamerzone_profile_cache";
+const _DASHBOARD_CACHE_PREFIX = "gamerzone_dashboard_cache";
 
 /**
  * Clear all app-related sessionStorage caches
@@ -17,7 +17,7 @@ export function clearAllSessionCaches() {
     const keysToRemove: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
-      if (key && key.startsWith("gamerzone_")) {
+      if (key?.startsWith("gamerzone_")) {
         keysToRemove.push(key);
       }
     }

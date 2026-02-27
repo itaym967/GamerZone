@@ -13,7 +13,7 @@ interface PartyFiltersProps {
 }
 
 const SKILL_LEVELS = ["מתחיל", "ממוצע", "מתקדם", "מומחה"];
-const STATUS_OPTIONS = [
+const _STATUS_OPTIONS = [
   { value: "open", label: "פתוחות" },
   { value: "full", label: "מלאות" },
 ];

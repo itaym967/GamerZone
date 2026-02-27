@@ -139,7 +139,7 @@ export function useChat(
           avatar_url: p.avatar_url,
           last_msg: contactMap.get(p.id)?.lastMsg,
           last_msg_time: new Date(
-            contactMap.get(p.id)!.time
+            contactMap.get(p.id)?.time
           ).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" }),
           online: p.is_online,
           unread_count: unreadCounts.get(p.id) || 0,
@@ -149,7 +149,7 @@ export function useChat(
     }
 
     fetchContacts();
-  }, [currentUserId]);
+  }, [currentUserId, supabase.from]);
 
   // 2. Subscribe to Realtime Messages with Auto-Reconnect
   const setupRealtimeSubscription = useCallback(() => {
@@ -278,7 +278,7 @@ export function useChat(
       });
 
     channelRef.current = channel;
-  }, [currentUserId]);
+  }, [currentUserId, supabase.channel, supabase.removeChannel]);
 
   useEffect(() => {
     setupRealtimeSubscription();
@@ -293,7 +293,7 @@ export function useChat(
       }
       isSubscribedRef.current = false;
     };
-  }, [setupRealtimeSubscription]);
+  }, [setupRealtimeSubscription, supabase.removeChannel]);
 
   // 3. Handle Page Visibility Changes (pause when hidden, resume when visible)
   useEffect(() => {
@@ -332,7 +332,7 @@ export function useChat(
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUserId, setupRealtimeSubscription]);
+  }, [currentUserId, setupRealtimeSubscription, supabase.removeChannel]);
 
   // 4. Heartbeat to monitor connection health
   useEffect(() => {
@@ -362,7 +362,7 @@ export function useChat(
         clearInterval(heartbeatIntervalRef.current);
       }
     };
-  }, [currentUserId, setupRealtimeSubscription]);
+  }, [currentUserId, setupRealtimeSubscription, supabase.removeChannel]);
 
   // 5. Typing Indicator Subscription (only when tab is visible)
   useEffect(() => {
@@ -407,7 +407,7 @@ export function useChat(
       typingChannelRef.current = null;
       setIsRemoteTyping(false);
     };
-  }, [currentUserId, activeChatId]);
+  }, [currentUserId, activeChatId, supabase.channel, supabase.removeChannel]);
 
   // 6. Methods
   const fetchMessages = async (otherUserId: string) => {
@@ -432,7 +432,7 @@ export function useChat(
     } else {
       // Filter out messages deleted by current user
       const filteredMessages = (data || []).filter(
-        (msg) => !(msg.deleted_by && msg.deleted_by.includes(currentUserId!))
+        (msg) => !msg.deleted_by?.includes(currentUserId!)
       );
       setMessages(filteredMessages);
     }
@@ -575,7 +575,7 @@ export function useChat(
       // This is a simple approach - in production you might want a more explicit refetch
       toast.success("מרענן חיבור...");
     }
-  }, [currentUserId, setupRealtimeSubscription]);
+  }, [currentUserId, setupRealtimeSubscription, supabase.removeChannel]);
 
   const deleteMessage = useCallback(
     async (messageId: string) => {

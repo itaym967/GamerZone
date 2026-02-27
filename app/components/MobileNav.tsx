@@ -67,7 +67,7 @@ export default function MobileNav({
   // Close drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
-  }, [pathname]);
+  }, []);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {

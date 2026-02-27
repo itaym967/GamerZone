@@ -181,7 +181,13 @@ export default function PartyFinderPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [selectedGame, selectedSkillLevel, selectedStatus]);
+  }, [
+    selectedGame,
+    fetchParties,
+    supabase.from,
+    supabase.channel,
+    supabase.removeChannel,
+  ]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -196,7 +202,7 @@ export default function PartyFinderPage() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [selectedGame, selectedSkillLevel, selectedStatus]);
+  }, [fetchParties, supabase.removeAllChannels]);
 
   const handleJoinParty = async (partyId: string) => {
     if (!user) {

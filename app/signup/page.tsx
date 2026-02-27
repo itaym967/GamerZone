@@ -62,7 +62,7 @@ export default function SignupPage() {
           clearAuthCookies();
           await supabase.auth.signOut();
         }
-      } catch (err) {
+      } catch (_err) {
         // Silently handle errors on signup page
         clearAuthCookies();
       }

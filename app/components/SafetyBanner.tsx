@@ -12,7 +12,7 @@ export default function SafetyBanner() {
   const { profile } = useAuth();
   const [dismissed, setDismissed] = useState(false);
 
-  if (!(profile && profile.is_minor) || dismissed) {
+  if (!profile?.is_minor || dismissed) {
     return null;
   }
 

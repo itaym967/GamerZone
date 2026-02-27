@@ -119,7 +119,13 @@ export default function PartyDetailsPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [partyId]);
+  }, [
+    partyId,
+    fetchPartyDetails,
+    router.push,
+    supabase.channel,
+    supabase.removeChannel,
+  ]);
 
   const handleLeaveParty = async () => {
     if (!user) {

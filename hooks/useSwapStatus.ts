@@ -138,7 +138,7 @@ export function useSwapStatus(currentUserId: string | null) {
         isSubscribedRef.current = false;
       }
     };
-  }, [currentUserId, supabase]);
+  }, [currentUserId, supabase, handleRealtimeUpdate]);
 
   // Handle realtime updates
   const handleRealtimeUpdate = (payload: any) => {

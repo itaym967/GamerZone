@@ -154,7 +154,7 @@ self.addEventListener("fetch", (event) => {
             }
           }
           return await fetch(request);
-        } catch (error) {
+        } catch (_error) {
           // Only serve offline fallback page when network fails
           const offlinePage = await caches.match("/offline.html");
           if (offlinePage) {

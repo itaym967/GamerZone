@@ -51,7 +51,7 @@ function ChatContent() {
     messageId: null,
     userId: null,
   });
-  const isMinorAccount = profile?.is_minor;
+  const _isMinorAccount = profile?.is_minor;
   const contentFilterLevel =
     profile?.account_type === "supervised"
       ? "strict"
@@ -135,14 +135,14 @@ function ChatContent() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, botMessages, isTyping, isBotTyping]);
+  }, []);
 
   // Trigger fetch when activeChat changes (including from param)
   useEffect(() => {
     if (activeChat) {
       fetchMessages(activeChat.id);
     }
-  }, [activeChat?.id]);
+  }, [activeChat?.id, activeChat, fetchMessages]);
 
   // Auto-mark messages as read when viewing
   useEffect(() => {

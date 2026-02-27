@@ -193,7 +193,7 @@ export function useDashboardData(
             return {
               id: profile.id,
               username: profile.username || "Unknown",
-              tag: "@" + (profile.username || "user").toLowerCase(),
+              tag: `@${(profile.username || "user").toLowerCase()}`,
               games: gamesList,
               bio: profile.bio || "",
               online: profile.is_online,

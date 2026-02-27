@@ -59,7 +59,7 @@ export default function ProfileEditTab({
             onChange={(e) =>
               onUpdateFormData({
                 username: e.target.value,
-                tag: "@" + e.target.value.toLowerCase(),
+                tag: `@${e.target.value.toLowerCase()}`,
               })
             }
             type="text"

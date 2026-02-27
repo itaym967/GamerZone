@@ -102,7 +102,7 @@ export default function LoginPage() {
         throw error;
       }
     } catch (error: any) {
-      toast.error("שגיאה בהתחברות עם " + provider, {
+      toast.error(`שגיאה בהתחברות עם ${provider}`, {
         description: error.message,
       });
     }
