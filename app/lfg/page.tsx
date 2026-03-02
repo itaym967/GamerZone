@@ -179,12 +179,12 @@ export default function LFGPage() {
       {/* Header */}
       <div className="sticky top-0 z-20 border-white/5 border-b bg-[#0a0a0a]/80 py-fluid-md backdrop-blur-xl">
         <div className="max-w-4xl content-shell">
-          <div className="mb-4 flex items-center justify-between">
-            <h1 className="font-bold text-fluid-xl text-white">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="font-bold text-fluid-xl text-white leading-tight">
               לוח חיפוש שחקנים
             </h1>
             <Link
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-fluid-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-fluid-sm text-white shadow-blue-600/20 shadow-lg transition-all hover:bg-blue-500 active:scale-95 sm:min-h-0 sm:w-auto sm:justify-start"
               href="/lfg/create"
               prefetch={false}
             >
@@ -195,9 +195,9 @@ export default function LFGPage() {
           </div>
 
           {/* Game Filter */}
-          <div className="no-scrollbar bleed-fluid flex gap-2 overflow-x-auto pb-2">
+          <div className="flex flex-wrap gap-2 pb-2">
             <button
-              className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-fluid-sm transition-all ${selectedGame ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10" : "border-white bg-white text-black"}`}
+              className={`min-h-10 rounded-full border px-3 py-1.5 font-medium text-fluid-sm transition-all sm:px-4 ${selectedGame ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10" : "border-white bg-white text-black"}`}
               onClick={() => setSelectedGame(null)}
               type="button"
             >
@@ -205,7 +205,7 @@ export default function LFGPage() {
             </button>
             {GAMES.map((game) => (
               <button
-                className={`whitespace-nowrap rounded-full border px-4 py-1.5 font-medium text-fluid-sm transition-all ${selectedGame === game ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
+                className={`min-h-10 rounded-full border px-3 py-1.5 font-medium text-fluid-sm transition-all sm:px-4 ${selectedGame === game ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"}`}
                 key={game}
                 onClick={() => setSelectedGame(game)}
                 type="button"
