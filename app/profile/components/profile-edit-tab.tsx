@@ -5,7 +5,7 @@ import {
   GameController02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import Image from "next/image";
+import OptimizedAvatar from "@/app/components/optimized-avatar";
 import type { ProfileFormData } from "../types";
 import { AVATARS } from "../types";
 
@@ -117,12 +117,11 @@ export default function ProfileEditTab({
                 onClick={() => onSetAvatarSeed(avatar.id)}
                 type="button"
               >
-                <Image
+                <OptimizedAvatar
                   alt={avatar.name}
                   className="h-full w-full object-cover"
-                  height={96}
-                  src={avatar.id}
-                  width={96}
+                  seed={avatar.id}
+                  size={96}
                 />
               </button>
             ))}
