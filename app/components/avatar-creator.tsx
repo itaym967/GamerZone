@@ -3,8 +3,8 @@
 import { Refresh01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { domAnimation, LazyMotion, m } from "framer-motion";
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import OptimizedAvatar from "./optimized-avatar";
 
 interface AvatarCreatorProps {
   initialSeed?: string;
@@ -28,7 +28,7 @@ export default function AvatarCreator({
 }: AvatarCreatorProps) {
   const [selectedStyle, setSelectedStyle] = useState("avataaars");
   const [seed, setSeed] = useState(initialSeed || "gamer");
-  const avatarUrl = `https://api.dicebear.com/7.x/${selectedStyle}/svg?seed=${seed}`;
+  const avatarUrl = `https://api.dicebear.com/7.x/${selectedStyle}/svg?seed=${encodeURIComponent(seed)}`;
 
   useEffect(() => {
     onSelect(avatarUrl);
@@ -51,12 +51,11 @@ export default function AvatarCreator({
           >
             <div className="h-40 w-40 rounded-full bg-linear-to-br from-primary to-secondary p-1">
               <div className="h-full w-full overflow-hidden rounded-full bg-black">
-                <Image
+                <OptimizedAvatar
                   alt="Avatar Preview"
                   className="h-full w-full object-cover"
-                  height={160}
-                  src={avatarUrl}
-                  width={160}
+                  seed={avatarUrl}
+                  size={160}
                 />
               </div>
             </div>
