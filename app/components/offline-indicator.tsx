@@ -32,11 +32,11 @@ async function hasConnectivity() {
   }
 
   try {
-    const response = await fetch("/manifest.json", {
+    await fetch("/", {
       cache: "no-store",
       method: "HEAD",
     });
-    return response.ok;
+    return true;
   } catch {
     return false;
   }
