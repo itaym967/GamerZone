@@ -12,6 +12,7 @@ interface OptimizedAvatarProps {
 }
 
 const HTTP_URL_REGEX = /^https?:\/\//i;
+const LEGACY_AVATAR_PATH_REGEX = /^\/avatars\/([^./?#]+)(?:\.[a-z0-9]+)?$/i;
 
 function normalizeRemoteAvatarUrl(url: string) {
   try {
@@ -19,6 +20,14 @@ function normalizeRemoteAvatarUrl(url: string) {
   } catch {
     return url;
   }
+}
+
+function toLegacyAvatarSeed(path: string) {
+  const match = path.match(LEGACY_AVATAR_PATH_REGEX);
+  if (!match?.[1]) {
+    return null;
+  }
+  return decodeURIComponent(match[1]).replaceAll(/[-_]+/g, " ").trim();
 }
 
 /**
@@ -35,20 +44,25 @@ export default function OptimizedAvatar({
   const [error, setError] = useState(false);
   const normalizedSeed = seed.trim();
   const safeSeed = normalizedSeed || "Gamer";
+  const legacyAvatarSeed = toLegacyAvatarSeed(safeSeed);
+  const fallbackSeed = legacyAvatarSeed || safeSeed;
 
   // Support real URLs/paths and generated avatars from a plain seed.
   const isRemoteUrl = HTTP_URL_REGEX.test(safeSeed);
   const isDataUrl = safeSeed.startsWith("data:image/");
   const isLocalPath = safeSeed.startsWith("/");
-  let avatarUrl = `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(safeSeed)}&backgroundColor=transparent`;
+  let avatarUrl = `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(fallbackSeed)}&backgroundColor=transparent`;
   if (isDataUrl || isLocalPath) {
     avatarUrl = safeSeed;
   } else if (isRemoteUrl) {
     avatarUrl = normalizeRemoteAvatarUrl(safeSeed);
   }
+  if (legacyAvatarSeed) {
+    avatarUrl = `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(legacyAvatarSeed)}&backgroundColor=transparent`;
+  }
 
   // Fallback avatar
-  const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(safeSeed)}`;
+  const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fallbackSeed)}`;
 
   if (error) {
     return (
