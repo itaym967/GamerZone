@@ -13,6 +13,14 @@ interface OptimizedAvatarProps {
 
 const HTTP_URL_REGEX = /^https?:\/\//i;
 
+function normalizeRemoteAvatarUrl(url: string) {
+  try {
+    return new URL(url).toString();
+  } catch {
+    return url;
+  }
+}
+
 /**
  * Optimized avatar component using Next.js Image with proper caching and sizing
  * Prevents loading full-resolution images for small avatars
@@ -32,10 +40,12 @@ export default function OptimizedAvatar({
   const isRemoteUrl = HTTP_URL_REGEX.test(safeSeed);
   const isDataUrl = safeSeed.startsWith("data:image/");
   const isLocalPath = safeSeed.startsWith("/");
-  const avatarUrl =
-    isRemoteUrl || isDataUrl || isLocalPath
-      ? safeSeed
-      : `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(safeSeed)}&backgroundColor=transparent`;
+  let avatarUrl = `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(safeSeed)}&backgroundColor=transparent`;
+  if (isDataUrl || isLocalPath) {
+    avatarUrl = safeSeed;
+  } else if (isRemoteUrl) {
+    avatarUrl = normalizeRemoteAvatarUrl(safeSeed);
+  }
 
   // Fallback avatar
   const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(safeSeed)}`;

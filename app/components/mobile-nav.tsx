@@ -220,8 +220,7 @@ export default function MobileNav({
 
       {/* Side Drawer - slides from right (RTL) */}
       <div
-        className={`fixed top-0 right-0 z-46 flex w-72 transform flex-col border-white/10 border-l bg-[#0a0a1e] transition-transform duration-300 ease-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
-        style={{ height: "calc(100dvh - 4.5rem)" }}
+        className={`fixed inset-y-0 right-0 z-46 flex w-72 transform flex-col border-white/10 border-l bg-[#0a0a1e] pt-[env(safe-area-inset-top,0rem)] pb-[calc(4.5rem+env(safe-area-inset-bottom,0rem))] transition-transform duration-300 ease-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Drawer Header */}
         <div className="border-white/5 border-b p-5 pt-12">
