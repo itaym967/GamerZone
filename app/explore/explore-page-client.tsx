@@ -11,6 +11,7 @@ import { useAuth } from "@/context/auth-context";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useFriendship } from "@/hooks/use-friendship";
 import { useSwapStatus } from "@/hooks/use-swap-status";
+import { getAutoMatchScore } from "@/lib/auto-match";
 import GamerCard from "../components/gamer-card";
 import Navigation from "../components/navigation";
 
@@ -43,7 +44,10 @@ export default function ExplorePage() {
   const currentUserId = useMemo(() => user?.id || null, [user?.id]);
 
   // Use cached dashboard data (shared with home page)
-  const { gamers, loading } = useDashboardData(currentUserId, authLoading);
+  const { gamers, loading, currentUserPreferences } = useDashboardData(
+    currentUserId,
+    authLoading
+  );
 
   // Use centralized swap status management
   const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } =
@@ -71,7 +75,7 @@ export default function ExplorePage() {
   }, [gamers, currentUserId, fetchSwapStatuses]);
 
   const filteredGamers = useMemo(() => {
-    return gamers.filter((gamer) => {
+    const visibleGamers = gamers.filter((gamer) => {
       const matchesSearch =
         (gamer.username?.toLowerCase() || "").includes(
           searchTerm.toLowerCase()
@@ -84,7 +88,45 @@ export default function ExplorePage() {
 
       return matchesSearch && matchesGame && matchesOnline && matchesFriends;
     });
-  }, [gamers, searchTerm, activeGame, onlineOnly, friendsOnly, isFriend]);
+
+    return visibleGamers.sort((left, right) => {
+      const leftScore = getAutoMatchScore({
+        currentAvailability: currentUserPreferences?.availability ?? null,
+        currentGames: currentUserPreferences?.games ?? [],
+        gamerAvailability: left.availabilityTimezone
+          ? {
+              slots: left.availabilitySlots,
+              timezone: left.availabilityTimezone,
+            }
+          : null,
+        gamerGames: left.games,
+        online: left.online,
+        isFriend: isFriend(left.id),
+      });
+      const rightScore = getAutoMatchScore({
+        currentAvailability: currentUserPreferences?.availability ?? null,
+        currentGames: currentUserPreferences?.games ?? [],
+        gamerAvailability: right.availabilityTimezone
+          ? {
+              slots: right.availabilitySlots,
+              timezone: right.availabilityTimezone,
+            }
+          : null,
+        gamerGames: right.games,
+        online: right.online,
+        isFriend: isFriend(right.id),
+      });
+      return rightScore - leftScore;
+    });
+  }, [
+    gamers,
+    searchTerm,
+    activeGame,
+    onlineOnly,
+    friendsOnly,
+    isFriend,
+    currentUserPreferences,
+  ]);
 
   return (
     <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">

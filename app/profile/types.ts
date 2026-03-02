@@ -1,4 +1,7 @@
+import type { AvailabilityPreferences } from "@/lib/availability";
+
 export interface ProfileFormData {
+  availability: AvailabilityPreferences;
   bio: string;
   games: string[];
   hiddenTags: { [key: string]: string };

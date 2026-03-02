@@ -4,6 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
+import {
+  DEFAULT_AVAILABILITY,
+  encodeAvailabilityPreferences,
+  parseAvailabilityPreferences,
+} from "@/lib/availability";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileFormData, ProfileStats } from "../types";
 
@@ -49,6 +54,7 @@ export function useProfileData() {
   const userId = useMemo(() => user?.id || null, [user?.id]);
 
   const [formData, setFormData] = useState<ProfileFormData>({
+    availability: DEFAULT_AVAILABILITY,
     username: "",
     tag: "",
     bio: "",
@@ -80,6 +86,8 @@ export function useProfileData() {
       formData.username !== originalData.username ||
       formData.bio !== originalData.bio ||
       avatarSeed !== originalAvatar ||
+      JSON.stringify(formData.availability) !==
+        JSON.stringify(originalData.availability) ||
       JSON.stringify(formData.hiddenTags) !==
         JSON.stringify(originalData.hiddenTags) ||
       formData.games.length !== originalData.games.length;
@@ -140,6 +148,9 @@ export function useProfileData() {
         const gamesList = Object.keys(hiddenTagsMap);
 
         const newFormData: ProfileFormData = {
+          availability:
+            parseAvailabilityPreferences(profile.website) ||
+            DEFAULT_AVAILABILITY,
           username: profile.username || "",
           tag: `@${(profile.username || "user").toLowerCase()}`,
           bio: profile.bio || "",
@@ -197,6 +208,7 @@ export function useProfileData() {
         .update({
           username: formData.username,
           bio: formData.bio,
+          website: encodeAvailabilityPreferences(formData.availability),
           avatar_url: avatarSeed,
           updated_at: new Date().toISOString(),
         })

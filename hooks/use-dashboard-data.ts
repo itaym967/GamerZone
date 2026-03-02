@@ -7,6 +7,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type AvailabilityPreferences,
+  parseAvailabilityPreferences,
+} from "@/lib/availability";
 import { createClient } from "@/lib/supabase/client";
 
 const CACHE_KEY_PREFIX = "gamerzone_dashboard_cache";
@@ -22,6 +26,8 @@ function getCacheKey(userId: string | null): string {
 }
 
 interface Gamer {
+  availabilitySlots: AvailabilityPreferences["slots"];
+  availabilityTimezone: string | null;
   avatarSeed?: string;
   bio: string;
   games: string[];
@@ -49,22 +55,40 @@ interface ProfileRow {
   id: string;
   is_online: boolean;
   username: string | null;
+  website: string | null;
 }
 
+interface CurrentUserPreferences {
+  availability: AvailabilityPreferences | null;
+  games: string[];
+}
+
+const getProfileGames = (profile: ProfileRow) => {
+  const games = new Set<string>();
+  for (const tag of profile.gamertags || []) {
+    if (tag.platform) {
+      games.add(tag.platform);
+    }
+  }
+  return [...games];
+};
+
 const mapProfileToGamer = (profile: ProfileRow): Gamer => {
+  const availability = parseAvailabilityPreferences(profile.website);
   const hiddenTagsMap: { [key: string]: string } = {};
-  const gamesList: string[] = [];
+  const gamesList = getProfileGames(profile);
   for (const tag of profile.gamertags || []) {
     if (!tag.platform) {
       continue;
     }
-    gamesList.push(tag.platform);
     if (tag.is_hidden) {
       hiddenTagsMap[tag.platform] = "********";
     }
   }
 
   return {
+    availabilitySlots: availability?.slots || [],
+    availabilityTimezone: availability?.timezone || null,
     id: profile.id,
     username: profile.username || "Unknown",
     tag: `@${(profile.username || "user").toLowerCase()}`,
@@ -94,7 +118,8 @@ const applyCachedDashboardState = (
   cached: CacheData,
   currentUserId: string | null,
   setGamers: (value: Gamer[]) => void,
-  setCurrentUsername: (value: string | null) => void
+  setCurrentUsername: (value: string | null) => void,
+  setCurrentUserPreferences: (value: CurrentUserPreferences | null) => void
 ) => {
   setGamers(filterOutCurrentUser(cached.gamers, currentUserId));
   const currentUserGamer = cached.gamers.find(
@@ -102,7 +127,16 @@ const applyCachedDashboardState = (
   );
   if (currentUserGamer) {
     setCurrentUsername(currentUserGamer.username);
+    setCurrentUserPreferences({
+      availability: {
+        slots: currentUserGamer.availabilitySlots,
+        timezone: currentUserGamer.availabilityTimezone ?? "Asia/Jerusalem",
+      },
+      games: currentUserGamer.games,
+    });
+    return;
   }
+  setCurrentUserPreferences(null);
 };
 
 const getDashboardProfiles = async (
@@ -116,6 +150,7 @@ const getDashboardProfiles = async (
                     bio,
                     avatar_url,
                     is_online,
+                    website,
                     gamertags (
                         platform,
                         is_hidden
@@ -170,6 +205,8 @@ export function useDashboardData(
   const [gamers, setGamers] = useState<Gamer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [currentUserPreferences, setCurrentUserPreferences] =
+    useState<CurrentUserPreferences | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const supabase = useMemo(() => createClient(), []);
   const fetchedRef = useRef(false);
@@ -214,7 +251,8 @@ export function useDashboardData(
         cached,
         currentUserId,
         setGamers,
-        setCurrentUsername
+        setCurrentUsername,
+        setCurrentUserPreferences
       );
       setLoading(false);
 
@@ -242,6 +280,12 @@ export function useDashboardData(
     const currentUserProfile = profiles.find((p) => p.id === currentUserId);
     if (currentUserProfile) {
       setCurrentUsername(currentUserProfile.username);
+      setCurrentUserPreferences({
+        availability: parseAvailabilityPreferences(currentUserProfile.website),
+        games: getProfileGames(currentUserProfile),
+      });
+    } else {
+      setCurrentUserPreferences(null);
     }
 
     const formattedGamers: Gamer[] = profiles.map((profile) =>
@@ -303,6 +347,7 @@ export function useDashboardData(
       lastUserIdRef.current = currentUserId;
       fetchedRef.current = false;
       setLoading(true);
+      setCurrentUserPreferences(null);
     }
 
     if (fetchedRef.current) {
@@ -341,6 +386,7 @@ export function useDashboardData(
     gamers,
     loading,
     currentUsername,
+    currentUserPreferences,
     refresh,
     isOffline,
   };

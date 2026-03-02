@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useFriendship } from "@/hooks/use-friendship";
 import { useSwapStatus } from "@/hooks/use-swap-status";
+import { getAutoMatchScore } from "@/lib/auto-match";
 import GamerCard from "./components/gamer-card";
 import Navigation from "./components/navigation";
 import ServiceWorkerRegistration from "./components/service-worker-registration";
@@ -31,17 +32,16 @@ export default function Dashboard() {
   const isLoggedIn = !!user;
 
   // Use cached dashboard data
-  const { gamers, loading, currentUsername } = useDashboardData(
-    currentUserId,
-    authLoading
-  );
+  const { gamers, loading, currentUsername, currentUserPreferences } =
+    useDashboardData(currentUserId, authLoading);
 
   // Use centralized swap status management
   const { fetchSwapStatuses, updateSwapStatus, getSwapStatus } =
     useSwapStatus(currentUserId);
 
   // Friend system
-  const { getFriendshipStatus, sendRequest } = useFriendship(currentUserId);
+  const { getFriendshipStatus, sendRequest, isFriend } =
+    useFriendship(currentUserId);
 
   const handleSendFriendRequest = async (targetId: string) => {
     const { error } = await sendRequest(targetId);
@@ -59,6 +59,38 @@ export default function Dashboard() {
       fetchSwapStatuses(userIds);
     }
   }, [gamers, currentUserId, fetchSwapStatuses]);
+
+  const sortedGamers = useMemo(() => {
+    return [...gamers].sort((left, right) => {
+      const leftScore = getAutoMatchScore({
+        currentAvailability: currentUserPreferences?.availability ?? null,
+        currentGames: currentUserPreferences?.games ?? [],
+        gamerAvailability: left.availabilityTimezone
+          ? {
+              slots: left.availabilitySlots,
+              timezone: left.availabilityTimezone,
+            }
+          : null,
+        gamerGames: left.games,
+        online: left.online,
+        isFriend: isFriend(left.id),
+      });
+      const rightScore = getAutoMatchScore({
+        currentAvailability: currentUserPreferences?.availability ?? null,
+        currentGames: currentUserPreferences?.games ?? [],
+        gamerAvailability: right.availabilityTimezone
+          ? {
+              slots: right.availabilitySlots,
+              timezone: right.availabilityTimezone,
+            }
+          : null,
+        gamerGames: right.games,
+        online: right.online,
+        isFriend: isFriend(right.id),
+      });
+      return rightScore - leftScore;
+    });
+  }, [gamers, currentUserPreferences, isFriend]);
 
   return (
     <div className="min-h-screen pb-24 transition-all md:pr-64 md:pb-0">
@@ -117,7 +149,7 @@ export default function Dashboard() {
           ) : (
             <div className="auto-grid auto-rows-fr">
               {gamers.length > 0 ? (
-                gamers.map((gamer) => (
+                sortedGamers.map((gamer) => (
                   <GamerCard
                     key={gamer.id}
                     {...gamer}

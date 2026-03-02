@@ -6,6 +6,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import OptimizedAvatar from "@/app/components/optimized-avatar";
+import type { AvailabilitySlot } from "@/lib/availability";
 import type { ProfileFormData } from "../types";
 import { AVATARS } from "../types";
 
@@ -19,6 +20,20 @@ interface ProfileEditTabProps {
   onUpdateFormData: (updates: Partial<ProfileFormData>) => void;
 }
 
+const AVAILABILITY_SLOTS: Array<{ id: AvailabilitySlot; label: string }> = [
+  { id: "morning", label: "בוקר" },
+  { id: "afternoon", label: "צהריים" },
+  { id: "evening", label: "ערב" },
+  { id: "late-night", label: "לילה" },
+];
+
+const TIMEZONE_OPTIONS = [
+  { label: "Israel (Asia/Jerusalem)", value: "Asia/Jerusalem" },
+  { label: "UTC", value: "UTC" },
+  { label: "Europe/Berlin", value: "Europe/Berlin" },
+  { label: "America/New_York", value: "America/New_York" },
+];
+
 export default function ProfileEditTab({
   formData,
   avatarSeed,
@@ -31,10 +46,24 @@ export default function ProfileEditTab({
   const USERNAME_INPUT_ID = "profile-username";
   const TAG_INPUT_ID = "profile-tag";
   const BIO_INPUT_ID = "profile-bio";
+  const TIMEZONE_INPUT_ID = "profile-timezone";
   const usernameError =
     formData.username.length > 0 && formData.username.length < 3;
   const bioLength = formData.bio.length;
   const bioOverLimit = bioLength > 200;
+
+  const toggleAvailabilitySlot = (slotId: AvailabilitySlot) => {
+    const hasSlot = formData.availability.slots.includes(slotId);
+    const nextSlots = hasSlot
+      ? formData.availability.slots.filter((slot) => slot !== slotId)
+      : [...formData.availability.slots, slotId];
+    onUpdateFormData({
+      availability: {
+        ...formData.availability,
+        slots: nextSlots,
+      },
+    });
+  };
 
   return (
     <div className="glass-panel space-y-6 rounded-2xl border border-white/5 p-6">
@@ -155,6 +184,62 @@ export default function ProfileEditTab({
             rows={3}
             value={formData.bio}
           />
+        </div>
+
+        {/* Availability */}
+        <div>
+          <p className="mb-1 block text-fluid-sm text-gray-400">
+            זמינות למשחקים
+          </p>
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            {AVAILABILITY_SLOTS.map((slot) => {
+              const isSelected = formData.availability.slots.includes(slot.id);
+              return (
+                <button
+                  className={`rounded-xl border px-3 py-2 font-medium text-fluid-sm transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/20 text-primary"
+                      : "border-white/10 bg-black/20 text-gray-300 hover:border-primary/40"
+                  }`}
+                  key={slot.id}
+                  onClick={() => toggleAvailabilitySlot(slot.id)}
+                  type="button"
+                >
+                  {slot.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <label
+            className="mb-1 block text-fluid-sm text-gray-400"
+            htmlFor={TIMEZONE_INPUT_ID}
+          >
+            אזור זמן
+          </label>
+          <select
+            className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-right text-white outline-hidden transition-colors focus:border-primary/50"
+            id={TIMEZONE_INPUT_ID}
+            onChange={(e) =>
+              onUpdateFormData({
+                availability: {
+                  ...formData.availability,
+                  timezone: e.target.value,
+                },
+              })
+            }
+            value={formData.availability.timezone}
+          >
+            {TIMEZONE_OPTIONS.map((option) => (
+              <option
+                className="bg-card text-white"
+                key={option.value}
+                value={option.value}
+              >
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
