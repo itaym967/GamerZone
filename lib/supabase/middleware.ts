@@ -24,6 +24,15 @@ const PUBLIC_AUTH_PATHS = [
   "/parental-consent",
 ];
 
+function logAuthRedirect(path: string, to: string, reason: string) {
+  console.warn("AuthMiddleware redirect", {
+    from: path,
+    reason,
+    timestamp: new Date().toISOString(),
+    to,
+  });
+}
+
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -148,6 +157,7 @@ export async function updateSession(request: NextRequest) {
         clearAuthCookies(request, response);
 
         if (isPathInList(path, PROTECTED_ROUTES)) {
+          logAuthRedirect(path, "/login", "refresh_token_error");
           return NextResponse.redirect(new URL("/login", request.url));
         }
 
@@ -166,6 +176,7 @@ export async function updateSession(request: NextRequest) {
     console.error("Session update error:", message);
 
     if (isPathInList(path, PROTECTED_ROUTES)) {
+      logAuthRedirect(path, "/login", "session_update_exception");
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
@@ -174,6 +185,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!user) {
     if (isPathInList(path, PROTECTED_ROUTES)) {
+      logAuthRedirect(path, "/login", "missing_user");
       return NextResponse.redirect(new URL("/login", request.url));
     }
 

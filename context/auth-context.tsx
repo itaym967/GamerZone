@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { trackAuthEvent } from "@/lib/auth/auth-telemetry";
 import { createClient } from "@/lib/supabase/client";
 
 interface Profile {
@@ -160,6 +161,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             setProfile(null);
             router.push("/login");
+            trackAuthEvent({
+              event: "redirect_to_login",
+              from: window.location.pathname,
+              reason: "user_banned",
+              status: "info",
+              to: "/login",
+            });
             return;
           }
 
@@ -190,6 +198,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   setUser(null);
                   setProfile(null);
                   router.push("/login");
+                  trackAuthEvent({
+                    event: "redirect_to_login",
+                    from: window.location.pathname,
+                    reason: "profile_banned_realtime_update",
+                    status: "info",
+                    to: "/login",
+                  });
                 } else {
                   const updatedProfile = { ...data, ...payload.new } as Profile;
                   setProfile(updatedProfile);
@@ -253,6 +268,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (hasSessionRefreshTokenError(sessionError)) {
         await supabase.auth.signOut();
         clearAuthState();
+        trackAuthEvent({
+          event: "session_invalidated",
+          reason: "refresh_token_error",
+          status: "error",
+        });
         finish();
         return;
       }
@@ -291,6 +311,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         case "SIGNED_OUT": {
           clearAuthState();
+          trackAuthEvent({
+            event: "auth_state_signed_out",
+            reason: "supabase_event",
+            status: "info",
+          });
           router.refresh();
           break;
         }
@@ -362,6 +387,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Force router refresh and redirect
       router.refresh();
       router.push("/login");
+      trackAuthEvent({
+        event: "redirect_to_login",
+        from: window.location.pathname,
+        reason: "manual_signout",
+        status: "info",
+        to: "/login",
+      });
     } catch (error) {
       console.error("Error during sign out:", error);
       // Even if sign out fails, clear local state
@@ -369,6 +401,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setIsAdmin(false);
       router.push("/login");
+      trackAuthEvent({
+        event: "redirect_to_login",
+        errorMessage: error instanceof Error ? error.message : undefined,
+        from: window.location.pathname,
+        reason: "manual_signout_fallback_after_error",
+        status: "error",
+        to: "/login",
+      });
     }
   }, [supabase, router]);
 

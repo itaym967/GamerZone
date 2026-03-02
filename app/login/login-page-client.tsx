@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { trackAuthEvent } from "@/lib/auth/auth-telemetry";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/logo";
 
@@ -29,6 +30,14 @@ function getErrorMessage(error: unknown): string {
     }
   }
   return "";
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || !error) {
+    return undefined;
+  }
+  const code = Reflect.get(error, "code");
+  return typeof code === "string" ? code : undefined;
 }
 
 function isRefreshTokenError(error: unknown): boolean {
@@ -56,6 +65,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const supabase = createClient();
 
@@ -77,6 +87,13 @@ export default function LoginPage() {
           return;
         }
         if (session.user) {
+          trackAuthEvent({
+            event: "redirect_existing_session",
+            from: "/login",
+            reason: "session_exists",
+            status: "info",
+            to: "/",
+          });
           window.location.replace("/");
         }
       } catch {
@@ -96,10 +113,17 @@ export default function LoginPage() {
 
     if (!(email.trim() && password)) {
       toast.error("נא למלא אימייל וסיסמה");
+      setLoginError("נא למלא אימייל וסיסמה");
       return;
     }
 
+    setLoginError("");
     setIsLoading(true);
+    trackAuthEvent({
+      event: "login_attempt",
+      reason: "password_login",
+      status: "info",
+    });
 
     try {
       const {
@@ -111,18 +135,35 @@ export default function LoginPage() {
       });
 
       if (error) {
+        const errorCode = getErrorCode(error);
         if (isRefreshTokenError(error)) {
           await supabase.auth.signOut();
           toast.error("שגיאה בהתחברות", {
             description: "פג תוקף ההתחברות. נסה שוב.",
+          });
+          setLoginError("פג תוקף ההתחברות. נסה שוב.");
+          trackAuthEvent({
+            event: "login_failed",
+            errorCode,
+            errorMessage: getErrorMessage(error),
+            reason: "refresh_token_error",
+            status: "error",
           });
           setIsLoading(false);
           return;
         }
         const message = getErrorMessage(error);
         const description = getLoginErrorDescription(message);
+        setLoginError(description);
         toast.error("שגיאה בהתחברות", {
           description,
+        });
+        trackAuthEvent({
+          event: "login_failed",
+          errorCode,
+          errorMessage: message,
+          reason: "invalid_credentials_or_auth_error",
+          status: "error",
         });
         setIsLoading(false);
         return;
@@ -131,16 +172,38 @@ export default function LoginPage() {
       if (!session) {
         // no-op
       } else if (session.user) {
+        trackAuthEvent({
+          event: "login_success",
+          reason: "password_login",
+          status: "success",
+        });
+        trackAuthEvent({
+          event: "redirect_after_login",
+          from: "/login",
+          reason: "successful_login",
+          status: "info",
+          to: "/",
+        });
         toast.success("ברוך הבא ל-GamerZone! 🎮");
         router.replace("/");
       }
     } catch (error: unknown) {
       const message = getErrorMessage(error);
+      const errorCode = getErrorCode(error);
+      const description =
+        message === "Invalid login credentials"
+          ? "פרטי ההתחברות שגויים"
+          : message;
+      setLoginError(description);
       toast.error("שגיאה בהתחברות", {
-        description:
-          message === "Invalid login credentials"
-            ? "פרטי ההתחברות שגויים"
-            : message,
+        description,
+      });
+      trackAuthEvent({
+        event: "login_failed",
+        errorCode,
+        errorMessage: message,
+        reason: "unexpected_login_exception",
+        status: "error",
       });
     }
     setIsLoading(false);
@@ -156,14 +219,35 @@ export default function LoginPage() {
       });
 
       if (error) {
+        const message = getErrorMessage(error);
         toast.error(`שגיאה בהתחברות עם ${provider}`, {
-          description: getErrorMessage(error),
+          description: message,
+        });
+        trackAuthEvent({
+          event: "oauth_start_failed",
+          errorCode: getErrorCode(error),
+          errorMessage: message,
+          reason: provider,
+          status: "error",
         });
         return;
       }
+      trackAuthEvent({
+        event: "oauth_start_success",
+        reason: provider,
+        status: "success",
+      });
     } catch (error: unknown) {
+      const message = getErrorMessage(error);
       toast.error(`שגיאה בהתחברות עם ${provider}`, {
-        description: getErrorMessage(error),
+        description: message,
+      });
+      trackAuthEvent({
+        event: "oauth_start_failed",
+        errorCode: getErrorCode(error),
+        errorMessage: message,
+        reason: provider,
+        status: "error",
       });
     }
   };
@@ -309,6 +393,16 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+
+            {loginError && (
+              <div
+                aria-live="polite"
+                className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-right text-fluid-xs text-red-300"
+                role="alert"
+              >
+                {loginError}
+              </div>
+            )}
           </form>
 
           <p className="mt-8 text-center text-fluid-sm text-gray-400">
