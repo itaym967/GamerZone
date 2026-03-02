@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 const DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_DEEPSEEK_MODEL = "deepseek-chat";
 const TRAILING_SLASHES_REGEX = /\/+$/;
+const GAMING_TOPIC_REGEX =
+  /\b(game|gaming|gamer|games|fps|moba|mmorpg|rpg|battle\s?royale|rank|ranked|meta|patch|nerf|buff|loadout|crosshair|aim|kd|kill|clutch|team|party|squad|duo|trio|tournament|esports|stream|controller|keyboard|mouse|ping|lag|latency|steam|xbox|playstation|ps5|ps4|switch|nintendo|valorant|fortnite|apex|overwatch|cs2|counter\s?strike|league of legends|lol|dota|rocket league|minecraft|roblox|call of duty|cod|pubg|fifa|ea fc|elden ring|gta|wow|world of warcraft)\b/i;
+const GAMING_TOPIC_HEBREW_REGEX =
+  /(משחק|משחקים|גיימ|גיימר|גיימינג|קבוצה|טים|פארטי|סקווד|ראנק|תחרות|יריות|איים|כוונת|פינג|לאג|קונסולה|פלייסטיישן|אקסבוקס|נינטנדו|מיינקראפט|פורטנייט|ולוראנט|אוברוואץ׳|אוברוואץ|ליג אוף לג׳נדס|ליג אוף לגנדס|ליג|דוטה|רוקט ליג|קול אוף דיוטי|פיפא|פאבג׳י|רובלוקס|סטרים|סטרימר)/i;
+const NON_GAMING_REPLY =
+  "אני עונה רק על נושאי גיימינג. תשאל אותי על משחקים, טיפים, ראנק, דמויות, נשקים, קבוצות או ציוד לגיימינג.";
 
 interface GamerBotRequest {
   message?: string;
@@ -34,6 +40,12 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
+function isGamingRelatedMessage(message: string): boolean {
+  return (
+    GAMING_TOPIC_REGEX.test(message) || GAMING_TOPIC_HEBREW_REGEX.test(message)
+  );
+}
+
 function buildDeepSeekEndpoints(baseUrl: string): string[] {
   const normalizedBaseUrl = baseUrl.replace(TRAILING_SLASHES_REGEX, "");
   const endpoints = [`${normalizedBaseUrl}/chat/completions`];
@@ -51,6 +63,9 @@ export async function POST(request: Request) {
 
   if (!message) {
     return NextResponse.json({ error: "Missing message" }, { status: 400 });
+  }
+  if (!isGamingRelatedMessage(message)) {
+    return NextResponse.json({ provider: "policy", reply: NON_GAMING_REPLY });
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -82,7 +97,7 @@ export async function POST(request: Request) {
             {
               role: "system",
               content:
-                "You are GamerBot, a concise gaming assistant for Hebrew speaking users. Keep answers practical, safe, and focused on gaming tips/team play.",
+                "You are GamerBot for Hebrew-speaking users. You must only answer gaming-related questions (games, teams, strategy, setup, esports, and gaming hardware). If the user asks about non-gaming topics, refuse briefly and ask for a gaming-related question. Keep answers concise and practical.",
             },
             { role: "user", content: message },
           ],
