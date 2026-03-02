@@ -14,26 +14,83 @@ interface GamerBotRequest {
   message?: string;
 }
 
+const LOCAL_BOT_RULES = [
+  {
+    patterns: ["valorant", "ולוראנט", "ואלוראנט"],
+    reply:
+      "טיפ ל-Valorant: תתמקד ב-2 agents קבועים, תשמור crosshair בגובה הראש, ותשתמש ב-utility לפני peek ולא אחרי.",
+  },
+  {
+    patterns: ["fortnite", "פורטנייט"],
+    reply:
+      "טיפ ל-Fortnite: תעבוד כל יום 10 דקות על build/edit מהיר, ותבחר landing spot קבוע כדי לשפר early game.",
+  },
+  {
+    patterns: ["cs2", "counter strike", "counter-strike", "קאונטר", "קונטר"],
+    reply:
+      "טיפ ל-CS2: אל תרוץ עם ה-crosshair לרצפה, תשחק עם util בסיסי (smoke+flash), ותלמד 2 executes קבועים לכל מפה.",
+  },
+  {
+    patterns: [
+      "league of legends",
+      "lol",
+      "ליג",
+      "ליג אוף לגנדס",
+      "ליג אוף לג׳נדס",
+    ],
+    reply:
+      "טיפ ל-LoL: תשחק 1-2 champs עיקריים, תתעדף farm יציב, ותשמור על vision לפני objective fights.",
+  },
+  {
+    patterns: ["overwatch", "אוברוואץ", "אוברוואץ׳"],
+    reply:
+      "טיפ ל-Overwatch: תבנה קומפ מאוזן, תנהל cooldowns ביחד עם הקבוצה, ואל תבזבז אולטים בסולו fight.",
+  },
+  {
+    patterns: ["apex", "אייפקס"],
+    reply:
+      "טיפ ל-Apex: תתקשר loot ו-rotations מוקדם, תילחם רק עם יתרון position, ותמיד תשאיר escape angle.",
+  },
+  {
+    patterns: ["fifa", "ea fc", "פיפא"],
+    reply:
+      "טיפ ל-EA FC/FIFA: תגן בסבלנות עם jockey, תשתמש במסירות קצרות בשליש האמצעי, ואל תכריח sprint בכל התקפה.",
+  },
+  {
+    patterns: ["cod", "call of duty", "קול אוף דיוטי"],
+    reply:
+      "טיפ ל-CoD: תעדיף positioning על gunfights מיותרים, תכוון ל-pre-aim corners, ותבנה loadout אחד יציב לכל מפה.",
+  },
+  {
+    patterns: ["minecraft", "מיינקראפט"],
+    reply:
+      "טיפ ל-Minecraft: בתחילת עולם תתעדף food+iron+shield, תסמן base ברור, ותצא ל-mining עם מטרה ספציפית.",
+  },
+  {
+    patterns: ["fps", "shoot", "יריות"],
+    reply:
+      "טיפ ל-FPS: תתאמן 10 דקות על aim לפני ranked, תשמור crosshair בגובה הראש, ותבדוק replay קצר אחרי כל session.",
+  },
+  {
+    patterns: ["party", "team", "קבוצה", "טים", "פארטי"],
+    reply:
+      "לחיפוש קבוצה טובה: תגדיר role ברור, שעות משחק קבועות, וסגנון תקשורת מראש כדי למנוע חיכוכים.",
+  },
+] as const;
+
 function getLocalBotReply(message: string): string {
   const normalizedMessage = message.trim().toLowerCase();
   if (!normalizedMessage) {
     return "כתוב לי מה בא לך לשחק ואנסה לעזור.";
   }
-  if (
-    normalizedMessage.includes("fps") ||
-    normalizedMessage.includes("shoot") ||
-    normalizedMessage.includes("יריות")
-  ) {
-    return "טיפ ל-FPS: תתאמן 10 דקות על aim לפני ranked ותשמור על crosshair בגובה הראש.";
+
+  for (const rule of LOCAL_BOT_RULES) {
+    if (rule.patterns.some((pattern) => normalizedMessage.includes(pattern))) {
+      return rule.reply;
+    }
   }
-  if (
-    normalizedMessage.includes("party") ||
-    normalizedMessage.includes("team") ||
-    normalizedMessage.includes("קבוצה")
-  ) {
-    return "לחיפוש קבוצה טובה: תגדיר role ברור, שעות משחק קבועות, וסגנון תקשורת מראש.";
-  }
-  return "אני זמין לעזור עם טיפים, בניית קבוצה ושיפור ביצועים לפי המשחק שאתה משחק.";
+
+  return "כתוב את שם המשחק (למשל Valorant / Fortnite / LoL / CS2) ואחזיר לך טיפים ממוקדים לשיפור.";
 }
 
 function getErrorMessage(error: unknown): string {
