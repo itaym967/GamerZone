@@ -40,7 +40,7 @@ function getLocalBotReply(message: string): string {
   ) {
     return "כדי לעלות ראנק: שחק עקבי, התמקד ב-2-3 דמויות/נשקים, ונתח משחק אחד ביום במקום רק לגריינד.";
   }
-  return "כרגע אני במצב בסיסי בלי AI חיצוני. תכתוב משחק/ז'אנר ואני אתן טיפים ממוקדים.";
+  return "תכתוב משחק/ז'אנר ואני אתן טיפים ממוקדים.";
 }
 
 export default function FloatingGamerBot() {
@@ -95,10 +95,27 @@ export default function FloatingGamerBot() {
       setTimeout(resolve, 300);
     });
 
+    let botReply = getLocalBotReply(userMessage.content);
+    try {
+      const response = await fetch("/api/gamerbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage.content }),
+      });
+      if (response.ok) {
+        const payload = (await response.json()) as { reply?: string };
+        if (payload.reply?.trim()) {
+          botReply = payload.reply.trim();
+        }
+      }
+    } catch (error: unknown) {
+      console.error("Floating GamerBot API fallback to local reply", error);
+    }
+
     const botMessage: Message = {
       id: `bot-${Date.now()}`,
       sender: "bot",
-      content: getLocalBotReply(userMessage.content),
+      content: botReply,
       timestamp: new Date().toISOString(),
     };
 

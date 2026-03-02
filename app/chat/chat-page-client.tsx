@@ -128,11 +128,28 @@ async function sendGamerBotMessage(params: {
     setTimeout(resolve, 300);
   });
 
+  let botReply = getLocalBotReply(userMessage);
+  try {
+    const response = await fetch("/api/gamerbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMessage }),
+    });
+    if (response.ok) {
+      const payload = (await response.json()) as { reply?: string };
+      if (payload.reply?.trim()) {
+        botReply = payload.reply.trim();
+      }
+    }
+  } catch (error: unknown) {
+    console.error("GamerBot API fallback to local reply", error);
+  }
+
   const botMsg: Message = {
     id: `bot-${Date.now()}`,
     sender_id: "gamerbot-ai",
     receiver_id: userId || "guest",
-    content: getLocalBotReply(userMessage),
+    content: botReply,
     created_at: new Date().toISOString(),
     is_read: true,
   };
