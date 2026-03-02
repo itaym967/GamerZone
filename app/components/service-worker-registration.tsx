@@ -20,8 +20,10 @@ export default function ServiceWorkerRegistration() {
     const hadController = !!navigator.serviceWorker.controller;
     let reloading = false;
 
+    const SW_VERSION = "2026-03-02-logout-fix";
+
     navigator.serviceWorker
-      .register("/sw.js")
+      .register(`/sw.js?v=${SW_VERSION}`)
       .then((registration) => {
         console.log("[SW] Service Worker registered:", registration.scope);
 

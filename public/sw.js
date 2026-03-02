@@ -1,8 +1,8 @@
 // Service Worker for GamerZone PWA
-// Version 2.0.0 - Full PWA audit: offline support, push improvements, background sync
+// Version 2.0.1 - cache bust for production clients
 
-const CACHE_NAME = "gamerzone-v13";
-const RUNTIME_CACHE = "gamerzone-runtime-v13";
+const CACHE_NAME = "gamerzone-v14";
+const RUNTIME_CACHE = "gamerzone-runtime-v14";
 const STATIC_ASSET_REGEX = /\.(woff2?|png|jpg|jpeg|gif|ico|svg)$/;
 
 // Precache static assets + offline fallback page
@@ -19,7 +19,7 @@ const PRECACHE_ASSETS = [
 
 // Install event - precache critical assets
 self.addEventListener("install", (event) => {
-  console.log("[SW] Installing service worker v2.0.0");
+  console.log("[SW] Installing service worker v2.0.1");
   event.waitUntil(
     caches
       .open(CACHE_NAME)
