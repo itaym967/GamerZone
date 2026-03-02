@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/auth-context";
 import FloatingGamerBot from "./components/floating-gamer-bot";
+import GlobalFeedbackButton from "./components/global-feedback-button";
 import KeyboardHandler from "./components/keyboard-handler";
 import OfflineIndicator from "./components/offline-indicator";
 import PWAInstallPrompt from "./components/pwa-install-prompt";
@@ -100,6 +101,7 @@ export default function RootLayout({
           {children}
           <PWAInstallPrompt />
           <FloatingGamerBot />
+          <GlobalFeedbackButton />
           <Toaster position="top-center" richColors theme="dark" />
         </AuthProvider>
       </body>

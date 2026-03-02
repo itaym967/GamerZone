@@ -8,7 +8,16 @@ interface OptimizedAvatarProps {
   className?: string;
   seed: string;
   size?: number;
-  style?: "avataaars" | "bottts" | "personas";
+  style?:
+    | "adventurer"
+    | "avataaars"
+    | "big-smile"
+    | "bottts"
+    | "fun-emoji"
+    | "lorelei"
+    | "personas"
+    | "pixel-art"
+    | "thumbs";
 }
 
 const HTTP_URL_REGEX = /^https?:\/\//i;
