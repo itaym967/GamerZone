@@ -4,6 +4,42 @@ import { createClient } from "@/lib/supabase/client";
 
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 
+function getDismissedKey(userId: string) {
+  return `gamerzone_dismissed_notifications_${userId}`;
+}
+
+function getDismissedIds(userId: string): Set<string> {
+  if (typeof window === "undefined") {
+    return new Set();
+  }
+  try {
+    const raw = localStorage.getItem(getDismissedKey(userId));
+    if (!raw) {
+      return new Set();
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return new Set();
+    }
+    return new Set(
+      parsed.filter((value): value is string => typeof value === "string")
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function persistDismissedIds(userId: string, ids: Set<string>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    localStorage.setItem(getDismissedKey(userId), JSON.stringify([...ids]));
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
 export function useNotifications(userId: string | null | undefined) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -28,29 +64,38 @@ export function useNotifications(userId: string | null | undefined) {
     if (error) {
       console.error("Error fetching notifications:", error);
     } else {
-      setNotifications(data || []);
-      setUnreadCount(data?.filter((n) => !n.is_read).length || 0);
+      const dismissedIds = getDismissedIds(userId);
+      const visibleNotifications = (data || []).filter(
+        (notification) => !dismissedIds.has(notification.id)
+      );
+      setNotifications(visibleNotifications);
+      setUnreadCount(visibleNotifications.filter((n) => !n.is_read).length);
     }
     setLoading(false);
   }, [userId, supabase]);
 
   const markAsRead = useCallback(
     async (notificationId: string) => {
+      if (!userId) {
+        return { error: "Not authenticated" };
+      }
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("id", notificationId);
+        .eq("id", notificationId)
+        .eq("user_id", userId);
 
-      if (!error) {
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notificationId ? { ...n, is_read: true } : n
-          )
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+      if (error) {
+        return { error: error.message };
       }
+
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      return { error: null };
     },
-    [supabase]
+    [supabase, userId]
   );
 
   const markAllAsRead = useCallback(async () => {
@@ -77,14 +122,12 @@ export function useNotifications(userId: string | null | undefined) {
 
   const deleteNotification = useCallback(
     async (notificationId: string) => {
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", notificationId);
-
-      if (error) {
-        return { error: error.message };
+      if (!userId) {
+        return { error: "Not authenticated" };
       }
+      const dismissedIds = getDismissedIds(userId);
+      dismissedIds.add(notificationId);
+      persistDismissedIds(userId, dismissedIds);
 
       setNotifications((prev) => {
         const removed = prev.find((n) => n.id === notificationId);
@@ -93,9 +136,19 @@ export function useNotifications(userId: string | null | undefined) {
         }
         return prev.filter((n) => n.id !== notificationId);
       });
+
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId)
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error("Error deleting notification:", error);
+      }
       return { error: null };
     },
-    [supabase]
+    [supabase, userId]
   );
 
   // Initial fetch
@@ -121,6 +174,10 @@ export function useNotifications(userId: string | null | undefined) {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
+          const dismissedIds = getDismissedIds(userId);
+          if (dismissedIds.has(newNotification.id)) {
+            return;
+          }
           setNotifications((prev) => [newNotification, ...prev]);
           setUnreadCount((prev) => prev + 1);
         }
