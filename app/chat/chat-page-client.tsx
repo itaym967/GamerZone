@@ -34,6 +34,8 @@ import Navigation from "../components/navigation";
 import OptimizedAvatar from "../components/optimized-avatar";
 import ReportMessageModal from "../components/report-message-modal";
 
+const FEEDBACK_EMAIL = "itay.machllof@gmail.com";
+
 function getLocalBotReply(message: string): string {
   const normalizedMessage = message.trim().toLowerCase();
   if (!normalizedMessage) {
@@ -100,6 +102,27 @@ function getTypingDotClasses(isConnected: boolean) {
   return `h-1.5 w-1.5 animate-bounce rounded-full ${
     isConnected ? "bg-primary" : "bg-gray-500"
   }`;
+}
+
+function buildFeedbackMailto(params: {
+  userEmail?: string;
+  activeChatName?: string;
+}) {
+  const subject = "GamerZone Feedback";
+  const bodyLines = [
+    "שלום,",
+    "",
+    "הנה הפידבק שלי על GamerZone:",
+    "",
+    "פירוט:",
+    "",
+    "---",
+    `משתמש: ${params.userEmail ?? "unknown"}`,
+    `שיחה פעילה: ${params.activeChatName ?? "unknown"}`,
+    `זמן: ${new Date().toISOString()}`,
+  ];
+  const body = bodyLines.join("\n");
+  return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function getVisibleChatState(params: {
@@ -407,6 +430,14 @@ function ChatContent() {
     await deleteMessage(messageId);
   };
 
+  const handleFeedback = () => {
+    const mailtoUrl = buildFeedbackMailto({
+      userEmail: user?.email,
+      activeChatName: activeChat?.username,
+    });
+    window.location.href = mailtoUrl;
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-primary-foreground">
@@ -567,6 +598,14 @@ function ChatContent() {
                 </div>
 
                 <div className="flex items-center gap-1 opacity-70">
+                  <button
+                    className="rounded-lg px-2 py-1 text-primary text-xs transition-colors hover:bg-primary/15 hover:text-primary"
+                    onClick={handleFeedback}
+                    title="שלח פידבק"
+                    type="button"
+                  >
+                    שלח פידבק
+                  </button>
                   <button
                     className="rounded-lg p-2 text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
                     onClick={handleClearConversation}

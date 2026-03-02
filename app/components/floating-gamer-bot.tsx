@@ -14,11 +14,30 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 
+const FEEDBACK_EMAIL = "itay.machllof@gmail.com";
+
 interface Message {
   content: string;
   id: string;
   sender: "user" | "bot";
   timestamp: string;
+}
+
+function buildFeedbackMailto(userEmail?: string) {
+  const subject = "GamerZone Feedback";
+  const bodyLines = [
+    "שלום,",
+    "",
+    "הנה פידבק על GamerBot:",
+    "",
+    "פירוט:",
+    "",
+    "---",
+    `משתמש: ${userEmail ?? "unknown"}`,
+    `זמן: ${new Date().toISOString()}`,
+  ];
+  const body = bodyLines.join("\n");
+  return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function getLocalBotReply(message: string): string {
@@ -130,6 +149,11 @@ export default function FloatingGamerBot() {
     setUi((prev) => ({ ...prev, isTyping: false }));
   };
 
+  const handleFeedback = () => {
+    const mailtoUrl = buildFeedbackMailto(user.email);
+    window.location.href = mailtoUrl;
+  };
+
   return (
     <LazyMotion features={domAnimation}>
       {/* Floating Button */}
@@ -210,6 +234,14 @@ export default function FloatingGamerBot() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <button
+                  className="rounded-lg px-2 py-1 text-primary text-xs transition-colors hover:bg-primary/15 hover:text-primary"
+                  onClick={handleFeedback}
+                  title="שלח פידבק"
+                  type="button"
+                >
+                  פידבק
+                </button>
                 <button
                   className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
                   onClick={() =>
