@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   const baseUrl = process.env.DEEPSEEK_BASE_URL ?? DEFAULT_DEEPSEEK_BASE_URL;
   const model = process.env.DEEPSEEK_MODEL ?? DEFAULT_DEEPSEEK_MODEL;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeout = setTimeout(() => controller.abort(), 5000);
   const endpoints = buildDeepSeekEndpoints(baseUrl);
 
   try {
