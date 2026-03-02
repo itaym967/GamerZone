@@ -11,6 +11,8 @@ interface OptimizedAvatarProps {
   style?: "avataaars" | "bottts" | "personas";
 }
 
+const HTTP_URL_REGEX = /^https?:\/\//i;
+
 /**
  * Optimized avatar component using Next.js Image with proper caching and sizing
  * Prevents loading full-resolution images for small avatars
@@ -23,15 +25,20 @@ export default function OptimizedAvatar({
   style = "bottts",
 }: OptimizedAvatarProps) {
   const [error, setError] = useState(false);
+  const normalizedSeed = seed.trim();
+  const safeSeed = normalizedSeed || "Gamer";
 
-  // Handle local avatar paths vs DiceBear API
-  const isLocalAvatar = seed.startsWith("/avatars");
-  const avatarUrl = isLocalAvatar
-    ? seed
-    : `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=transparent`;
+  // Support real URLs/paths and generated avatars from a plain seed.
+  const isRemoteUrl = HTTP_URL_REGEX.test(safeSeed);
+  const isDataUrl = safeSeed.startsWith("data:image/");
+  const isLocalPath = safeSeed.startsWith("/");
+  const avatarUrl =
+    isRemoteUrl || isDataUrl || isLocalPath
+      ? safeSeed
+      : `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(safeSeed)}&backgroundColor=transparent`;
 
   // Fallback avatar
-  const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${seed}`;
+  const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(safeSeed)}`;
 
   if (error) {
     return (

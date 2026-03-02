@@ -26,26 +26,58 @@ function offlineReducer(
   return { ...state, showBanner: false };
 }
 
+async function hasConnectivity() {
+  if (navigator.onLine) {
+    return true;
+  }
+
+  try {
+    const response = await fetch("/manifest.json", {
+      cache: "no-store",
+      method: "HEAD",
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function OfflineIndicator() {
-  const initialOffline =
-    typeof navigator !== "undefined" ? !navigator.onLine : false;
   const [state, dispatch] = useReducer(offlineReducer, {
-    isOffline: initialOffline,
-    showBanner: initialOffline,
+    isOffline: false,
+    showBanner: false,
   });
 
   useEffect(() => {
-    const handleOnline = () => {
-      dispatch({ type: "ONLINE" });
-    };
-    const handleOffline = () => {
-      dispatch({ type: "OFFLINE" });
+    let isActive = true;
+
+    const updateConnectivity = () => {
+      hasConnectivity()
+        .then((isOnline) => {
+          if (isActive) {
+            dispatch({ type: isOnline ? "ONLINE" : "OFFLINE" });
+          }
+        })
+        .catch(() => {
+          if (isActive) {
+            dispatch({ type: "OFFLINE" });
+          }
+        });
     };
 
+    const handleOnline = () => {
+      updateConnectivity();
+    };
+    const handleOffline = () => {
+      updateConnectivity();
+    };
+
+    updateConnectivity();
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
     return () => {
+      isActive = false;
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };

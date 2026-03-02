@@ -56,3 +56,8 @@ investor-screenshots/README.md
 
 # Supabase Local & Migrations
 supabase/migrations/*.sql
+
+# QA / Dogfood generated artifacts
+dogfood-output/
+*.webm
+*-screenshot.png
