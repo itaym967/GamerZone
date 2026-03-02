@@ -1,0 +1,97 @@
+name: Nightly Mobile QA
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-mobile-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-public-nightly:
+    name: Mobile Public Visuals
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: bunx playwright install chromium
+
+      - name: Run public visual suite
+        env:
+          VISUAL_BASE_URL: https://gamer-zone-sigma.vercel.app
+        run: bun run test:visual:mobile
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report-public
+          path: playwright-report
+          if-no-files-found: ignore
+
+  mobile-auth-nightly:
+    name: Mobile Auth Visuals
+    runs-on: macos-14
+    if: ${{ secrets.VISUAL_TEST_EMAIL != '' && secrets.VISUAL_TEST_PASSWORD != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: bunx playwright install chromium
+
+      - name: Run authenticated visual suite
+        env:
+          VISUAL_BASE_URL: https://gamer-zone-sigma.vercel.app
+          VISUAL_TEST_EMAIL: ${{ secrets.VISUAL_TEST_EMAIL }}
+          VISUAL_TEST_PASSWORD: ${{ secrets.VISUAL_TEST_PASSWORD }}
+        run: bun run test:visual:mobile:auth
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report-auth
+          path: playwright-report
+          if-no-files-found: ignore
+
+  nightly-summary:
+    name: Nightly QA Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - mobile-public-nightly
+      - mobile-auth-nightly
+    steps:
+      - name: Write summary
+        run: |
+          {
+            echo "## Nightly Mobile QA Summary"
+            echo ""
+            echo "- Public visual suite: **${{ needs.mobile-public-nightly.result }}**"
+            echo "- Auth visual suite: **${{ needs.mobile-auth-nightly.result }}**"
+            echo ""
+            echo "Notes:"
+            echo "- \`mobile-auth-nightly\` will be \`skipped\` when VISUAL_TEST_EMAIL/VISUAL_TEST_PASSWORD are not configured."
+            echo "- See uploaded Playwright report artifacts for full failure details and screenshots."
+          } >> "$GITHUB_STEP_SUMMARY"
