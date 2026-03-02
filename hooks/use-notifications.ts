@@ -55,7 +55,7 @@ export function useNotifications(userId: string | null | undefined) {
 
   const markAllAsRead = useCallback(async () => {
     if (!userId) {
-      return;
+      return { error: "Not authenticated" };
     }
 
     const { error } = await supabase
@@ -64,10 +64,15 @@ export function useNotifications(userId: string | null | undefined) {
       .eq("user_id", userId)
       .eq("is_read", false);
 
+    if (error) {
+      return { error: error.message };
+    }
+
     if (!error) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
     }
+    return { error: null };
   }, [userId, supabase]);
 
   const deleteNotification = useCallback(
@@ -77,15 +82,18 @@ export function useNotifications(userId: string | null | undefined) {
         .delete()
         .eq("id", notificationId);
 
-      if (!error) {
-        setNotifications((prev) => {
-          const removed = prev.find((n) => n.id === notificationId);
-          if (removed && !removed.is_read) {
-            setUnreadCount((c) => Math.max(0, c - 1));
-          }
-          return prev.filter((n) => n.id !== notificationId);
-        });
+      if (error) {
+        return { error: error.message };
       }
+
+      setNotifications((prev) => {
+        const removed = prev.find((n) => n.id === notificationId);
+        if (removed && !removed.is_read) {
+          setUnreadCount((c) => Math.max(0, c - 1));
+        }
+        return prev.filter((n) => n.id !== notificationId);
+      });
+      return { error: null };
     },
     [supabase]
   );

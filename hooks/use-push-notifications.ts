@@ -73,52 +73,47 @@ export function usePushNotifications() {
   );
 
   const subscribeToPush = useCallback(async () => {
+    if (!("serviceWorker" in navigator && "PushManager" in window)) {
+      toast.error("הדפדפן לא תומך בהתראות push");
+      return;
+    }
+
     try {
-      const registration = await navigator.serviceWorker.ready;
-
-      // 1. Get possible keys
-      const envVarKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      const hardcodedKey =
-        "BMh2smgb3nI3qOBD7XJp6gl3jqpDcV9WC5qx3x0NZH6mphcEzVq7v_cGyFTAvtB37AGYTywnTnyMywB609EsImg";
-
-      let convertedKey: Uint8Array | null = null;
-
-      // 2. Try Env Var First
-      if (envVarKey) {
-        try {
-          const cleanKey = envVarKey.trim().replace(/['"\s\u200b]/g, "");
-          convertedKey = urlBase64ToUint8Array(cleanKey);
-          console.log("Using Environment VAPID Key");
-        } catch (e) {
-          console.warn(
-            "Environment VAPID Key failed decoding. Falling back to hardcoded.",
-            e
-          );
-        }
+      const hasPermission = await ensurePushPermission();
+      if (!hasPermission) {
+        return;
       }
 
-      // 3. Fallback if Env Var failed or missing
-      if (!convertedKey) {
-        try {
-          convertedKey = urlBase64ToUint8Array(hardcodedKey);
-          console.log("Using Hardcoded VAPID Key");
-        } catch (e) {
-          console.error("Hardcoded VAPID Key failed decoding!", e);
-          toast.error("שגיאה קריטית: מפתח התראות פגום");
-          return;
-        }
+      const registration = await navigator.serviceWorker.ready;
+      const existingSubscription =
+        await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        setSubscription(existingSubscription);
+        toast.success("התראות כבר פעילות");
+        return;
+      }
+
+      let applicationServerKey: Uint8Array;
+      try {
+        applicationServerKey = getApplicationServerKey();
+      } catch (error) {
+        console.error("Failed to decode VAPID key:", error);
+        toast.error("שגיאה קריטית: מפתח התראות פגום");
+        return;
       }
 
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedKey as BufferSource,
+        applicationServerKey: applicationServerKey as BufferSource,
       });
       setSubscription(sub);
       await saveSubscription(sub);
       toast.success("התראות הופעלו בהצלחה!");
     } catch (error) {
       console.error("Failed to subscribe:", error);
-      toast.error("שגיאה בהפעלת התראות");
+      toast.error("שגיאה בהפעלת התראות", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   }, [saveSubscription]);
 
@@ -136,4 +131,43 @@ function urlBase64ToUint8Array(base64String: string) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+}
+
+async function ensurePushPermission() {
+  if (Notification.permission === "denied") {
+    toast.error("התראות חסומות בדפדפן", {
+      description: "אפשר התראות בהגדרות האתר ונסה שוב.",
+    });
+    return false;
+  }
+
+  if (Notification.permission === "default") {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      toast.error("לא ניתן להפעיל התראות ללא הרשאה");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function getApplicationServerKey() {
+  const envVarKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const hardcodedKey =
+    "BMh2smgb3nI3qOBD7XJp6gl3jqpDcV9WC5qx3x0NZH6mphcEzVq7v_cGyFTAvtB37AGYTywnTnyMywB609EsImg";
+
+  if (envVarKey) {
+    try {
+      const cleanKey = envVarKey.trim().replace(/['"\s\u200b]/g, "");
+      return urlBase64ToUint8Array(cleanKey);
+    } catch (error) {
+      console.warn(
+        "Environment VAPID Key failed decoding. Falling back to hardcoded.",
+        error
+      );
+    }
+  }
+
+  return urlBase64ToUint8Array(hardcodedKey);
 }

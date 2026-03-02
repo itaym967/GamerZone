@@ -192,7 +192,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="glass-panel fixed top-0 right-0 z-50 hidden h-screen w-64 flex-col border-white/5 border-l bg-primary-foreground p-6 md:flex">
+      <aside className="glass-panel fixed top-0 right-0 z-50 hidden h-screen w-64 flex-col overflow-y-auto border-white/5 border-l bg-primary-foreground p-6 md:flex">
         <div className="mb-10 flex items-center gap-2 px-2">
           <div className="rounded-lg bg-primary p-2 text-black">
             <HugeiconsIcon icon={GameController02Icon} size={24} />

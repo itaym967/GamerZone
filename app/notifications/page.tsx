@@ -105,8 +105,9 @@ function NotificationItem({
   onDelete: (id: string) => void;
 }) {
   const config = getTypeConfig(notification.type);
+  const hasAction = Boolean(notification.action_url);
 
-  const content = (
+  return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
       className={`group relative flex items-start gap-4 rounded-2xl border p-4 transition-all ${
@@ -118,41 +119,52 @@ function NotificationItem({
       initial={{ opacity: 0, y: 10 }}
       layout
     >
-      {/* Unread dot */}
       {!notification.is_read && (
         <div className="absolute top-4 left-4 h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_0.5rem_rgba(59,130,246,0.6)]" />
       )}
 
-      {/* Icon */}
       <div
         className={`h-10 w-10 shrink-0 rounded-xl ${config.bg} flex items-center justify-center`}
       >
         <HugeiconsIcon className={config.color} icon={config.icon} size={20} />
       </div>
 
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <h3 className="mb-1 font-semibold text-fluid-sm text-white leading-tight">
-          {notification.title}
-        </h3>
-        <p className="text-fluid-sm text-white/50 leading-relaxed">
-          {notification.message}
-        </p>
-        <span className="mt-2 block text-fluid-xs text-white/30">
-          {formatTimeAgo(notification.created_at)}
-        </span>
-      </div>
+      {hasAction ? (
+        <Link
+          className="min-w-0 flex-1"
+          href={notification.action_url || "/notifications"}
+          onClick={() => !notification.is_read && onMarkRead(notification.id)}
+          prefetch={false}
+        >
+          <h3 className="mb-1 font-semibold text-fluid-sm text-white leading-tight">
+            {notification.title}
+          </h3>
+          <p className="text-fluid-sm text-white/50 leading-relaxed">
+            {notification.message}
+          </p>
+          <span className="mt-2 block text-fluid-xs text-white/30">
+            {formatTimeAgo(notification.created_at)}
+          </span>
+        </Link>
+      ) : (
+        <div className="min-w-0 flex-1">
+          <h3 className="mb-1 font-semibold text-fluid-sm text-white leading-tight">
+            {notification.title}
+          </h3>
+          <p className="text-fluid-sm text-white/50 leading-relaxed">
+            {notification.message}
+          </p>
+          <span className="mt-2 block text-fluid-xs text-white/30">
+            {formatTimeAgo(notification.created_at)}
+          </span>
+        </div>
+      )}
 
-      {/* Actions */}
-      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex shrink-0 items-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
         {!notification.is_read && (
           <button
             className="rounded-lg p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-blue-400"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onMarkRead(notification.id);
-            }}
+            onClick={() => onMarkRead(notification.id)}
             title="סמן כנקרא"
             type="button"
           >
@@ -161,11 +173,7 @@ function NotificationItem({
         )}
         <button
           className="rounded-lg p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-red-400"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDelete(notification.id);
-          }}
+          onClick={() => onDelete(notification.id)}
           title="מחק"
           type="button"
         >
@@ -173,28 +181,13 @@ function NotificationItem({
         </button>
       </div>
 
-      {/* Link indicator */}
-      {notification.action_url && (
+      {hasAction && (
         <div className="shrink-0 self-center text-white/20">
           <HugeiconsIcon icon={LinkSquare01Icon} size={14} />
         </div>
       )}
     </motion.div>
   );
-
-  if (notification.action_url) {
-    return (
-      <Link
-        href={notification.action_url}
-        onClick={() => !notification.is_read && onMarkRead(notification.id)}
-        prefetch={false}
-      >
-        {content}
-      </Link>
-    );
-  }
-
-  return content;
 }
 
 export default function NotificationsPage() {
@@ -215,12 +208,20 @@ export default function NotificationsPage() {
       : notifications;
 
   const handleMarkAllRead = async () => {
-    await markAllAsRead();
+    const { error } = await markAllAsRead();
+    if (error) {
+      toast.error("שגיאה בסימון ההתראות", { description: error });
+      return;
+    }
     toast.success("כל ההתראות סומנו כנקראו");
   };
 
   const handleDelete = async (id: string) => {
-    await deleteNotification(id);
+    const { error } = await deleteNotification(id);
+    if (error) {
+      toast.error("שגיאה במחיקת התראה", { description: error });
+      return;
+    }
     toast.success("ההתראה נמחקה");
   };
 
