@@ -66,3 +66,4 @@ dogfood-output/
 # Playwright artifacts
 playwright-report/
 test-results/
+tests/.auth/

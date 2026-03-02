@@ -22,7 +22,15 @@ export default defineConfig({
   },
   projects: [
     {
+      name: "setup-auth",
+      testMatch: /auth\.setup\.ts/,
+      use: {
+        browserName: "chromium",
+      },
+    },
+    {
       name: "mobile-iphone13",
+      testMatch: /mobile-public-pages\.spec\.ts/,
       use: {
         browserName: "chromium",
         ...devices["iPhone 13"],
@@ -30,9 +38,30 @@ export default defineConfig({
     },
     {
       name: "mobile-pixel7",
+      testMatch: /mobile-public-pages\.spec\.ts/,
       use: {
         browserName: "chromium",
         ...devices["Pixel 7"],
+      },
+    },
+    {
+      name: "mobile-iphone13-auth",
+      dependencies: ["setup-auth"],
+      testMatch: /mobile-auth-pages\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        ...devices["iPhone 13"],
+        storageState: "tests/.auth/user.json",
+      },
+    },
+    {
+      name: "mobile-pixel7-auth",
+      dependencies: ["setup-auth"],
+      testMatch: /mobile-auth-pages\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        ...devices["Pixel 7"],
+        storageState: "tests/.auth/user.json",
       },
     },
   ],
