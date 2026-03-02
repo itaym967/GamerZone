@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+*.png
 
 # debug
 npm-debug.log*
@@ -61,3 +62,7 @@ supabase/migrations/*.sql
 dogfood-output/
 *.webm
 *-screenshot.png
+
+# Playwright artifacts
+playwright-report/
+test-results/

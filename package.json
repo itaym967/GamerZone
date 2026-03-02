@@ -8,7 +8,9 @@
     "start": "bun run --bun next start",
     "lint": "ultracite check",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "test:visual:mobile": "bunx playwright test tests/visual/mobile-public-pages.spec.ts",
+    "test:visual:mobile:update": "bunx playwright test tests/visual/mobile-public-pages.spec.ts --update-snapshots"
   },
   "packageManager": "bun@1.3.10",
   "dependencies": {
