@@ -118,7 +118,7 @@ export default function FloatingGamerBot() {
               x: ui.position.x,
               y: ui.position.y,
             }}
-            className="group fixed bottom-24 left-6 z-9999 flex h-16 w-16 cursor-move items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary shadow-2xl shadow-primary/50 transition-shadow hover:shadow-primary/70 md:bottom-6"
+            className="group fixed bottom-24 left-4 z-9999 flex h-14 w-14 cursor-move items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary shadow-2xl shadow-primary/50 transition-shadow hover:shadow-primary/70 md:bottom-6 md:left-6 md:h-16 md:w-16"
             drag
             dragElastic={0}
             dragMomentum={false}
@@ -154,7 +154,7 @@ export default function FloatingGamerBot() {
               y: 0,
               height: ui.isMinimized ? "auto" : "37.5rem",
             }}
-            className="fixed bottom-24 left-6 z-9999 flex w-96 flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl md:bottom-6"
+            className="fixed right-3 bottom-24 left-3 z-9999 flex w-auto max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-2xl md:right-auto md:bottom-6 md:left-6 md:w-96 md:max-w-none"
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
           >
@@ -233,7 +233,7 @@ export default function FloatingGamerBot() {
                         key={msg.id}
                       >
                         <div
-                          className={`max-w-[clamp(16rem,85%,28rem)] rounded-2xl px-4 py-2.5 text-fluid-sm leading-relaxed ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-fluid-sm leading-relaxed md:max-w-[clamp(16rem,85%,28rem)] ${
                             msg.sender === "user"
                               ? "rounded-tl-sm bg-primary text-black"
                               : "rounded-tr-sm border border-white/5 bg-[#1a1a2e] text-gray-200"

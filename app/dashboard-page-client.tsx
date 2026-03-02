@@ -139,7 +139,7 @@ export default function Dashboard() {
 
         {/* Call to Action Banner - Only for guests */}
         {!(isLoggedIn || loading) && (
-          <section className="group relative mt-8 overflow-hidden rounded-2xl border border-white/10 p-8">
+          <section className="group relative mt-8 overflow-hidden rounded-2xl border border-white/10 p-5 md:p-8">
             <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-secondary/20 to-primary/10 backdrop-blur-3xl transition-opacity group-hover:opacity-80" />
             <div className="relative z-20 flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-right">
               <div>
@@ -151,7 +151,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Link
-                className="relative z-100 block cursor-pointer whitespace-nowrap rounded-xl bg-white px-6 py-3 font-bold text-black shadow-lg shadow-white/10 transition-colors hover:bg-gray-200"
+                className="relative z-100 block w-full cursor-pointer whitespace-nowrap rounded-xl bg-white px-6 py-3 text-center font-bold text-black shadow-lg shadow-white/10 transition-colors hover:bg-gray-200 md:w-auto"
                 href="/signup"
                 prefetch={false}
               >

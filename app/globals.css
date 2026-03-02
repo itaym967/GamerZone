@@ -61,8 +61,16 @@ body {
   background: linear-gradient(135deg, #050510 0%, #0a0a1e 100%);
   color: white;
   direction: rtl;
+  overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 /* ===== Fluid + Container Query Utilities ===== */
