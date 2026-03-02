@@ -107,6 +107,8 @@ interface GamerCardProps {
   id: string;
   // OPTIMIZATION: Accept swap status from parent to avoid per-card subscriptions
   initialSwapStatus?: SwapStatus;
+  matchConfidence?: number;
+  matchReasons?: string[];
   online?: boolean;
   onSendFriendRequest?: (targetId: string) => void;
   onSwapStatusChange?: (userId: string, status: SwapStatus) => void;
@@ -357,6 +359,8 @@ export default function GamerCard({
   id,
   currentUserId,
   initialSwapStatus,
+  matchConfidence,
+  matchReasons,
   onSwapStatusChange,
   friendshipStatus = "none",
   onSendFriendRequest,
@@ -578,6 +582,22 @@ export default function GamerCard({
                   initial={{ width: 0 }}
                 />
               </div>
+              {typeof matchConfidence === "number" && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 font-bold text-[0.625rem] text-primary">
+                    <HugeiconsIcon icon={SparklesIcon} size={10} />
+                    {matchConfidence}% התאמה
+                  </span>
+                  {(matchReasons ?? []).slice(0, 2).map((reason) => (
+                    <span
+                      className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.625rem] text-gray-300"
+                      key={reason}
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

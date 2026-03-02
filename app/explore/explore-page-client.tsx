@@ -11,7 +11,7 @@ import { useAuth } from "@/context/auth-context";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useFriendship } from "@/hooks/use-friendship";
 import { useSwapStatus } from "@/hooks/use-swap-status";
-import { getAutoMatchScore } from "@/lib/auto-match";
+import { getAutoMatchInsights } from "@/lib/auto-match";
 import GamerCard from "../components/gamer-card";
 import Navigation from "../components/navigation";
 
@@ -89,35 +89,37 @@ export default function ExplorePage() {
       return matchesSearch && matchesGame && matchesOnline && matchesFriends;
     });
 
-    return visibleGamers.sort((left, right) => {
-      const leftScore = getAutoMatchScore({
-        currentAvailability: currentUserPreferences?.availability ?? null,
-        currentGames: currentUserPreferences?.games ?? [],
-        gamerAvailability: left.availabilityTimezone
-          ? {
-              slots: left.availabilitySlots,
-              timezone: left.availabilityTimezone,
-            }
-          : null,
-        gamerGames: left.games,
-        online: left.online,
-        isFriend: isFriend(left.id),
+    return visibleGamers
+      .map((gamer) => {
+        const insights = getAutoMatchInsights({
+          currentAvailability: currentUserPreferences?.availability ?? null,
+          currentGames: currentUserPreferences?.games ?? [],
+          gamerAvailability: gamer.availabilityTimezone
+            ? {
+                slots: gamer.availabilitySlots,
+                timezone: gamer.availabilityTimezone,
+              }
+            : null,
+          gamerGames: gamer.games,
+          online: gamer.online,
+          isFriend: isFriend(gamer.id),
+        });
+        return {
+          gamer,
+          matchConfidence: insights.confidence,
+          matchReasons: insights.reasons.slice(0, 3),
+          score: insights.score,
+        };
+      })
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+        if (right.matchConfidence !== left.matchConfidence) {
+          return right.matchConfidence - left.matchConfidence;
+        }
+        return left.gamer.username.localeCompare(right.gamer.username);
       });
-      const rightScore = getAutoMatchScore({
-        currentAvailability: currentUserPreferences?.availability ?? null,
-        currentGames: currentUserPreferences?.games ?? [],
-        gamerAvailability: right.availabilityTimezone
-          ? {
-              slots: right.availabilitySlots,
-              timezone: right.availabilityTimezone,
-            }
-          : null,
-        gamerGames: right.games,
-        online: right.online,
-        isFriend: isFriend(right.id),
-      });
-      return rightScore - leftScore;
-    });
   }, [
     gamers,
     searchTerm,
@@ -232,11 +234,13 @@ export default function ExplorePage() {
           <div className="auto-grid auto-rows-fr">
             {filteredGamers.map((gamer) => (
               <GamerCard
-                key={gamer.id}
-                {...gamer}
+                key={gamer.gamer.id}
+                {...gamer.gamer}
                 currentUserId={currentUserId}
-                friendshipStatus={getFriendshipStatus(gamer.id).status}
-                initialSwapStatus={getSwapStatus(gamer.id)}
+                friendshipStatus={getFriendshipStatus(gamer.gamer.id).status}
+                initialSwapStatus={getSwapStatus(gamer.gamer.id)}
+                matchConfidence={gamer.matchConfidence}
+                matchReasons={gamer.matchReasons}
                 onSendFriendRequest={handleSendFriendRequest}
                 onSwapStatusChange={updateSwapStatus}
               />
