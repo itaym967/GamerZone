@@ -62,12 +62,19 @@ export default function FloatingGamerBot() {
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const messageCount = messages.length;
+  const shouldKeepBottomInView =
+    ui.isOpen && !ui.isMinimized && (messageCount > 0 || ui.isTyping);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!(shouldKeepBottomInView && scrollRef.current)) {
+      return;
     }
-  }, []);
+    if (messageCount < 0) {
+      return;
+    }
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [shouldKeepBottomInView, messageCount]);
 
   // Hide bot for unauthenticated users (after all hooks)
   if (!user) {

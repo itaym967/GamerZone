@@ -102,6 +102,27 @@ function getTypingDotClasses(isConnected: boolean) {
   }`;
 }
 
+function getVisibleChatState(params: {
+  activeChatId: string | null;
+  gamerBotId: string;
+  regularMessagesCount: number;
+  botMessagesCount: number;
+  isRemoteTyping: boolean;
+  isBotTyping: boolean;
+}) {
+  if (params.activeChatId === params.gamerBotId) {
+    return {
+      visibleMessageCount: params.botMessagesCount,
+      isVisibleTyping: params.isBotTyping,
+    };
+  }
+
+  return {
+    visibleMessageCount: params.regularMessagesCount,
+    isVisibleTyping: params.isRemoteTyping,
+  };
+}
+
 async function sendGamerBotMessage(params: {
   input: string;
   userId?: string;
@@ -260,13 +281,26 @@ function ChatContent() {
   useEffect(() => {
     contactsRef.current = contacts;
   }, [contacts]);
+  const activeChatId = activeChat?.id ?? null;
+  const { visibleMessageCount, isVisibleTyping } = getVisibleChatState({
+    activeChatId,
+    gamerBotId: GAMERBOT_ID,
+    regularMessagesCount: messages.length,
+    botMessagesCount: uiState.botMessages.length,
+    isRemoteTyping: isTyping,
+    isBotTyping: uiState.isBotTyping,
+  });
 
-  // Initial Scroll
+  // Keep newest message visible
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!(activeChatId && scrollRef.current)) {
+      return;
     }
-  }, []);
+    if (visibleMessageCount === 0 && !isVisibleTyping) {
+      return;
+    }
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [activeChatId, visibleMessageCount, isVisibleTyping]);
 
   // Auto-mark messages as read when viewing
   useEffect(() => {
