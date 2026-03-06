@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
@@ -63,6 +64,7 @@ function getLocalBotReply(message: string): string {
 }
 
 export default function FloatingGamerBot() {
+  const pathname = usePathname();
   const [ui, setUi] = useState({
     isOpen: false,
     isMinimized: false,
@@ -96,7 +98,7 @@ export default function FloatingGamerBot() {
   }, [shouldKeepBottomInView, messageCount]);
 
   // Hide bot for unauthenticated users (after all hooks)
-  if (!user) {
+  if (!user || pathname !== "/") {
     return null;
   }
 

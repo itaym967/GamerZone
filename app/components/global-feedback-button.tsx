@@ -50,6 +50,10 @@ export default function GlobalFeedbackButton() {
     );
   }, [pathname, user?.email]);
 
+  if (pathname !== "/") {
+    return null;
+  }
+
   return (
     <a
       className="fixed right-3 bottom-24 z-9998 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-black/70 px-3 py-2 font-medium text-primary text-xs shadow-xl backdrop-blur-md transition-colors hover:bg-black/85 hover:text-primary md:right-6 md:bottom-6"
