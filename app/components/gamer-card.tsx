@@ -112,12 +112,22 @@ interface GamerCardProps {
   online?: boolean;
   onSendFriendRequest?: (targetId: string) => void;
   onSwapStatusChange?: (userId: string, status: SwapStatus) => void;
+  showSwapActions?: boolean;
   tag: string; // e.g. @cyber_ninja
   username: string;
 }
 
 const getErrorMessage = (error: unknown) => {
-  return error instanceof Error ? error.message : "Unknown error";
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.length > 0) {
+      return message;
+    }
+  }
+  return "Unknown error";
 };
 
 function determineStatus(data: SwapRequestRow, userId: string): SwapStatus {
@@ -224,15 +234,21 @@ interface SwapActionsProps {
   handleSendRequest: () => Promise<void>;
   isLoading: boolean;
   status: SwapStatus;
+  targetUserId: string;
 }
 
 const SwapActions = ({
   status,
   isLoading,
   currentUserId,
+  targetUserId,
   handleSendRequest,
   handleApproveResponse,
 }: SwapActionsProps): ReactNode => {
+  if (currentUserId === targetUserId) {
+    return null;
+  }
+
   if (status === "initial" || status === "rejected") {
     return (
       <button
@@ -362,6 +378,7 @@ export default function GamerCard({
   matchConfidence,
   matchReasons,
   onSwapStatusChange,
+  showSwapActions = true,
   friendshipStatus = "none",
   onSendFriendRequest,
 }: GamerCardProps) {
@@ -433,6 +450,10 @@ export default function GamerCard({
   const handleSendRequest = async () => {
     if (!currentUserId) {
       toast.error("עליך להתחבר כדי לשלוח בקשה!");
+      return;
+    }
+    if (currentUserId === id) {
+      toast.info("אי אפשר לשלוח בקשת החלפה לעצמך.");
       return;
     }
 
@@ -719,13 +740,16 @@ export default function GamerCard({
             )}
           </AnimatePresence>
 
-          <SwapActions
-            currentUserId={currentUserId}
-            handleApproveResponse={handleApproveResponse}
-            handleSendRequest={handleSendRequest}
-            isLoading={isLoading}
-            status={status}
-          />
+          {showSwapActions && (
+            <SwapActions
+              currentUserId={currentUserId}
+              handleApproveResponse={handleApproveResponse}
+              handleSendRequest={handleSendRequest}
+              isLoading={isLoading}
+              status={status}
+              targetUserId={id}
+            />
+          )}
 
           <FriendActionButton
             currentUserId={currentUserId}

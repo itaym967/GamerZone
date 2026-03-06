@@ -133,6 +133,7 @@ export default function ProfilePage() {
                 hiddenTags={formData.hiddenTags}
                 id="preview"
                 online={true}
+                showSwapActions={false}
                 tag={formData.tag}
                 username={formData.username}
               />

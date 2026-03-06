@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   images: {
     // Keep image revalidation short for frequently changing remote avatars.
     minimumCacheTTL: 60,
+    // Allow the quality values used by avatar/image components.
+    qualities: [75, 90],
     // Prevent very large remote images from consuming too much memory in optimization.
     maximumResponseBody: 10_000_000,
     remotePatterns: [

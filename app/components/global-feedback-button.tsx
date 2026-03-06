@@ -3,11 +3,16 @@
 import { SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 
 const FEEDBACK_EMAIL = "itay.machllof@gmail.com";
 
-function buildFeedbackMailto(params: { pathname: string; userEmail?: string }) {
+function buildFeedbackMailto(params: {
+  pathname: string;
+  timestamp: string;
+  userEmail?: string;
+}) {
   const subject = "GamerZone Feedback";
   const bodyLines = [
     "Hello,",
@@ -19,7 +24,7 @@ function buildFeedbackMailto(params: { pathname: string; userEmail?: string }) {
     "---",
     `User: ${params.userEmail ?? "unknown"}`,
     `Page: ${params.pathname}`,
-    `Time: ${new Date().toISOString()}`,
+    `Time: ${params.timestamp}`,
   ];
   const body = bodyLines.join("\n");
   return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -28,10 +33,22 @@ function buildFeedbackMailto(params: { pathname: string; userEmail?: string }) {
 export default function GlobalFeedbackButton() {
   const { user } = useAuth();
   const pathname = usePathname();
-  const mailtoUrl = buildFeedbackMailto({
-    pathname: pathname ?? "/",
-    userEmail: user?.email,
-  });
+  const [mailtoUrl, setMailtoUrl] = useState(() =>
+    buildFeedbackMailto({
+      pathname: "/",
+      timestamp: "pending",
+    })
+  );
+
+  useEffect(() => {
+    setMailtoUrl(
+      buildFeedbackMailto({
+        pathname: pathname ?? "/",
+        timestamp: new Date().toISOString(),
+        userEmail: user?.email,
+      })
+    );
+  }, [pathname, user?.email]);
 
   return (
     <a

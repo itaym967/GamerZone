@@ -19,16 +19,34 @@ export default function ServiceWorkerRegistration() {
     // and should NOT trigger a reload.
     const hadController = !!navigator.serviceWorker.controller;
     let reloading = false;
+    let updateInterval: ReturnType<typeof setInterval> | undefined;
+    let isUnmounted = false;
 
     const SW_VERSION = "2026-03-02-logout-fix";
 
     navigator.serviceWorker
       .register(`/sw.js?v=${SW_VERSION}`)
       .then((registration) => {
+        if (isUnmounted) {
+          return;
+        }
         console.log("[SW] Service Worker registered:", registration.scope);
 
         // Check for updates periodically
-        setInterval(() => registration.update(), 60_000);
+        updateInterval = setInterval(() => {
+          if (
+            !(
+              registration.active ||
+              registration.waiting ||
+              registration.installing
+            )
+          ) {
+            return;
+          }
+          registration.update().catch((error: unknown) => {
+            console.warn("[SW] Update check failed:", error);
+          });
+        }, 60_000);
 
         // Listen for updates
         registration.addEventListener("updatefound", () => {
@@ -83,6 +101,10 @@ export default function ServiceWorkerRegistration() {
     navigator.serviceWorker.addEventListener("message", handleMessage);
 
     return () => {
+      isUnmounted = true;
+      if (updateInterval) {
+        clearInterval(updateInterval);
+      }
       navigator.serviceWorker.removeEventListener(
         "controllerchange",
         onControllerChange
