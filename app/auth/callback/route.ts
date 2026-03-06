@@ -2,12 +2,55 @@ import { NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
 import { createClient } from "@/lib/supabase/server";
 
+const DEFAULT_PRODUCTION_ORIGIN = "https://gamer-zone-sigma.vercel.app";
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
+
+const normalizeOrigin = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
+const isLocalOrigin = (origin: string) => {
+  try {
+    const { hostname } = new URL(origin);
+    return LOCAL_HOSTS.has(hostname);
+  } catch {
+    return false;
+  }
+};
+
+const getSafeRedirectOrigin = (requestOrigin: string) => {
+  const envOrigin = normalizeOrigin(
+    process.env.NEXT_PUBLIC_AUTH_REDIRECT_ORIGIN ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      ""
+  );
+  if (envOrigin) {
+    return envOrigin;
+  }
+  if (process.env.NODE_ENV === "development") {
+    return requestOrigin;
+  }
+  return isLocalOrigin(requestOrigin)
+    ? DEFAULT_PRODUCTION_ORIGIN
+    : requestOrigin;
+};
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const type = searchParams.get("type");
   // if "next" is in param, use it as the redirect URL
   let next = searchParams.get("next") ?? "/";
+  if (!next.startsWith("/")) {
+    next = "/";
+  }
 
   // Handle password recovery flow fallback
   if (type === "recovery") {
@@ -18,23 +61,9 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    console.log("Auth Callback Debug:");
-    console.log("Original URL:", request.url);
-    console.log("Next param:", next);
-    console.log("Code present:", !!code);
-    console.log("Exchange Error:", error);
-
     if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
-      const isLocalEnv = process.env.NODE_ENV === "development";
-      if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`);
-      }
-      if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      }
-      return NextResponse.redirect(`${origin}${next}`);
+      const safeOrigin = getSafeRedirectOrigin(origin);
+      return NextResponse.redirect(`${safeOrigin}${next}`);
     }
   }
 
