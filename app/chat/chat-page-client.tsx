@@ -217,6 +217,7 @@ function ChatContent() {
     },
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
   const contentFilterLevel = getContentFilterLevel(profile?.account_type);
   const isChatRestricted = profile?.chat_restricted;
   const openChat = useCallback((contact: Contact) => {
@@ -348,6 +349,18 @@ function ChatContent() {
     fetchMessages(contact.id);
   };
 
+  useEffect(() => {
+    if (!(mobileView === "chat" && activeChat)) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      chatInputRef.current?.focus();
+    }, 120);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [mobileView, activeChat]);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -451,10 +464,10 @@ function ChatContent() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="flex min-h-screen bg-primary-foreground pb-24 md:pr-64 md:pb-0">
+      <div className="flex min-h-[100dvh] bg-primary-foreground pb-24 md:pr-64 md:pb-0">
         <Navigation />
 
-        <main className="relative mx-auto flex h-screen w-full max-w-7xl flex-1 overflow-hidden">
+        <main className="relative mx-auto flex h-[100dvh] w-full max-w-7xl flex-1 overflow-hidden md:h-screen">
           {/* Contacts Sidebar */}
           <aside
             className={`${mobileView === "list" ? "flex" : "hidden"} w-full flex-col border-white/5 border-l bg-card lg:flex lg:w-80`}
@@ -559,7 +572,7 @@ function ChatContent() {
 
           {/* Chat Area */}
           <section
-            className={`${mobileView === "chat" ? "flex" : "hidden"} relative flex-1 flex-col bg-primary-foreground lg:flex`}
+            className={`${mobileView === "chat" ? "flex" : "hidden"} relative flex-1 flex-col bg-primary-foreground pb-[calc(env(safe-area-inset-bottom)+4.5rem)] lg:flex lg:pb-0`}
           >
             {/* Header */}
             {activeChat ? (
@@ -597,7 +610,7 @@ function ChatContent() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 opacity-70">
+                <div className="hidden items-center gap-1 opacity-70 sm:flex">
                   <button
                     className="rounded-lg px-2 py-1 text-primary text-xs transition-colors hover:bg-primary/15 hover:text-primary"
                     onClick={handleFeedback}
@@ -630,7 +643,7 @@ function ChatContent() {
 
             {/* Messages */}
             <div
-              className="flex-1 space-y-4 overflow-y-auto p-4"
+              className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4"
               ref={scrollRef}
             >
               <AnimatePresence initial={false}>
@@ -757,7 +770,7 @@ function ChatContent() {
               )}
 
             {/* Input Area */}
-            <div className="chat-input-area border-white/5 border-t bg-card/80 p-4 backdrop-blur-lg">
+            <div className="chat-input-area sticky bottom-0 border-white/5 border-t bg-card/80 p-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] backdrop-blur-lg">
               <form
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-1.5 transition-colors focus-within:border-primary/50"
                 onSubmit={handleSend}
@@ -780,6 +793,7 @@ function ChatContent() {
                     sendTyping();
                   }}
                   placeholder="כתוב הודעה..."
+                  ref={chatInputRef}
                   type="text"
                   value={input}
                 />
