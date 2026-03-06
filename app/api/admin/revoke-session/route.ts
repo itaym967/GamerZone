@@ -1,11 +1,32 @@
 import { createClient as createServerClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user: actor },
+      error: actorError,
+    } = await supabase.auth.getUser();
+
+    if (actorError || !actor) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: actorProfile, error: actorProfileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", actor.id)
+      .single();
+
+    if (actorProfileError || actorProfile?.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { userId } = await request.json();
 
-    if (!userId) {
+    if (typeof userId !== "string" || userId.length === 0) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 });
     }
 

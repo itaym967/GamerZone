@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -24,6 +25,10 @@ function noStoreRedirect(path: string, requestUrl: string): NextResponse {
   return NextResponse.redirect(new URL(path, requestUrl), {
     headers: getNoStoreHeaders(),
   });
+}
+
+function generateSecureConsentToken() {
+  return randomBytes(32).toString("base64url");
 }
 
 function getRequiredEnv(
@@ -147,13 +152,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate consent token
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let consentToken = "";
-    for (let i = 0; i < 32; i++) {
-      consentToken += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    // Generate cryptographically secure consent token
+    const consentToken = generateSecureConsentToken();
 
     // Create or update parental control record
     const { error: upsertError } = await getSupabaseAdmin()
@@ -195,15 +195,20 @@ export async function POST(request: NextRequest) {
     // Build consent URL
     const consentUrl = `${request.nextUrl.origin}/api/parental-consent?token=${consentToken}`;
 
-    // In production, send email via a service. For now, log the URL.
-    console.log(
-      `[Parental Consent] Send email to ${parentEmail} with link: ${consentUrl}`
-    );
+    // In production, send email via a service.
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `[Parental Consent] Send email to ${parentEmail} with link: ${consentUrl}`
+      );
+    }
+
+    const devResponse =
+      process.env.NODE_ENV === "development" ? { consentUrl } : {};
 
     return NextResponse.json({
       success: true,
       message: "בקשת הסכמת הורים נשלחה",
-      consentUrl, // Remove in production - only for dev/testing
+      ...devResponse,
     });
   } catch (error) {
     console.error("Parental consent POST error:", error);
