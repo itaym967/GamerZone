@@ -68,10 +68,10 @@ export default function ProfilePage() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="mb-8 flex gap-1 overflow-x-auto rounded-xl bg-white/5 p-1">
+        <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto rounded-xl bg-white/5 p-1.5">
           {TABS.map((tab) => (
             <button
-              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 font-medium text-fluid-sm transition-all ${
+              className={`flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2.5 font-medium text-fluid-sm transition-all sm:px-4 ${
                 activeTab === tab.id
                   ? "bg-primary text-black"
                   : "text-gray-400 hover:bg-white/5 hover:text-white"
@@ -116,7 +116,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Live Preview */}
-          <div className="space-y-4">
+          <div className="hidden space-y-4 lg:block">
             <div className="mb-2 flex items-center justify-center gap-2 lg:justify-start">
               <span className="font-medium text-fluid-sm text-gray-400 uppercase tracking-wider">
                 תצוגה מקדימה

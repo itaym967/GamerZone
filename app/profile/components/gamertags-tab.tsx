@@ -102,28 +102,9 @@ export default function GamertagsTab({
           <h3 className="mb-3 font-bold text-fluid-sm text-white">
             הוסף משחק חדש
           </h3>
-          <div className="flex gap-2">
-            <button
-              className="rounded-xl bg-primary p-2.5 text-black transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!ui.newTag.trim()}
-              onClick={handleAdd}
-              type="button"
-            >
-              <HugeiconsIcon icon={Add01Icon} size={18} />
-            </button>
-            <input
-              className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-fluid-sm text-white outline-hidden focus:border-primary/50"
-              dir="ltr"
-              onChange={(e) =>
-                setUi((prev) => ({ ...prev, newTag: e.target.value }))
-              }
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="הכנס את ה-Gamertag שלך..."
-              type="text"
-              value={ui.newTag}
-            />
+          <div className="space-y-2">
             <select
-              className="min-w-30 appearance-none rounded-xl border border-white/10 bg-black/20 px-2 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
+              className="w-full appearance-none rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-right text-fluid-sm text-white outline-hidden focus:border-primary/50"
               onChange={(e) =>
                 setUi((prev) => ({ ...prev, newPlatform: e.target.value }))
               }
@@ -135,6 +116,27 @@ export default function GamertagsTab({
                 </option>
               ))}
             </select>
+            <div className="flex gap-2">
+              <input
+                className="dir-ltr flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-left font-mono text-fluid-sm text-white outline-hidden focus:border-primary/50"
+                dir="ltr"
+                onChange={(e) =>
+                  setUi((prev) => ({ ...prev, newTag: e.target.value }))
+                }
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                placeholder="הכנס את ה-Gamertag שלך..."
+                type="text"
+                value={ui.newTag}
+              />
+              <button
+                className="rounded-xl bg-primary px-3 py-2.5 text-black transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!ui.newTag.trim()}
+                onClick={handleAdd}
+                type="button"
+              >
+                <HugeiconsIcon icon={Add01Icon} size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -156,60 +158,15 @@ export default function GamertagsTab({
         ) : (
           formData.games.map((platform) => (
             <div
-              className="group flex items-center gap-3 rounded-xl border border-white/5 bg-black/20 p-3 transition-colors hover:border-white/10"
+              className="group space-y-2 rounded-xl border border-white/5 bg-black/20 p-3 transition-colors hover:border-white/10 sm:space-y-0"
               key={platform}
             >
-              {/* Platform Name */}
-              <span className="min-w-25 text-right font-bold text-fluid-sm text-primary">
-                {platform}
-              </span>
-
-              {/* Tag Value */}
-              {ui.editingPlatform === platform ? (
-                <div className="flex flex-1 gap-2">
-                  <input
-                    className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-fluid-sm text-white outline-hidden"
-                    dir="ltr"
-                    onChange={(e) =>
-                      setUi((prev) => ({ ...prev, editValue: e.target.value }))
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSaveEdit(platform);
-                      }
-                      if (e.key === "Escape") {
-                        handleCancelEdit();
-                      }
-                    }}
-                    type="text"
-                    value={ui.editValue}
-                  />
-                  <button
-                    className="rounded-lg bg-green-500/20 p-1.5 text-green-400 transition-colors hover:bg-green-500/30"
-                    onClick={() => handleSaveEdit(platform)}
-                    type="button"
-                  >
-                    <HugeiconsIcon icon={Tick01Icon} size={14} />
-                  </button>
-                  <button
-                    className="rounded-lg bg-red-500/20 p-1.5 text-red-400 transition-colors hover:bg-red-500/30"
-                    onClick={handleCancelEdit}
-                    type="button"
-                  >
-                    <HugeiconsIcon icon={Cancel01Icon} size={14} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span
-                    className="flex-1 text-left font-mono text-fluid-sm text-white"
-                    dir="ltr"
-                  >
-                    {formData.hiddenTags[platform]}
-                  </span>
-
-                  {/* Actions */}
-                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-right font-bold text-fluid-sm text-primary">
+                  {platform}
+                </span>
+                {ui.editingPlatform !== platform && (
+                  <div className="flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     <button
                       className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                       onClick={() => handleStartEdit(platform)}
@@ -233,7 +190,50 @@ export default function GamertagsTab({
                       <HugeiconsIcon icon={Delete02Icon} size={14} />
                     </button>
                   </div>
-                </>
+                )}
+              </div>
+
+              {ui.editingPlatform === platform ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    className="flex-1 rounded-lg border border-primary/30 bg-black/30 px-3 py-1 text-left font-mono text-fluid-sm text-white outline-hidden"
+                    dir="ltr"
+                    onChange={(e) =>
+                      setUi((prev) => ({ ...prev, editValue: e.target.value }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSaveEdit(platform);
+                      }
+                      if (e.key === "Escape") {
+                        handleCancelEdit();
+                      }
+                    }}
+                    type="text"
+                    value={ui.editValue}
+                  />
+                  <button
+                    className="rounded-lg bg-green-500/20 px-2 py-1.5 text-green-400 transition-colors hover:bg-green-500/30"
+                    onClick={() => handleSaveEdit(platform)}
+                    type="button"
+                  >
+                    <HugeiconsIcon icon={Tick01Icon} size={14} />
+                  </button>
+                  <button
+                    className="rounded-lg bg-red-500/20 px-2 py-1.5 text-red-400 transition-colors hover:bg-red-500/30"
+                    onClick={handleCancelEdit}
+                    type="button"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={14} />
+                  </button>
+                </div>
+              ) : (
+                <span
+                  className="block w-full text-left font-mono text-fluid-sm text-white"
+                  dir="ltr"
+                >
+                  {formData.hiddenTags[platform]}
+                </span>
               )}
             </div>
           ))

@@ -84,7 +84,7 @@ export default function StatsTab({ stats }: StatsTabProps) {
         <h2 className="font-bold text-fluid-lg text-white">סטטיסטיקות</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {statCards.map((card) => (
           <div
             className={`${card.bg} border ${card.border} rounded-xl p-4 transition-all hover:scale-[1.02]`}
