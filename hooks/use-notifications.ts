@@ -139,8 +139,10 @@ export function useNotifications(userId: string | null | undefined) {
       return;
     }
 
+    let isTearingDown = false;
+    const channelName = `notifications_realtime_${userId}_${Date.now()}`;
     const channel = supabase
-      .channel("notifications_realtime")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -166,9 +168,17 @@ export function useNotifications(userId: string | null | undefined) {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (isTearingDown || process.env.NODE_ENV === "production") {
+          return;
+        }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("Notifications realtime status:", status);
+        }
+      });
 
     return () => {
+      isTearingDown = true;
       supabase.removeChannel(channel);
     };
   }, [userId, supabase]);

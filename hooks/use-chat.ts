@@ -52,6 +52,20 @@ interface ContactMapEntry {
   time: string;
 }
 
+const isDevEnvironment = process.env.NODE_ENV !== "production";
+
+const logDebug = (...args: unknown[]) => {
+  if (isDevEnvironment) {
+    console.log(...args);
+  }
+};
+
+const warnDebug = (...args: unknown[]) => {
+  if (isDevEnvironment) {
+    console.warn(...args);
+  }
+};
+
 const formatContactTime = (timestamp: string | undefined) => {
   if (!timestamp) {
     return undefined;
@@ -182,6 +196,7 @@ export function useChat(
   const onMessageReceivedRef = useRef(onMessageReceived);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isSubscribedRef = useRef(false);
+  const isTearingDownRef = useRef(false);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageTimeRef = useRef<number>(Date.now());
   const activeChatIdRef = useRef(activeChatId);
@@ -272,7 +287,7 @@ export function useChat(
   // 2. Subscribe to Realtime Messages with Auto-Reconnect
   const setupRealtimeSubscription = useCallback(() => {
     if (!currentUserId || isSubscribedRef.current || document.hidden) {
-      console.log("⚠️ Skipping subscription setup:", {
+      logDebug("Skipping subscription setup:", {
         currentUserId,
         isSubscribed: isSubscribedRef.current,
         tabHidden: document.hidden,
@@ -280,8 +295,8 @@ export function useChat(
       return;
     }
 
-    console.log("🔄 Setting up realtime subscription for user:", currentUserId);
-    console.log("📡 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    isTearingDownRef.current = false;
+    logDebug("Setting up realtime subscription for user:", currentUserId);
 
     const channel = supabase
       .channel(`chat_room_${currentUserId}`, {
@@ -300,7 +315,7 @@ export function useChat(
           filter: `or(sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId})`,
         },
         (payload) => {
-          console.log("🎉 REALTIME EVENT RECEIVED:", {
+          logDebug("Realtime message event received:", {
             timestamp: new Date().toISOString(),
             payload,
             currentUserId,
@@ -322,24 +337,21 @@ export function useChat(
             newMessage.sender_id === currentUserId ||
             newMessage.receiver_id === currentUserId
           ) {
-            console.log("✅ Message is relevant to current user");
+            logDebug("Message is relevant to current user");
 
             // Update messages state ONLY if it belongs to the active chat
             if (isActiveChat) {
               setMessages((prev) => {
                 // Deduplicate based on ID
                 if (prev.some((m) => m.id === newMessage.id)) {
-                  console.log(
-                    "⚠️ Message already exists, skipping:",
-                    newMessage.id
-                  );
+                  logDebug("Message already exists, skipping:", newMessage.id);
                   return prev;
                 }
-                console.log("➕ Adding new message to state:", newMessage.id);
+                logDebug("Adding new message to state:", newMessage.id);
                 return [...prev, newMessage];
               });
             } else {
-              console.log(
+              logDebug(
                 "ℹ️ Message received for background chat, not updating active view"
               );
             }
@@ -355,13 +367,12 @@ export function useChat(
         }
       )
       .subscribe((status) => {
-        console.log("📊 Realtime subscription status:", status);
+        if (isTearingDownRef.current) {
+          return;
+        }
+        logDebug("Realtime subscription status:", status);
         if (status === "SUBSCRIBED") {
-          console.log("✅ Successfully subscribed to realtime messages");
-          console.log("🔍 Channel state:", channelRef.current?.state);
-          console.log(
-            "⚡ Listening for INSERT events on public.messages table (filtered by user)"
-          );
+          logDebug("Successfully subscribed to realtime messages");
           isSubscribedRef.current = true;
         } else if (status === "CHANNEL_ERROR") {
           console.error("❌ Realtime subscription error");
@@ -369,7 +380,10 @@ export function useChat(
           toast.error("שגיאה בחיבור לעדכונים בזמן אמת");
           // Attempt reconnection after 3 seconds
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("Attempting to reconnect...");
+            if (isTearingDownRef.current) {
+              return;
+            }
+            logDebug("Attempting to reconnect...");
             if (channelRef.current) {
               supabase.removeChannel(channelRef.current);
             }
@@ -377,12 +391,14 @@ export function useChat(
             setupRealtimeSubscription();
           }, 3000);
         } else if (status === "TIMED_OUT") {
-          console.error("⏱️ Realtime subscription timed out");
+          warnDebug("Realtime subscription timed out");
           isSubscribedRef.current = false;
-          toast.warning("החיבור לעדכונים בזמן אמת איטי");
           // Attempt reconnection
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("Attempting to reconnect after timeout...");
+            if (isTearingDownRef.current) {
+              return;
+            }
+            logDebug("Attempting to reconnect after timeout...");
             if (channelRef.current) {
               supabase.removeChannel(channelRef.current);
             }
@@ -390,19 +406,20 @@ export function useChat(
             setupRealtimeSubscription();
           }, 2000);
         } else if (status === "CLOSED") {
-          console.warn("🔌 Realtime connection closed");
+          logDebug("Realtime connection closed");
           isSubscribedRef.current = false;
         }
       });
 
     channelRef.current = channel;
-  }, [currentUserId, supabase.channel, supabase.removeChannel]);
+  }, [currentUserId, supabase]);
 
   useEffect(() => {
     setupRealtimeSubscription();
 
     return () => {
-      console.log("Cleaning up realtime subscription");
+      isTearingDownRef.current = true;
+      logDebug("Cleaning up realtime subscription");
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
@@ -411,7 +428,7 @@ export function useChat(
       }
       isSubscribedRef.current = false;
     };
-  }, [setupRealtimeSubscription, supabase.removeChannel]);
+  }, [setupRealtimeSubscription, supabase]);
 
   // 3. Handle Page Visibility Changes (pause when hidden, resume when visible)
   useEffect(() => {
@@ -422,7 +439,8 @@ export function useChat(
     const handleVisibilityChange = () => {
       const resumeSubscriptions = () => {
         if (!isSubscribedRef.current) {
-          console.log("🔄 Reconnecting after tab became visible...");
+          logDebug("Reconnecting after tab became visible...");
+          isTearingDownRef.current = false;
           if (channelRef.current) {
             supabase.removeChannel(channelRef.current);
           }
@@ -431,7 +449,8 @@ export function useChat(
       };
 
       const pauseSubscriptions = () => {
-        console.log("💤 Tab hidden, pausing realtime subscription...");
+        isTearingDownRef.current = true;
+        logDebug("Tab hidden, pausing realtime subscription...");
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;
@@ -444,7 +463,7 @@ export function useChat(
       };
 
       if (document.visibilityState === "visible") {
-        console.log("📱 Tab became visible, checking connection...");
+        logDebug("Tab became visible, checking connection...");
         resumeSubscriptions();
         return;
       }
@@ -456,7 +475,7 @@ export function useChat(
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentUserId, setupRealtimeSubscription, supabase.removeChannel]);
+  }, [currentUserId, setupRealtimeSubscription, supabase]);
 
   // 4. Heartbeat to monitor connection health
   useEffect(() => {
@@ -468,10 +487,10 @@ export function useChat(
       const timeSinceLastMessage = Date.now() - lastMessageTimeRef.current;
       // If no activity for 2 minutes and we think we're subscribed, verify connection
       if (timeSinceLastMessage > 120_000 && isSubscribedRef.current) {
-        console.log("Heartbeat: Verifying connection health...");
+        logDebug("Heartbeat: Verifying connection health...");
         // Check if channel is still connected
         if (channelRef.current && channelRef.current.state !== "joined") {
-          console.warn("Heartbeat: Connection appears stale, reconnecting...");
+          warnDebug("Heartbeat: Connection appears stale, reconnecting...");
           isSubscribedRef.current = false;
           if (channelRef.current) {
             supabase.removeChannel(channelRef.current);
@@ -486,7 +505,7 @@ export function useChat(
         clearInterval(heartbeatIntervalRef.current);
       }
     };
-  }, [currentUserId, setupRealtimeSubscription, supabase.removeChannel]);
+  }, [currentUserId, setupRealtimeSubscription, supabase]);
 
   // 5. Typing Indicator Subscription (only when tab is visible)
   useEffect(() => {
@@ -496,7 +515,7 @@ export function useChat(
 
     const sortedIds = [currentUserId, activeChatId].sort().join("_");
     const channelName = `typing_${sortedIds}`;
-    console.log(`🔌 Subscribing to typing channel: ${channelName}`);
+    logDebug(`Subscribing to typing channel: ${channelName}`);
 
     const channel = supabase.channel(channelName);
 
@@ -523,7 +542,7 @@ export function useChat(
       });
 
     return () => {
-      console.log(`🔌 Unsubscribing from typing channel: ${channelName}`);
+      logDebug(`Unsubscribing from typing channel: ${channelName}`);
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -531,7 +550,7 @@ export function useChat(
       typingChannelRef.current = null;
       setIsRemoteTyping(false);
     };
-  }, [currentUserId, activeChatId, supabase.channel, supabase.removeChannel]);
+  }, [currentUserId, activeChatId, supabase]);
 
   // 6. Methods
   const fetchMessages = async (otherUserId: string) => {
@@ -656,7 +675,8 @@ export function useChat(
   };
 
   const refreshConnection = useCallback(() => {
-    console.log("Manual refresh triggered");
+    logDebug("Manual refresh triggered");
+    isTearingDownRef.current = false;
     // Reconnect realtime
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
@@ -670,7 +690,7 @@ export function useChat(
       // This is a simple approach - in production you might want a more explicit refetch
       toast.success("מרענן חיבור...");
     }
-  }, [currentUserId, setupRealtimeSubscription, supabase.removeChannel]);
+  }, [currentUserId, setupRealtimeSubscription, supabase]);
 
   const deleteMessage = useCallback(
     async (messageId: string) => {

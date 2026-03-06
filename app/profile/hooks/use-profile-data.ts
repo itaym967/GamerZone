@@ -17,6 +17,14 @@ interface HiddenTagRow {
   tag: string | null;
 }
 
+type SupabaseClient = ReturnType<typeof createClient>;
+
+interface ProfileSnapshot {
+  avatarUrl: string | null;
+  formData: ProfileFormData;
+  stats: ProfileStats;
+}
+
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) {
     return error.message;
@@ -30,6 +38,21 @@ const throwIfError = (error: unknown) => {
   }
 };
 
+const RETRYABLE_PROFILE_FETCH_ATTEMPTS = 3;
+const RETRYABLE_PROFILE_FETCH_DELAY_MS = 400;
+
+const isFailedToFetchError = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return error.message.toLowerCase().includes("failed to fetch");
+};
+
+const wait = async (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
 const DEFAULT_AVATAR_URL =
   "https://api.dicebear.com/7.x/adventurer/svg?seed=Samurai";
 
@@ -42,6 +65,102 @@ const buildHiddenTagsMap = (tags: HiddenTagRow[]) => {
     hiddenTagsMap[tag.platform] = tag.tag;
   }
   return hiddenTagsMap;
+};
+
+const fetchProfileSnapshot = async (
+  supabase: SupabaseClient,
+  userId: string
+): Promise<ProfileSnapshot> => {
+  const [
+    profileRes,
+    tagsRes,
+    swapsSentRes,
+    swapsReceivedRes,
+    swapsApprovedRes,
+    friendsRes,
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).single(),
+    supabase.from("gamertags").select("*").eq("user_id", userId),
+    supabase
+      .from("swap_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("sender_id", userId),
+    supabase
+      .from("swap_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("receiver_id", userId),
+    supabase
+      .from("swap_requests")
+      .select("id", { count: "exact", head: true })
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .eq("status", "approved"),
+    supabase
+      .from("friendships")
+      .select("id", { count: "exact", head: true })
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .eq("status", "accepted"),
+  ]);
+
+  throwIfError(profileRes.error);
+  throwIfError(tagsRes.error);
+
+  const profile = profileRes.data;
+  if (!profile) {
+    throw new Error("Profile not found");
+  }
+
+  const tags = (tagsRes.data || []) as HiddenTagRow[];
+  const hiddenTagsMap = buildHiddenTagsMap(tags);
+  const gamesList = Object.keys(hiddenTagsMap);
+
+  return {
+    avatarUrl: profile.avatar_url,
+    formData: {
+      availability:
+        parseAvailabilityPreferences(profile.website) || DEFAULT_AVAILABILITY,
+      username: profile.username || "",
+      tag: `@${(profile.username || "user").toLowerCase()}`,
+      bio: profile.bio || "",
+      games: gamesList,
+      hiddenTags: hiddenTagsMap,
+    },
+    stats: {
+      swapsSent: swapsSentRes.count || 0,
+      swapsReceived: swapsReceivedRes.count || 0,
+      swapsApproved: swapsApprovedRes.count || 0,
+      friendsCount: friendsRes.count || 0,
+      gamesCount: gamesList.length,
+      memberSince: profile.updated_at || null,
+    },
+  };
+};
+
+const fetchProfileSnapshotWithRetry = async (
+  supabase: SupabaseClient,
+  userId: string
+) => {
+  let lastError: unknown = null;
+
+  for (
+    let attempt = 1;
+    attempt <= RETRYABLE_PROFILE_FETCH_ATTEMPTS;
+    attempt++
+  ) {
+    try {
+      return await fetchProfileSnapshot(supabase, userId);
+    } catch (error) {
+      lastError = error;
+      const shouldRetry =
+        isFailedToFetchError(error) &&
+        attempt < RETRYABLE_PROFILE_FETCH_ATTEMPTS;
+      if (!shouldRetry) {
+        throw error;
+      }
+      await wait(RETRYABLE_PROFILE_FETCH_DELAY_MS * attempt);
+    }
+  }
+
+  throw lastError || new Error("Profile loading failed");
 };
 
 export function useProfileData() {
@@ -104,84 +223,38 @@ export function useProfileData() {
       return;
     }
 
+    let isDisposed = false;
+
     const fetchAll = async () => {
       try {
-        const [
-          profileRes,
-          tagsRes,
-          swapsSentRes,
-          swapsReceivedRes,
-          swapsApprovedRes,
-          friendsRes,
-        ] = await Promise.all([
-          supabase.from("profiles").select("*").eq("id", userId).single(),
-          supabase.from("gamertags").select("*").eq("user_id", userId),
-          supabase
-            .from("swap_requests")
-            .select("id", { count: "exact", head: true })
-            .eq("sender_id", userId),
-          supabase
-            .from("swap_requests")
-            .select("id", { count: "exact", head: true })
-            .eq("receiver_id", userId),
-          supabase
-            .from("swap_requests")
-            .select("id", { count: "exact", head: true })
-            .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-            .eq("status", "approved"),
-          supabase
-            .from("friendships")
-            .select("id", { count: "exact", head: true })
-            .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-            .eq("status", "accepted"),
-        ]);
-
-        throwIfError(profileRes.error);
-        throwIfError(tagsRes.error);
-
-        const profile = profileRes.data;
-        if (!profile) {
-          throw new Error("Profile not found");
-        }
-        const tags = (tagsRes.data || []) as HiddenTagRow[];
-        const hiddenTagsMap = buildHiddenTagsMap(tags);
-        const gamesList = Object.keys(hiddenTagsMap);
-
-        const newFormData: ProfileFormData = {
-          availability:
-            parseAvailabilityPreferences(profile.website) ||
-            DEFAULT_AVAILABILITY,
-          username: profile.username || "",
-          tag: `@${(profile.username || "user").toLowerCase()}`,
-          bio: profile.bio || "",
-          games: gamesList,
-          hiddenTags: hiddenTagsMap,
-        };
-
-        setFormData(newFormData);
-        setOriginalData(newFormData);
-
-        if (profile.avatar_url) {
-          setAvatarSeed(profile.avatar_url);
-          setOriginalAvatar(profile.avatar_url);
+        const snapshot = await fetchProfileSnapshotWithRetry(supabase, userId);
+        if (isDisposed) {
+          return;
         }
 
-        setStats({
-          swapsSent: swapsSentRes.count || 0,
-          swapsReceived: swapsReceivedRes.count || 0,
-          swapsApproved: swapsApprovedRes.count || 0,
-          friendsCount: friendsRes.count || 0,
-          gamesCount: gamesList.length,
-          memberSince: profile.updated_at || null,
-        });
-      } catch (error) {
-        console.error("Error loading profile:", error);
+        setFormData(snapshot.formData);
+        setOriginalData(snapshot.formData);
+        if (snapshot.avatarUrl) {
+          setAvatarSeed(snapshot.avatarUrl);
+          setOriginalAvatar(snapshot.avatarUrl);
+        }
+        setStats(snapshot.stats);
+      } catch (_error) {
+        if (isDisposed) {
+          return;
+        }
         toast.error("שגיאה בטעינת הפרופיל");
+      } finally {
+        if (!isDisposed) {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
     };
 
     fetchAll();
+    return () => {
+      isDisposed = true;
+    };
   }, [authLoading, userId, router, supabase]);
 
   const updateFormData = useCallback((updates: Partial<ProfileFormData>) => {
