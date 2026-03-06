@@ -40,6 +40,10 @@ export default function ExplorePage() {
   const [activeGame, setActiveGame] = useState("All");
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [friendsOnly, setFriendsOnly] = useState(false);
+  const [sortMode, setSortMode] = useState<"match" | "online" | "alphabetic">(
+    "match"
+  );
+  const [minimumMatch, setMinimumMatch] = useState(0);
 
   const currentUserId = useMemo(() => user?.id || null, [user?.id]);
 
@@ -75,7 +79,29 @@ export default function ExplorePage() {
   }, [gamers, currentUserId, fetchSwapStatuses]);
 
   const filteredGamers = useMemo(() => {
-    const visibleGamers = gamers.filter((gamer) => {
+    const rankedGamers = gamers.map((gamer) => {
+      const insights = getAutoMatchInsights({
+        currentAvailability: currentUserPreferences?.availability ?? null,
+        currentGames: currentUserPreferences?.games ?? [],
+        gamerAvailability: gamer.availabilityTimezone
+          ? {
+              slots: gamer.availabilitySlots,
+              timezone: gamer.availabilityTimezone,
+            }
+          : null,
+        gamerGames: gamer.games,
+        online: gamer.online,
+        isFriend: isFriend(gamer.id),
+      });
+      return {
+        gamer,
+        matchConfidence: insights.confidence,
+        matchReasons: insights.reasons.slice(0, 3),
+        score: insights.score,
+      };
+    });
+
+    const visibleGamers = rankedGamers.filter(({ gamer, matchConfidence }) => {
       const matchesSearch =
         (gamer.username?.toLowerCase() || "").includes(
           searchTerm.toLowerCase()
@@ -85,50 +111,60 @@ export default function ExplorePage() {
         activeGame === "All" || gamer.games?.includes(activeGame);
       const matchesOnline = !onlineOnly || gamer.online;
       const matchesFriends = !friendsOnly || isFriend(gamer.id);
+      const matchesThreshold = matchConfidence >= minimumMatch;
 
-      return matchesSearch && matchesGame && matchesOnline && matchesFriends;
+      return (
+        matchesSearch &&
+        matchesGame &&
+        matchesOnline &&
+        matchesFriends &&
+        matchesThreshold
+      );
     });
 
-    return visibleGamers
-      .map((gamer) => {
-        const insights = getAutoMatchInsights({
-          currentAvailability: currentUserPreferences?.availability ?? null,
-          currentGames: currentUserPreferences?.games ?? [],
-          gamerAvailability: gamer.availabilityTimezone
-            ? {
-                slots: gamer.availabilitySlots,
-                timezone: gamer.availabilityTimezone,
-              }
-            : null,
-          gamerGames: gamer.games,
-          online: gamer.online,
-          isFriend: isFriend(gamer.id),
-        });
-        return {
-          gamer,
-          matchConfidence: insights.confidence,
-          matchReasons: insights.reasons.slice(0, 3),
-          score: insights.score,
-        };
-      })
-      .sort((left, right) => {
-        if (right.score !== left.score) {
-          return right.score - left.score;
+    if (sortMode === "online") {
+      return visibleGamers.sort((left, right) => {
+        if (left.gamer.online !== right.gamer.online) {
+          return left.gamer.online ? -1 : 1;
         }
         if (right.matchConfidence !== left.matchConfidence) {
           return right.matchConfidence - left.matchConfidence;
         }
         return left.gamer.username.localeCompare(right.gamer.username);
       });
+    }
+
+    if (sortMode === "alphabetic") {
+      return visibleGamers.sort((left, right) =>
+        left.gamer.username.localeCompare(right.gamer.username)
+      );
+    }
+
+    return visibleGamers.sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+      if (right.matchConfidence !== left.matchConfidence) {
+        return right.matchConfidence - left.matchConfidence;
+      }
+      return left.gamer.username.localeCompare(right.gamer.username);
+    });
   }, [
     gamers,
     searchTerm,
     activeGame,
     onlineOnly,
     friendsOnly,
+    minimumMatch,
+    sortMode,
     isFriend,
     currentUserPreferences,
   ]);
+
+  const strongMatchesCount = useMemo(
+    () => filteredGamers.filter((entry) => entry.matchConfidence >= 75).length,
+    [filteredGamers]
+  );
 
   return (
     <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">
@@ -222,7 +258,56 @@ export default function ExplorePage() {
                 size={16}
               />
             </div>
+
+            <div className="relative min-w-40">
+              <select
+                className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/20 px-4 text-right text-white outline-hidden transition-colors hover:bg-white/5 focus:border-primary/50"
+                onChange={(e) =>
+                  setSortMode(
+                    e.target.value as "match" | "online" | "alphabetic"
+                  )
+                }
+                value={sortMode}
+              >
+                <option className="bg-card text-white" value="match">
+                  התאמה חכמה
+                </option>
+                <option className="bg-card text-white" value="online">
+                  מחוברים קודם
+                </option>
+                <option className="bg-card text-white" value="alphabetic">
+                  א-ב
+                </option>
+              </select>
+              <HugeiconsIcon
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+                icon={UserGroupIcon}
+                size={16}
+              />
+            </div>
           </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-white/5 bg-card/70 p-fluid-md">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="font-medium text-gray-300 text-sm">
+              סף התאמה מינימלי
+            </p>
+            <p className="font-bold text-primary text-sm">{minimumMatch}%+</p>
+          </div>
+          <input
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-primary"
+            max={100}
+            min={0}
+            onChange={(event) => setMinimumMatch(Number(event.target.value))}
+            step={5}
+            type="range"
+            value={minimumMatch}
+          />
+          <p className="mt-3 text-gray-400 text-xs">
+            נמצאו {filteredGamers.length} שחקנים, מתוכם {strongMatchesCount}{" "}
+            התאמות חזקות (75%+)
+          </p>
         </div>
 
         {/* Gamers Grid */}
@@ -269,6 +354,10 @@ export default function ExplorePage() {
               onClick={() => {
                 setActiveGame("All");
                 setSearchTerm("");
+                setOnlineOnly(false);
+                setFriendsOnly(false);
+                setMinimumMatch(0);
+                setSortMode("match");
               }}
               type="button"
             >
