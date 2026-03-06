@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/client";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Friendship = Database["public"]["Tables"]["friendships"]["Row"];
+type ExistingFriendshipRow = Pick<
+  Friendship,
+  "id" | "status" | "sender_id" | "receiver_id"
+>;
 
 export type FriendWithProfile = Friendship & {
   friend: Pick<
@@ -17,6 +21,99 @@ export type FriendshipStatus =
   | "pending_sent"
   | "pending_received"
   | "accepted";
+
+interface ResolveExistingFriendshipParams {
+  existing: ExistingFriendshipRow;
+  fetchFriends: () => Promise<void>;
+  supabase: ReturnType<typeof createClient>;
+  targetId: string;
+  userId: string;
+}
+
+const acceptExistingPendingRequest = async ({
+  existing,
+  fetchFriends,
+  supabase,
+}: Pick<
+  ResolveExistingFriendshipParams,
+  "existing" | "fetchFriends" | "supabase"
+>) => {
+  const { error } = await supabase
+    .from("friendships")
+    .update({
+      status: "accepted",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  await fetchFriends();
+  return { error: null };
+};
+
+const resendRejectedRequest = async ({
+  existing,
+  fetchFriends,
+  supabase,
+  targetId,
+  userId,
+}: ResolveExistingFriendshipParams) => {
+  const { error } = await supabase
+    .from("friendships")
+    .update({
+      status: "pending",
+      sender_id: userId,
+      receiver_id: targetId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id);
+  if (error) {
+    return { error: error.message };
+  }
+  await fetchFriends();
+  return { error: null };
+};
+
+const resolveExistingFriendship = async ({
+  existing,
+  fetchFriends,
+  supabase,
+  targetId,
+  userId,
+}: ResolveExistingFriendshipParams) => {
+  if (existing.status === "accepted") {
+    return { handled: true, error: "Already friends" };
+  }
+
+  if (existing.status === "pending") {
+    if (existing.sender_id === targetId && existing.receiver_id === userId) {
+      const result = await acceptExistingPendingRequest({
+        existing,
+        fetchFriends,
+        supabase,
+      });
+      return { handled: true, error: result.error };
+    }
+
+    return { handled: true, error: "Request already pending" };
+  }
+
+  if (existing.status === "rejected") {
+    const result = await resendRejectedRequest({
+      existing,
+      fetchFriends,
+      supabase,
+      targetId,
+      userId,
+    });
+    return { handled: true, error: result.error };
+  }
+
+  return { handled: false, error: null };
+};
 
 export function useFriendship(userId: string | null | undefined) {
   const [friends, setFriends] = useState<FriendWithProfile[]>([]);
@@ -80,11 +177,22 @@ export function useFriendship(userId: string | null | undefined) {
     });
 
     const accepted = withProfiles.filter((f) => f.status === "accepted");
+    const acceptedFriendIds = new Set(
+      accepted
+        .map((f) => (f.sender_id === userId ? f.receiver_id : f.sender_id))
+        .filter(Boolean)
+    );
     const pendingIn = withProfiles.filter(
-      (f) => f.status === "pending" && f.receiver_id === userId
+      (f) =>
+        f.status === "pending" &&
+        f.receiver_id === userId &&
+        !acceptedFriendIds.has(f.sender_id)
     );
     const pendingOut = withProfiles.filter(
-      (f) => f.status === "pending" && f.sender_id === userId
+      (f) =>
+        f.status === "pending" &&
+        f.sender_id === userId &&
+        !acceptedFriendIds.has(f.receiver_id)
     );
 
     setFriends(accepted);
@@ -105,7 +213,7 @@ export function useFriendship(userId: string | null | undefined) {
       // Check if a friendship already exists in either direction
       const { data: existing } = await supabase
         .from("friendships")
-        .select("id, status")
+        .select("id, status, sender_id, receiver_id")
         .or(
           `and(sender_id.eq.${userId},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${userId})`
         )
@@ -113,28 +221,15 @@ export function useFriendship(userId: string | null | undefined) {
         .maybeSingle();
 
       if (existing) {
-        if (existing.status === "accepted") {
-          return { error: "Already friends" };
-        }
-        if (existing.status === "pending") {
-          return { error: "Request already pending" };
-        }
-        // If rejected, allow re-sending by updating
-        if (existing.status === "rejected") {
-          const { error } = await supabase
-            .from("friendships")
-            .update({
-              status: "pending",
-              sender_id: userId,
-              receiver_id: targetId,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", existing.id);
-          if (error) {
-            return { error: error.message };
-          }
-          await fetchFriends();
-          return { error: null };
+        const result = await resolveExistingFriendship({
+          existing,
+          fetchFriends,
+          supabase,
+          targetId,
+          userId,
+        });
+        if (result.handled) {
+          return { error: result.error };
         }
       }
 
@@ -163,12 +258,16 @@ export function useFriendship(userId: string | null | undefined) {
 
   const acceptRequest = useCallback(
     async (friendshipId: string) => {
+      if (!userId) {
+        return { error: "Not authenticated" };
+      }
       const friendship = pendingReceived.find((f) => f.id === friendshipId);
 
       const { error } = await supabase
         .from("friendships")
         .update({ status: "accepted", updated_at: new Date().toISOString() })
-        .eq("id", friendshipId);
+        .eq("id", friendshipId)
+        .eq("receiver_id", userId);
 
       if (error) {
         return { error: error.message };
@@ -188,15 +287,19 @@ export function useFriendship(userId: string | null | undefined) {
       await fetchFriends();
       return { error: null };
     },
-    [supabase, fetchFriends, pendingReceived]
+    [supabase, fetchFriends, pendingReceived, userId]
   );
 
   const rejectRequest = useCallback(
     async (friendshipId: string) => {
+      if (!userId) {
+        return { error: "Not authenticated" };
+      }
       const { error } = await supabase
         .from("friendships")
         .update({ status: "rejected", updated_at: new Date().toISOString() })
-        .eq("id", friendshipId);
+        .eq("id", friendshipId)
+        .eq("receiver_id", userId);
 
       if (error) {
         return { error: error.message };
@@ -204,7 +307,7 @@ export function useFriendship(userId: string | null | undefined) {
       await fetchFriends();
       return { error: null };
     },
-    [supabase, fetchFriends]
+    [supabase, fetchFriends, userId]
   );
 
   const unfriend = useCallback(
