@@ -231,21 +231,25 @@ const ensureFriendship = async ({
   senderId,
   supabase,
 }: EnsureFriendshipParams) => {
-  const { error: friendError } = await supabase.from("friendships").upsert(
-    {
-      sender_id: senderId,
-      receiver_id: receiverId,
-      status: "accepted",
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "sender_id,receiver_id", ignoreDuplicates: true }
-  );
+  const { error: friendError } = await supabase
+    .schema("public")
+    .from("friendships")
+    .upsert(
+      {
+        sender_id: senderId,
+        receiver_id: receiverId,
+        status: "accepted",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "sender_id,receiver_id", ignoreDuplicates: true }
+    );
 
   if (!friendError) {
     return;
   }
 
   const { data: existing } = await supabase
+    .schema("public")
     .from("friendships")
     .select("id")
     .or(
@@ -254,7 +258,7 @@ const ensureFriendship = async ({
     .maybeSingle();
 
   if (!existing) {
-    await supabase.from("friendships").insert({
+    await supabase.schema("public").from("friendships").insert({
       sender_id: senderId,
       receiver_id: receiverId,
       status: "accepted",

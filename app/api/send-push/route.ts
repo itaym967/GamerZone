@@ -96,6 +96,7 @@ const isActorAllowedToNotifyTarget = async (
   }
 
   const { data: friendship } = await supabase
+    .schema("public")
     .from("friendships")
     .select("id")
     .eq("status", "accepted")

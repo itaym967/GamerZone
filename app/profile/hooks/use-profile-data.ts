@@ -95,6 +95,7 @@ const fetchProfileSnapshot = async (
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .eq("status", "approved"),
     supabase
+      .schema("public")
       .from("friendships")
       .select("id", { count: "exact", head: true })
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)

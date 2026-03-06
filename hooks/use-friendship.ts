@@ -39,6 +39,7 @@ const acceptExistingPendingRequest = async ({
   "existing" | "fetchFriends" | "supabase"
 >) => {
   const { error } = await supabase
+    .schema("public")
     .from("friendships")
     .update({
       status: "accepted",
@@ -62,6 +63,7 @@ const resendRejectedRequest = async ({
   userId,
 }: ResolveExistingFriendshipParams) => {
   const { error } = await supabase
+    .schema("public")
     .from("friendships")
     .update({
       status: "pending",
@@ -139,6 +141,7 @@ export function useFriendship(userId: string | null | undefined) {
 
     // Fetch all friendships involving this user
     const { data, error } = await supabase
+      .schema("public")
       .from("friendships")
       .select("*")
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
@@ -212,6 +215,7 @@ export function useFriendship(userId: string | null | undefined) {
 
       // Check if a friendship already exists in either direction
       const { data: existing } = await supabase
+        .schema("public")
         .from("friendships")
         .select("id, status, sender_id, receiver_id")
         .or(
@@ -234,6 +238,7 @@ export function useFriendship(userId: string | null | undefined) {
       }
 
       const { error } = await supabase
+        .schema("public")
         .from("friendships")
         .insert({ sender_id: userId, receiver_id: targetId });
 
@@ -264,6 +269,7 @@ export function useFriendship(userId: string | null | undefined) {
       const friendship = pendingReceived.find((f) => f.id === friendshipId);
 
       const { error } = await supabase
+        .schema("public")
         .from("friendships")
         .update({ status: "accepted", updated_at: new Date().toISOString() })
         .eq("id", friendshipId)
@@ -296,6 +302,7 @@ export function useFriendship(userId: string | null | undefined) {
         return { error: "Not authenticated" };
       }
       const { error } = await supabase
+        .schema("public")
         .from("friendships")
         .update({ status: "rejected", updated_at: new Date().toISOString() })
         .eq("id", friendshipId)
@@ -313,6 +320,7 @@ export function useFriendship(userId: string | null | undefined) {
   const unfriend = useCallback(
     async (friendshipId: string) => {
       const { error } = await supabase
+        .schema("public")
         .from("friendships")
         .delete()
         .eq("id", friendshipId);
@@ -329,6 +337,7 @@ export function useFriendship(userId: string | null | undefined) {
   const cancelRequest = useCallback(
     async (friendshipId: string) => {
       const { error } = await supabase
+        .schema("public")
         .from("friendships")
         .delete()
         .eq("id", friendshipId);
