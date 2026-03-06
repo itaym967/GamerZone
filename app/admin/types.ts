@@ -54,12 +54,6 @@ export interface ContentReport {
 
 export interface DBMetrics {
   avgQueryTime: number;
-  optimizationStatus: {
-    lfgPage: boolean;
-    chatHook: boolean;
-    gamerCard: boolean;
-    adminPage: boolean;
-  };
   realtimeSubscriptions: number;
   slowQueryCount: number;
 }
