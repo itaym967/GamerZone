@@ -605,7 +605,7 @@ export function useChat(
       return;
     }
 
-    console.log("Sending message...", {
+    logDebug("Sending message...", {
       sender_id: senderId,
       receiver_id: receiverId,
       content: content.substring(0, 50) + (content.length > 50 ? "..." : ""),
@@ -656,7 +656,7 @@ export function useChat(
         return;
       }
 
-      console.log("Message sent successfully:", data);
+      logDebug("Message sent successfully:", data);
 
       // Replace optimistic message with real one from server
       if (data && data.length > 0) {

@@ -45,7 +45,7 @@ export default function ExplorePage() {
   );
   const [minimumMatch, setMinimumMatch] = useState(0);
 
-  const currentUserId = useMemo(() => user?.id || null, [user?.id]);
+  const currentUserId = user?.id || null;
 
   // Use cached dashboard data (shared with home page)
   const { gamers, loading, currentUserPreferences } = useDashboardData(
@@ -161,10 +161,9 @@ export default function ExplorePage() {
     currentUserPreferences,
   ]);
 
-  const strongMatchesCount = useMemo(
-    () => filteredGamers.filter((entry) => entry.matchConfidence >= 75).length,
-    [filteredGamers]
-  );
+  const strongMatchesCount = filteredGamers.filter(
+    (entry) => entry.matchConfidence >= 75
+  ).length;
 
   return (
     <div className="min-h-screen bg-primary-foreground pb-24 transition-all md:pr-64 md:pb-0">

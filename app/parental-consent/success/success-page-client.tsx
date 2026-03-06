@@ -5,14 +5,15 @@ import {
   SecurityCheckIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import Logo from "../../components/logo";
 
-function SuccessContent() {
-  const searchParams = useSearchParams();
-  const alreadyGranted = searchParams.get("already") === "true";
+interface SuccessPageClientProps {
+  alreadyGranted: boolean;
+}
 
+export default function ParentalConsentSuccessPage({
+  alreadyGranted,
+}: SuccessPageClientProps) {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-primary-foreground p-4">
       <div className="absolute top-[-20%] right-[-10%] h-125 w-125 rounded-full bg-green-500/10 blur-[7.5rem]" />
@@ -83,19 +84,5 @@ function SuccessContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function ParentalConsentSuccessPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-primary-foreground">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      }
-    >
-      <SuccessContent />
-    </Suspense>
   );
 }

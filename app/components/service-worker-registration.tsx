@@ -30,8 +30,6 @@ export default function ServiceWorkerRegistration() {
         if (isUnmounted) {
           return;
         }
-        console.log("[SW] Service Worker registered:", registration.scope);
-
         // Check for updates periodically
         updateInterval = setInterval(() => {
           if (
@@ -57,7 +55,6 @@ export default function ServiceWorkerRegistration() {
                 newWorker.state === "installed" &&
                 navigator.serviceWorker.controller
               ) {
-                console.log("[SW] New service worker available");
                 toast.info("עדכון חדש זמין!", {
                   description: "לחץ כאן כדי לרענן את האפליקציה",
                   duration: 10_000,
@@ -83,7 +80,6 @@ export default function ServiceWorkerRegistration() {
         return;
       }
       reloading = true;
-      console.log("[SW] Controller changed (update), reloading");
       window.location.reload();
     };
     navigator.serviceWorker.addEventListener(

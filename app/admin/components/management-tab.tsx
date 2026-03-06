@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { toast } from "sonner";
 import type { DBMetrics } from "../types";
 
@@ -37,6 +37,44 @@ interface HealthCheckResult {
   message: string;
   success: boolean;
 }
+
+interface ManagementState {
+  dbMetrics: DBMetrics | null;
+  errorMessage: string | null;
+  healthCheckResult: HealthCheckResult | null;
+  healthCheckRunning: boolean;
+  lastUpdated: string | null;
+  loading: boolean;
+  rpcHealth: RpcHealth;
+}
+
+interface ManagementAction {
+  payload: Partial<ManagementState>;
+  type: "patch";
+}
+
+const initialState: ManagementState = {
+  dbMetrics: null,
+  errorMessage: null,
+  healthCheckResult: null,
+  healthCheckRunning: false,
+  lastUpdated: null,
+  loading: true,
+  rpcHealth: {
+    realtime: false,
+    slowQueries: false,
+  },
+};
+
+const managementReducer = (
+  state: ManagementState,
+  action: ManagementAction
+): ManagementState => {
+  if (action.type === "patch") {
+    return { ...state, ...action.payload };
+  }
+  return state;
+};
 
 const getMetricNumber = (value: unknown) =>
   typeof value === "number" ? value : 0;
@@ -83,122 +121,142 @@ const formatLastUpdated = (isoString: string | null) => {
 };
 
 export default function ManagementTab({ supabase }: ManagementTabProps) {
-  const [dbMetrics, setDbMetrics] = useState<DBMetrics | null>(null);
-  const [rpcHealth, setRpcHealth] = useState<RpcHealth>({
-    realtime: false,
-    slowQueries: false,
-  });
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [healthCheckRunning, setHealthCheckRunning] = useState(false);
-  const [healthCheckResult, setHealthCheckResult] =
-    useState<HealthCheckResult | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, dispatch] = useReducer(managementReducer, initialState);
+  const patchState = useCallback((payload: Partial<ManagementState>) => {
+    dispatch({
+      type: "patch",
+      payload,
+    });
+  }, []);
 
   const fetchMetrics = useCallback(
     async (showLoading = false) => {
       if (showLoading) {
-        setLoading(true);
+        patchState({ loading: true });
       }
 
-      setErrorMessage(null);
+      patchState({ errorMessage: null });
 
       const [rtResult, sqResult] = await Promise.all([
         supabase
           .rpc("get_realtime_subscription_count")
           .single<RealtimeSubscriptionCountResult>(),
         supabase.rpc("get_slow_query_metrics").single<SlowQueryMetricsResult>(),
-      ]);
+      ]).catch(() => [null, null] as const);
 
-      const realtimeOk = !rtResult.error && !!rtResult.data;
-      const slowQueriesOk = !sqResult.error && !!sqResult.data;
-      setRpcHealth({ realtime: realtimeOk, slowQueries: slowQueriesOk });
-
-      if (!(realtimeOk && slowQueriesOk)) {
-        setDbMetrics(null);
-        setErrorMessage("לא ניתן לטעון חלק מנתוני הניטור כרגע.");
-        setLoading(false);
+      if (!(rtResult && sqResult)) {
+        patchState({
+          dbMetrics: null,
+          errorMessage: "אירעה שגיאה בטעינת נתוני הניטור.",
+          loading: false,
+        });
         return;
       }
 
-      setDbMetrics({
-        realtimeSubscriptions: getMetricNumber(rtResult.data?.count),
-        slowQueryCount: getMetricNumber(sqResult.data?.slow_count),
-        avgQueryTime: getMetricNumber(sqResult.data?.avg_time),
+      const realtimeOk = !rtResult.error && !!rtResult.data;
+      const slowQueriesOk = !sqResult.error && !!sqResult.data;
+      patchState({
+        rpcHealth: { realtime: realtimeOk, slowQueries: slowQueriesOk },
       });
-      setLastUpdated(new Date().toISOString());
-      setLoading(false);
+
+      if (!(realtimeOk && slowQueriesOk)) {
+        patchState({
+          dbMetrics: null,
+          errorMessage: "לא ניתן לטעון חלק מנתוני הניטור כרגע.",
+          loading: false,
+        });
+        return;
+      }
+
+      patchState({
+        dbMetrics: {
+          realtimeSubscriptions: getMetricNumber(rtResult.data?.count),
+          slowQueryCount: getMetricNumber(sqResult.data?.slow_count),
+          avgQueryTime: getMetricNumber(sqResult.data?.avg_time),
+        },
+        lastUpdated: new Date().toISOString(),
+        loading: false,
+      });
     },
-    [supabase]
+    [patchState, supabase]
   );
 
   useEffect(() => {
-    fetchMetrics(false).catch(() => {
-      setDbMetrics(null);
-      setErrorMessage("אירעה שגיאה בטעינת נתוני הניטור.");
-      setLoading(false);
-    });
+    const timer = setTimeout(() => {
+      fetchMetrics(false).catch(() => undefined);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchMetrics]);
 
   const runHealthCheck = useCallback(async () => {
-    setHealthCheckRunning(true);
+    patchState({ healthCheckRunning: true });
 
-    try {
-      const [rtResult, sqResult] = await Promise.all([
-        supabase
-          .rpc("get_realtime_subscription_count")
-          .single<RealtimeSubscriptionCountResult>(),
-        supabase.rpc("get_slow_query_metrics").single<SlowQueryMetricsResult>(),
-      ]);
+    const [rtResult, sqResult] = await Promise.all([
+      supabase
+        .rpc("get_realtime_subscription_count")
+        .single<RealtimeSubscriptionCountResult>(),
+      supabase.rpc("get_slow_query_metrics").single<SlowQueryMetricsResult>(),
+    ]).catch(() => [null, null] as const);
 
-      const realtimeOk = !rtResult.error && !!rtResult.data;
-      const slowQueriesOk = !sqResult.error && !!sqResult.data;
-      setRpcHealth({ realtime: realtimeOk, slowQueries: slowQueriesOk });
+    if (!(rtResult && sqResult)) {
+      patchState({
+        healthCheckResult: {
+          checkedAt: new Date().toISOString(),
+          message: "אירעה שגיאה בלתי צפויה במהלך בדיקת התקינות.",
+          success: false,
+        },
+        healthCheckRunning: false,
+      });
+      toast.error("אירעה שגיאה בבדיקת התקינות");
+      return;
+    }
 
-      const success = realtimeOk && slowQueriesOk;
-      setHealthCheckResult({
+    const realtimeOk = !rtResult.error && !!rtResult.data;
+    const slowQueriesOk = !sqResult.error && !!sqResult.data;
+    patchState({
+      rpcHealth: { realtime: realtimeOk, slowQueries: slowQueriesOk },
+    });
+
+    const success = realtimeOk && slowQueriesOk;
+    patchState({
+      healthCheckResult: {
         checkedAt: new Date().toISOString(),
         message: success
           ? "בדיקת התקינות עברה בהצלחה."
           : "בדיקת התקינות נכשלה באחד ממקורות הנתונים.",
         success,
-      });
-      if (success) {
-        toast.success("בדיקת תקינות עברה");
-      } else {
-        toast.error("בדיקת תקינות נכשלה");
-      }
-
-      if (success) {
-        await fetchMetrics(false);
-      }
-    } catch {
-      setHealthCheckResult({
-        checkedAt: new Date().toISOString(),
-        message: "אירעה שגיאה בלתי צפויה במהלך בדיקת התקינות.",
-        success: false,
-      });
-      toast.error("אירעה שגיאה בבדיקת התקינות");
-    } finally {
-      setHealthCheckRunning(false);
+      },
+    });
+    if (success) {
+      toast.success("בדיקת תקינות עברה");
+      await fetchMetrics(false);
+    } else {
+      toast.error("בדיקת תקינות נכשלה");
     }
-  }, [fetchMetrics, supabase]);
+    patchState({ healthCheckRunning: false });
+  }, [fetchMetrics, patchState, supabase]);
 
   const realtimeHealth = useMemo(
     () =>
-      dbMetrics ? getRealtimeHealth(dbMetrics.realtimeSubscriptions) : null,
-    [dbMetrics]
+      state.dbMetrics
+        ? getRealtimeHealth(state.dbMetrics.realtimeSubscriptions)
+        : null,
+    [state.dbMetrics]
   );
   const slowQueryHealth = useMemo(
-    () => (dbMetrics ? getSlowQueryHealth(dbMetrics.slowQueryCount) : null),
-    [dbMetrics]
+    () =>
+      state.dbMetrics
+        ? getSlowQueryHealth(state.dbMetrics.slowQueryCount)
+        : null,
+    [state.dbMetrics]
   );
   const latencyHealth = useMemo(
-    () => (dbMetrics ? getLatencyHealth(dbMetrics.avgQueryTime) : null),
-    [dbMetrics]
+    () =>
+      state.dbMetrics ? getLatencyHealth(state.dbMetrics.avgQueryTime) : null,
+    [state.dbMetrics]
   );
 
-  if (loading) {
+  if (state.loading) {
     return (
       <div className="flex justify-center py-20">
         <span className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500/30 border-t-blue-500" />
@@ -223,18 +281,18 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           נתונים בזמן אמת על Realtime ושאילתות איטיות
         </p>
         <p className="mt-2 text-fluid-xs text-gray-400">
-          עודכן לאחרונה: {formatLastUpdated(lastUpdated)}
+          עודכן לאחרונה: {formatLastUpdated(state.lastUpdated)}
         </p>
       </div>
 
-      {errorMessage && (
+      {state.errorMessage && (
         <div className="flex items-start gap-3 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
           <HugeiconsIcon
             className="mt-0.5 shrink-0 text-yellow-400"
             icon={AlertCircleIcon}
             size={18}
           />
-          <p className="text-fluid-sm text-yellow-200">{errorMessage}</p>
+          <p className="text-fluid-sm text-yellow-200">{state.errorMessage}</p>
         </div>
       )}
 
@@ -259,7 +317,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           }
           label="מנויי Realtime"
           sub="מספר מנויים פעילים"
-          value={dbMetrics?.realtimeSubscriptions ?? "—"}
+          value={state.dbMetrics?.realtimeSubscriptions ?? "—"}
           valueClassName={realtimeHealth?.valueClassName}
         />
 
@@ -283,7 +341,7 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           }
           label="שאילתות איטיות"
           sub="כמות בשעה האחרונה"
-          value={dbMetrics?.slowQueryCount ?? "—"}
+          value={state.dbMetrics?.slowQueryCount ?? "—"}
           valueClassName={slowQueryHealth?.valueClassName}
         />
 
@@ -307,7 +365,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           }
           label="זמן שאילתה ממוצע"
           sub="במילישניות"
-          value={dbMetrics ? `${dbMetrics.avgQueryTime.toFixed(2)}ms` : "—"}
+          value={
+            state.dbMetrics
+              ? `${state.dbMetrics.avgQueryTime.toFixed(2)}ms`
+              : "—"
+          }
           valueClassName={latencyHealth?.valueClassName}
         />
       </div>
@@ -318,11 +380,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
         </h3>
         <div className="space-y-3">
           <HealthRow
-            isHealthy={rpcHealth.realtime}
+            isHealthy={state.rpcHealth.realtime}
             label="RPC: get_realtime_subscription_count"
           />
           <HealthRow
-            isHealthy={rpcHealth.slowQueries}
+            isHealthy={state.rpcHealth.slowQueries}
             label="RPC: get_slow_query_metrics"
           />
         </div>
@@ -337,9 +399,11 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
             className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition-all hover:bg-blue-500"
             onClick={() => {
               fetchMetrics(true).catch(() => {
-                setDbMetrics(null);
-                setErrorMessage("אירעה שגיאה בטעינת נתוני הניטור.");
-                setLoading(false);
+                patchState({
+                  dbMetrics: null,
+                  errorMessage: "אירעה שגיאה בטעינת נתוני הניטור.",
+                  loading: false,
+                });
               });
             }}
             type="button"
@@ -349,38 +413,42 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
           </button>
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-slate-700 px-4 py-3 font-bold text-white transition-all hover:bg-slate-600"
-            disabled={healthCheckRunning}
+            disabled={state.healthCheckRunning}
             onClick={() => {
               runHealthCheck().catch(() => {
-                setHealthCheckRunning(false);
-                setHealthCheckResult({
-                  checkedAt: new Date().toISOString(),
-                  message: "בדיקת התקינות נכשלה.",
-                  success: false,
+                patchState({
+                  healthCheckRunning: false,
+                  healthCheckResult: {
+                    checkedAt: new Date().toISOString(),
+                    message: "בדיקת התקינות נכשלה.",
+                    success: false,
+                  },
                 });
               });
             }}
             type="button"
           >
             <HugeiconsIcon icon={Activity01Icon} size={18} />
-            {healthCheckRunning ? "בודק..." : "בדיקת תקינות"}
+            {state.healthCheckRunning ? "בודק..." : "בדיקת תקינות"}
           </button>
         </div>
 
-        {healthCheckResult && (
+        {state.healthCheckResult && (
           <div
             className={`mt-4 flex items-start gap-3 rounded-xl border p-4 ${
-              healthCheckResult.success
+              state.healthCheckResult.success
                 ? "border-green-500/20 bg-green-500/10"
                 : "border-red-500/20 bg-red-500/10"
             }`}
           >
             <HugeiconsIcon
               className={`mt-0.5 shrink-0 ${
-                healthCheckResult.success ? "text-green-400" : "text-red-400"
+                state.healthCheckResult.success
+                  ? "text-green-400"
+                  : "text-red-400"
               }`}
               icon={
-                healthCheckResult.success
+                state.healthCheckResult.success
                   ? CheckmarkCircle02Icon
                   : AlertCircleIcon
               }
@@ -389,13 +457,16 @@ export default function ManagementTab({ supabase }: ManagementTabProps) {
             <div>
               <p
                 className={`text-fluid-sm ${
-                  healthCheckResult.success ? "text-green-200" : "text-red-200"
+                  state.healthCheckResult.success
+                    ? "text-green-200"
+                    : "text-red-200"
                 }`}
               >
-                {healthCheckResult.message}
+                {state.healthCheckResult.message}
               </p>
               <p className="mt-1 text-fluid-xs text-gray-400">
-                זמן בדיקה: {formatLastUpdated(healthCheckResult.checkedAt)}
+                זמן בדיקה:{" "}
+                {formatLastUpdated(state.healthCheckResult.checkedAt)}
               </p>
             </div>
           </div>

@@ -40,6 +40,13 @@ interface RealtimeEventPayload {
   old: { [key: string]: unknown };
 }
 
+const isDevEnvironment = process.env.NODE_ENV !== "production";
+const logDebug = (...args: unknown[]) => {
+  if (isDevEnvironment) {
+    console.log(...args);
+  }
+};
+
 const toSwapRequestRow = (
   value: { [key: string]: unknown } | null | undefined
 ) => {
@@ -155,7 +162,7 @@ export function useSwapStatus(currentUserId: string | null) {
       return;
     }
 
-    console.log("🔄 Setting up centralized swap status subscription");
+    logDebug("Setting up centralized swap status subscription");
 
     const channel = supabase
       .channel("swap_status_all")
@@ -169,7 +176,7 @@ export function useSwapStatus(currentUserId: string | null) {
           filter: `sender_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log("📨 Swap status update (as sender):", payload);
+          logDebug("Swap status update (as sender):", payload);
           handleRealtimeUpdate(
             toSwapRealtimePayload(payload as RealtimeEventPayload)
           );
@@ -185,14 +192,14 @@ export function useSwapStatus(currentUserId: string | null) {
           filter: `receiver_id=eq.${currentUserId}`,
         },
         (payload) => {
-          console.log("📨 Swap status update (as receiver):", payload);
+          logDebug("Swap status update (as receiver):", payload);
           handleRealtimeUpdate(
             toSwapRealtimePayload(payload as RealtimeEventPayload)
           );
         }
       )
       .subscribe((status) => {
-        console.log("✅ Swap status subscription:", status);
+        logDebug("Swap status subscription:", status);
         if (status === "SUBSCRIBED") {
           isSubscribedRef.current = true;
         }
@@ -203,14 +210,14 @@ export function useSwapStatus(currentUserId: string | null) {
     // OPTIMIZATION: Handle tab visibility changes
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log("💤 Tab hidden, pausing swap status subscription");
+        logDebug("Tab hidden, pausing swap status subscription");
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;
           isSubscribedRef.current = false;
         }
       } else {
-        console.log("👀 Tab visible, resuming swap status subscription");
+        logDebug("Tab visible, resuming swap status subscription");
         // Re-setup subscription (this useEffect will run again)
       }
     };

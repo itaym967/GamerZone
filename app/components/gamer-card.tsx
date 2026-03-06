@@ -16,14 +16,12 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import Link from "next/link";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { haptic } from "@/utils/haptics";
 import OptimizedAvatar from "./optimized-avatar";
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SWAP_REQUEST_COOLDOWN_MS = 60 * 1000;
 
 const getDeterministicXp = (seed: string) => {
@@ -46,13 +44,6 @@ type FriendshipStatus =
   | "pending_sent"
   | "pending_received"
   | "accepted";
-
-interface SwapRequestRow {
-  created_at?: string;
-  receiver_id: string;
-  sender_id: string;
-  status: string;
-}
 
 interface GamerTagRow {
   platform: string;
@@ -162,62 +153,6 @@ const markSwapRequestSentNow = (senderId: string, receiverId: string) => {
     getSwapCooldownKey(senderId, receiverId),
     String(Date.now())
   );
-};
-
-function determineStatus(data: SwapRequestRow, userId: string): SwapStatus {
-  if (data.status === "approved") {
-    return "approved";
-  }
-  if (data.status === "rejected") {
-    return "rejected";
-  }
-  if (data.status === "pending") {
-    return data.sender_id === userId ? "pending_sent" : "pending_received";
-  }
-  return "initial";
-}
-
-interface LoadInitialStatusParams {
-  currentUserId: string | null;
-  fetchRealTags: () => Promise<void>;
-  id: string;
-  initialSwapStatus?: SwapStatus;
-  setStatus: (status: SwapStatus) => void;
-  supabase: ReturnType<typeof createClient>;
-}
-
-const loadInitialSwapStatus = async ({
-  currentUserId,
-  id,
-  initialSwapStatus,
-  supabase,
-  setStatus,
-  fetchRealTags,
-}: LoadInitialStatusParams) => {
-  if (!(currentUserId && id) || initialSwapStatus) {
-    return;
-  }
-  if (!(UUID_REGEX.test(currentUserId) && UUID_REGEX.test(id))) {
-    return;
-  }
-
-  const { data } = await supabase
-    .from("swap_requests")
-    .select("*")
-    .or(
-      `and(sender_id.eq.${currentUserId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${currentUserId})`
-    )
-    .maybeSingle();
-
-  if (!data) {
-    return;
-  }
-
-  const newStatus = determineStatus(data, currentUserId);
-  setStatus(newStatus);
-  if (newStatus === "approved") {
-    await fetchRealTags();
-  }
 };
 
 interface EnsureFriendshipParams {
@@ -460,33 +395,6 @@ export default function GamerCard({
     }
   }, [id, supabase]);
 
-  useEffect(() => {
-    loadInitialSwapStatus({
-      currentUserId,
-      id,
-      initialSwapStatus,
-      supabase,
-      setStatus,
-      fetchRealTags,
-    });
-  }, [currentUserId, id, initialSwapStatus, fetchRealTags, supabase]);
-
-  useEffect(() => {
-    if (!initialSwapStatus) {
-      return;
-    }
-
-    setStatus((previousStatus) =>
-      previousStatus === initialSwapStatus ? previousStatus : initialSwapStatus
-    );
-
-    if (initialSwapStatus === "approved") {
-      fetchRealTags().catch((error: unknown) => {
-        console.error("Failed to fetch real tags after approval:", error);
-      });
-    }
-  }, [initialSwapStatus, fetchRealTags]);
-
   const handleSendRequest = async () => {
     if (!currentUserId) {
       toast.error("עליך להתחבר כדי לשלוח בקשה!");
@@ -505,8 +413,9 @@ export default function GamerCard({
     }
 
     setIsLoading(true);
-    try {
-      const { data: existingRequest } = await supabase
+
+    const { data: existingRequest, error: existingRequestError } =
+      await supabase
         .from("swap_requests")
         .select("sender_id, receiver_id, status")
         .or(
@@ -515,49 +424,51 @@ export default function GamerCard({
         .eq("status", "pending")
         .maybeSingle();
 
-      if (existingRequest) {
-        const pendingStatus =
-          existingRequest.sender_id === currentUserId
-            ? "pending_sent"
-            : "pending_received";
-        setStatus(pendingStatus);
-        if (onSwapStatusChange) {
-          onSwapStatusChange(id, pendingStatus);
-        }
-        toast.info("כבר קיימת בקשה ממתינה ביניכם.");
-        setIsLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.from("swap_requests").insert({
-        sender_id: currentUserId,
-        receiver_id: id,
-        status: "pending", // Default, but being explicit
-      });
-
-      if (error) {
-        toast.error("שגיאה בשליחת הבקשה", {
-          description: getErrorMessage(error),
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      setStatus("pending_sent");
-      markSwapRequestSentNow(currentUserId, id);
-      haptic("success");
-      if (onSwapStatusChange) {
-        onSwapStatusChange(id, "pending_sent");
-      }
-      toast.success("בקשה נשלחה!", {
-        description: "תקבל התראה כשהמשתמש יאשר.",
-      });
-    } catch (error: unknown) {
-      console.error(error);
+    if (existingRequestError) {
       toast.error("שגיאה בשליחת הבקשה", {
-        description: getErrorMessage(error),
+        description: getErrorMessage(existingRequestError),
       });
+      setIsLoading(false);
+      return;
     }
+
+    if (existingRequest) {
+      let pendingStatus: SwapStatus = "pending_received";
+      if (existingRequest.sender_id === currentUserId) {
+        pendingStatus = "pending_sent";
+      }
+      setStatus(pendingStatus);
+      if (onSwapStatusChange) {
+        onSwapStatusChange(id, pendingStatus);
+      }
+      toast.info("כבר קיימת בקשה ממתינה ביניכם.");
+      setIsLoading(false);
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("swap_requests").insert({
+      sender_id: currentUserId,
+      receiver_id: id,
+      status: "pending",
+    });
+
+    if (insertError) {
+      toast.error("שגיאה בשליחת הבקשה", {
+        description: getErrorMessage(insertError),
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    setStatus("pending_sent");
+    markSwapRequestSentNow(currentUserId, id);
+    haptic("success");
+    if (onSwapStatusChange) {
+      onSwapStatusChange(id, "pending_sent");
+    }
+    toast.success("בקשה נשלחה!", {
+      description: "תקבל התראה כשהמשתמש יאשר.",
+    });
     setIsLoading(false);
   };
 

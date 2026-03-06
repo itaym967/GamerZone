@@ -60,7 +60,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`Successfully revoked all sessions for user: ${userId}`);
     return NextResponse.json({
       success: true,
       message: "User session revoked",

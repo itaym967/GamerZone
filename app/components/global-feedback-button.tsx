@@ -3,7 +3,6 @@
 import { SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 
 const FEEDBACK_EMAIL = "itay.machllof@gmail.com";
@@ -33,26 +32,16 @@ function buildFeedbackMailto(params: {
 export default function GlobalFeedbackButton() {
   const { user } = useAuth();
   const pathname = usePathname();
-  const [mailtoUrl, setMailtoUrl] = useState(() =>
-    buildFeedbackMailto({
-      pathname: "/",
-      timestamp: "pending",
-    })
-  );
-
-  useEffect(() => {
-    setMailtoUrl(
-      buildFeedbackMailto({
-        pathname: pathname ?? "/",
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email,
-      })
-    );
-  }, [pathname, user?.email]);
 
   if (pathname !== "/") {
     return null;
   }
+
+  const mailtoUrl = buildFeedbackMailto({
+    pathname: pathname ?? "/",
+    timestamp: new Date().toISOString(),
+    userEmail: user?.email,
+  });
 
   return (
     <a

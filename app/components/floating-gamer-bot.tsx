@@ -124,20 +124,22 @@ export default function FloatingGamerBot() {
     });
 
     let botReply = getLocalBotReply(userMessage.content);
-    try {
-      const response = await fetch("/api/gamerbot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage.content }),
-      });
-      if (response.ok) {
-        const payload = (await response.json()) as { reply?: string };
-        if (payload.reply?.trim()) {
-          botReply = payload.reply.trim();
-        }
-      }
-    } catch (error: unknown) {
+    const response = await fetch("/api/gamerbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMessage.content }),
+    }).catch((error: unknown) => {
       console.error("Floating GamerBot API fallback to local reply", error);
+      return null;
+    });
+
+    if (response?.ok) {
+      const payload = (await response.json()) as { reply?: string };
+      const reply =
+        typeof payload.reply === "string" ? payload.reply.trim() : "";
+      if (reply.length > 0) {
+        botReply = reply;
+      }
     }
 
     const botMessage: Message = {

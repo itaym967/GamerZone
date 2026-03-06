@@ -7,10 +7,21 @@ export const metadata: Metadata = {
   description: "Parental consent confirmation page.",
 };
 
-export default function ParentalConsentSuccessPage() {
+interface ParentalConsentSuccessPageProps {
+  searchParams: Promise<{
+    already?: string;
+  }>;
+}
+
+export default async function ParentalConsentSuccessPage({
+  searchParams,
+}: ParentalConsentSuccessPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const alreadyGranted = resolvedSearchParams.already === "true";
+
   return (
     <Suspense fallback={<div className="min-h-screen bg-primary-foreground" />}>
-      <SuccessPageClient />
+      <SuccessPageClient alreadyGranted={alreadyGranted} />
     </Suspense>
   );
 }
