@@ -59,9 +59,24 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: exchangeData, error } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      const authUserId = exchangeData.user?.id;
+      if (authUserId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", authUserId)
+          .maybeSingle();
+
+        if (!profile?.onboarding_completed) {
+          const safeOrigin = getSafeRedirectOrigin(origin);
+          return NextResponse.redirect(`${safeOrigin}/onboarding`);
+        }
+      }
+
       const safeOrigin = getSafeRedirectOrigin(origin);
       return NextResponse.redirect(`${safeOrigin}${next}`);
     }
