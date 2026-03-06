@@ -414,6 +414,22 @@ export default function GamerCard({
     });
   }, [currentUserId, id, initialSwapStatus, fetchRealTags, supabase]);
 
+  useEffect(() => {
+    if (!initialSwapStatus) {
+      return;
+    }
+
+    setStatus((previousStatus) =>
+      previousStatus === initialSwapStatus ? previousStatus : initialSwapStatus
+    );
+
+    if (initialSwapStatus === "approved") {
+      fetchRealTags().catch((error: unknown) => {
+        console.error("Failed to fetch real tags after approval:", error);
+      });
+    }
+  }, [initialSwapStatus, fetchRealTags]);
+
   const handleSendRequest = async () => {
     if (!currentUserId) {
       toast.error("עליך להתחבר כדי לשלוח בקשה!");
