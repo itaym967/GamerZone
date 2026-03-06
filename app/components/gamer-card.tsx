@@ -112,7 +112,9 @@ interface GamerCardProps {
   online?: boolean;
   onSendFriendRequest?: (targetId: string) => void;
   onSwapStatusChange?: (userId: string, status: SwapStatus) => void;
+  reliabilityScore?: number;
   showSwapActions?: boolean;
+  swapsApprovedCount?: number;
   tag: string; // e.g. @cyber_ninja
   username: string;
 }
@@ -377,6 +379,8 @@ export default function GamerCard({
   initialSwapStatus,
   matchConfidence,
   matchReasons,
+  reliabilityScore,
+  swapsApprovedCount,
   onSwapStatusChange,
   showSwapActions = true,
   friendshipStatus = "none",
@@ -633,6 +637,17 @@ export default function GamerCard({
                       {reason}
                     </span>
                   ))}
+                </div>
+              )}
+              {typeof reliabilityScore === "number" && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2 py-0.5 font-bold text-[0.625rem] text-emerald-300">
+                    <HugeiconsIcon icon={Shield01Icon} size={10} />
+                    אמינות {Math.round(reliabilityScore)}%
+                  </span>
+                  <span className="text-[0.625rem] text-gray-400">
+                    {swapsApprovedCount || 0} החלפות מאושרות
+                  </span>
                 </div>
               )}
             </div>

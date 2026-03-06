@@ -34,6 +34,8 @@ interface Gamer {
   hiddenTags: { [key: string]: string };
   id: string;
   online: boolean;
+  reliabilityScore: number;
+  swapsApprovedCount: number;
   tag: string;
   username: string;
 }
@@ -58,6 +60,11 @@ interface ProfileRow {
   website: string | null;
 }
 
+interface ApprovedSwapRow {
+  receiver_id: string;
+  sender_id: string;
+}
+
 interface CurrentUserPreferences {
   availability: AvailabilityPreferences | null;
   games: string[];
@@ -73,7 +80,15 @@ const getProfileGames = (profile: ProfileRow) => {
   return [...games];
 };
 
-const mapProfileToGamer = (profile: ProfileRow): Gamer => {
+const getReliabilityScore = (approvedSwapsCount: number) => {
+  const normalized = Math.min(100, 40 + approvedSwapsCount * 8);
+  return Math.max(0, normalized);
+};
+
+const mapProfileToGamer = (
+  profile: ProfileRow,
+  approvedSwapsCount: number
+): Gamer => {
   const availability = parseAvailabilityPreferences(profile.website);
   const hiddenTagsMap: { [key: string]: string } = {};
   const gamesList = getProfileGames(profile);
@@ -97,6 +112,8 @@ const mapProfileToGamer = (profile: ProfileRow): Gamer => {
     online: profile.is_online,
     hiddenTags: hiddenTagsMap,
     avatarSeed: profile.avatar_url ?? undefined,
+    swapsApprovedCount: approvedSwapsCount,
+    reliabilityScore: getReliabilityScore(approvedSwapsCount),
   };
 };
 
@@ -159,6 +176,26 @@ const getDashboardProfiles = async (
     .order("username", { ascending: true });
 
   return { data: data as ProfileRow[] | null, error };
+};
+
+const getApprovedSwapCountsByUser = async (
+  supabase: ReturnType<typeof createClient>
+) => {
+  const { data, error } = await supabase
+    .from("swap_requests")
+    .select("sender_id, receiver_id")
+    .eq("status", "approved");
+
+  if (error) {
+    return { counts: new Map<string, number>(), error };
+  }
+
+  const counts = new Map<string, number>();
+  for (const row of (data || []) as ApprovedSwapRow[]) {
+    counts.set(row.sender_id, (counts.get(row.sender_id) || 0) + 1);
+    counts.set(row.receiver_id, (counts.get(row.receiver_id) || 0) + 1);
+  }
+  return { counts, error: null };
 };
 
 function getCachedData(userId: string | null): CacheData | null {
@@ -265,10 +302,16 @@ export function useDashboardData(
   );
 
   const loadGamersFromDatabase = useCallback(async () => {
-    const { data: profiles, error } = await getDashboardProfiles(supabase);
-
-    if (error) {
-      console.error("Dashboard: Error fetching data", error);
+    const [profilesResult, approvedSwapsResult] = await Promise.all([
+      getDashboardProfiles(supabase),
+      getApprovedSwapCountsByUser(supabase),
+    ]);
+    const { data: profiles, error } = profilesResult;
+    if (error || approvedSwapsResult.error) {
+      console.error(
+        "Dashboard: Error fetching data",
+        error || approvedSwapsResult.error
+      );
       setLoading(false);
       return;
     }
@@ -289,7 +332,10 @@ export function useDashboardData(
     }
 
     const formattedGamers: Gamer[] = profiles.map((profile) =>
-      mapProfileToGamer(profile)
+      mapProfileToGamer(
+        profile,
+        approvedSwapsResult.counts.get(profile.id) || 0
+      )
     );
     setCachedData(formattedGamers, currentUserId);
     setGamers(filterOutCurrentUser(formattedGamers, currentUserId));
