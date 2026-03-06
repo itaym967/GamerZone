@@ -10,6 +10,7 @@ import { domAnimation, LazyMotion, m } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/logo";
 
@@ -30,7 +31,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/update-password")}`,
+        redirectTo: buildAuthCallbackUrl("/update-password"),
       });
 
       if (error) {

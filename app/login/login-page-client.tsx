@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trackAuthEvent } from "@/lib/auth/auth-telemetry";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "../components/logo";
 
@@ -214,7 +215,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: buildAuthCallbackUrl(),
         },
       });
 

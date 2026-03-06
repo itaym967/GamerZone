@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
 import { createClient } from "@/lib/supabase/client";
 import {
   calculateAge,
@@ -242,7 +243,7 @@ export default function SignupPage() {
             account_type: accountType,
             is_minor: isMinorUser,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+          emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
         },
       });
 
@@ -320,7 +321,7 @@ export default function SignupPage() {
                     .signInWithOAuth({
                       provider: "discord",
                       options: {
-                        redirectTo: `${window.location.origin}/auth/callback`,
+                        redirectTo: buildAuthCallbackUrl(),
                       },
                     })
                     .then(({ error }) => {
