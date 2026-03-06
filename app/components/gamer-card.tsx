@@ -24,6 +24,7 @@ import OptimizedAvatar from "./optimized-avatar";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SWAP_REQUEST_COOLDOWN_MS = 60 * 1000;
 
 const getDeterministicXp = (seed: string) => {
   let hash = 0;
@@ -47,6 +48,7 @@ type FriendshipStatus =
   | "accepted";
 
 interface SwapRequestRow {
+  created_at?: string;
   receiver_id: string;
   sender_id: string;
   status: string;
@@ -130,6 +132,36 @@ const getErrorMessage = (error: unknown) => {
     }
   }
   return "Unknown error";
+};
+
+const getSwapCooldownKey = (senderId: string, receiverId: string) =>
+  `gamerzone_swap_cooldown_${senderId}_${receiverId}`;
+
+const getRemainingCooldownMs = (senderId: string, receiverId: string) => {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  const rawValue = window.sessionStorage.getItem(
+    getSwapCooldownKey(senderId, receiverId)
+  );
+  if (!rawValue) {
+    return 0;
+  }
+  const lastSentAt = Number(rawValue);
+  if (Number.isNaN(lastSentAt)) {
+    return 0;
+  }
+  return Math.max(0, SWAP_REQUEST_COOLDOWN_MS - (Date.now() - lastSentAt));
+};
+
+const markSwapRequestSentNow = (senderId: string, receiverId: string) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.sessionStorage.setItem(
+    getSwapCooldownKey(senderId, receiverId),
+    String(Date.now())
+  );
 };
 
 function determineStatus(data: SwapRequestRow, userId: string): SwapStatus {
@@ -460,9 +492,39 @@ export default function GamerCard({
       toast.info("אי אפשר לשלוח בקשת החלפה לעצמך.");
       return;
     }
+    const remainingCooldownMs = getRemainingCooldownMs(currentUserId, id);
+    if (remainingCooldownMs > 0) {
+      toast.info("רגע לפני בקשה נוספת", {
+        description: `נסה שוב בעוד ${Math.ceil(remainingCooldownMs / 1000)} שניות.`,
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
+      const { data: existingRequest } = await supabase
+        .from("swap_requests")
+        .select("sender_id, receiver_id, status")
+        .or(
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${currentUserId})`
+        )
+        .eq("status", "pending")
+        .maybeSingle();
+
+      if (existingRequest) {
+        const pendingStatus =
+          existingRequest.sender_id === currentUserId
+            ? "pending_sent"
+            : "pending_received";
+        setStatus(pendingStatus);
+        if (onSwapStatusChange) {
+          onSwapStatusChange(id, pendingStatus);
+        }
+        toast.info("כבר קיימת בקשה ממתינה ביניכם.");
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.from("swap_requests").insert({
         sender_id: currentUserId,
         receiver_id: id,
@@ -478,6 +540,7 @@ export default function GamerCard({
       }
 
       setStatus("pending_sent");
+      markSwapRequestSentNow(currentUserId, id);
       haptic("success");
       if (onSwapStatusChange) {
         onSwapStatusChange(id, "pending_sent");
