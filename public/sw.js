@@ -195,8 +195,8 @@ self.addEventListener("push", (event) => {
     const tag = data.tag || `gz-${Date.now()}`;
     const options = {
       body: data.body || data.message,
-      icon: "/icons/icon-192x192.svg",
-      badge: "/icons/icon-72x72.svg",
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-72x72.png",
       vibrate: [100, 50, 100],
       tag,
       renotify: true,

@@ -65,19 +65,19 @@ export default function RootLayout({
       <head>
         <link href="/manifest.json" rel="manifest" />
         {/* Apple Touch Icons - multiple sizes for different devices */}
-        <link href="/icons/icon-192x192.svg" rel="apple-touch-icon" />
+        <link href="/icons/icon-192x192.png" rel="apple-touch-icon" />
         <link
-          href="/icons/icon-152x152.svg"
+          href="/icons/icon-152x152.png"
           rel="apple-touch-icon"
           sizes="152x152"
         />
         <link
-          href="/icons/icon-144x144.svg"
+          href="/icons/icon-144x144.png"
           rel="apple-touch-icon"
           sizes="144x144"
         />
         <link
-          href="/icons/icon-128x128.svg"
+          href="/icons/icon-128x128.png"
           rel="apple-touch-icon"
           sizes="128x128"
         />
